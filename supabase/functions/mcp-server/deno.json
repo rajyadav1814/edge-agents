@@ -1,0 +1,11 @@
+{
+  "imports": {
+    "@modelcontextprotocol/sdk/server/index.js": "https://esm.sh/@modelcontextprotocol/sdk/server/index.js",
+    "@modelcontextprotocol/sdk/server/http.js": "https://esm.sh/@modelcontextprotocol/sdk/server/http.js",
+    "@modelcontextprotocol/sdk/types.js": "https://esm.sh/@modelcontextprotocol/sdk/types.js",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js"
+  },
+  "tasks": {
+    "start": "deno run --allow-net --allow-env index.ts"
+  }
+}
