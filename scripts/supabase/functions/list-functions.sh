@@ -1,25 +1,16 @@
 #!/bin/bash
 
-# Source environment variables from root .env
-source "/workspaces/edge-agents/.env"
+# Load environment variables
+source .env
 
-# Check if required environment variables are set
-if [ -z "$SUPABASE_PROJECT_ID" ] || [ -z "$SUPABASE_PERSONAL_ACCESS_TOKEN" ]; then
-  echo "Error: Required environment variables SUPABASE_PROJECT_ID and SUPABASE_PERSONAL_ACCESS_TOKEN must be set"
-  exit 1
-fi
-
-# Check if jq is installed
-if ! command -v jq &> /dev/null; then
-  echo "Error: jq is required but not installed. Please install jq to parse JSON responses."
-  exit 1
-fi
+# Configuration
+API_URL="https://api.supabase.com/v1/projects/${VITE_SUPABASE_PROJECT_ID}/functions"
 
 # Function to list all Edge Functions
 list_functions() {
-  echo "Fetching all Edge Functions for project: ${SUPABASE_PROJECT_ID}"
+  echo "Fetching all Edge Functions for project: ${VITE_SUPABASE_PROJECT_ID}"
   
-  response=$(curl --silent --location "https://api.supabase.com/v1/projects/${SUPABASE_PROJECT_ID}/functions" \
+  response=$(curl --silent --location "${API_URL}" \
     --header "Authorization: Bearer ${SUPABASE_PERSONAL_ACCESS_TOKEN}" \
     --header "Content-Type: application/json")
   
@@ -38,6 +29,12 @@ list_functions() {
   function_count=$(echo "$response" | jq '. | length')
   echo "Total functions: $function_count"
 }
+
+# Check if jq is installed
+if ! command -v jq &> /dev/null; then
+  echo "Error: jq is required but not installed. Please install jq to parse JSON responses."
+  exit 1
+fi
 
 # Execute the function
 list_functions
