@@ -28,6 +28,7 @@ The documentation is organized into the following categories:
 - [Getting Started](./getting_started.md) - Guide to getting started with the repository
 - [Deployment Guide](./deployment.md) - Guide to deploying edge functions
 - [Contributing Guidelines](./contributing.md) - Guidelines for contributing to the repository
+- [Tutorials](./tutorials/README.md) - Step-by-step beginner tutorials for Agentic Edge Functions
 
 ## Function Index
 
