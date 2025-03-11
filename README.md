@@ -79,6 +79,7 @@ To get started with these edge functions:
 3. Configure environment variables
 4. Deploy functions to your Supabase project
 
+For beginners, we recommend following our [step-by-step tutorials](./docs/tutorials/README.md) to learn how to create, deploy, and test edge functions.
 For detailed instructions, see the [Getting Started Guide](./docs/getting_started.md).
 
 ## Documentation
@@ -92,6 +93,12 @@ Comprehensive documentation is available in the [docs](./docs) directory:
 - [Secrets Management](./docs/secrets_management.md) - Best practices for managing secrets
 - [Database Triggers](./docs/database_triggers.md) - Using database triggers with edge functions
 - [Deployment Guide](./docs/deployment.md) - Deploying edge functions to production
+
+### Tutorials
+- [Tutorials Overview](./docs/tutorials/README.md) - Beginner-friendly guides for Agentic Edge Functions
+- [Creating Your First Edge Function](./docs/tutorials/01-first-edge-function.md) - Learn the basics of edge functions
+- [Building a Basic Agentic Function](./docs/tutorials/02-basic-agentic-function.md) - Create your first agentic edge function
+- [Deploying and Testing Edge Functions](./docs/tutorials/03-deployment-and-testing.md) - Learn how to deploy and test your functions
 
 ## Contributing
 
