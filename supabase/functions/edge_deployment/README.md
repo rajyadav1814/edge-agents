@@ -1,143 +1,61 @@
-# Edge Deployment Function
+# Edge Function Deployment API
 
-A Supabase Edge Function for managing other Edge Functions programmatically. This function provides a RESTful API for listing, creating, updating, and deleting Edge Functions in your Supabase project.
-
-## Features
-
-- List all Edge Functions in your Supabase project
-- Get details of a specific Edge Function
-- Get the body (code) of a specific Edge Function
-- Create a new Edge Function
-- Update an existing Edge Function
-- Delete an Edge Function
-
-## Prerequisites
-
-- [Deno](https://deno.land/#installation)
-- [Supabase CLI](https://supabase.com/docs/guides/cli)
-- Supabase project with Edge Functions enabled
+This Edge Function provides an API for deploying other Edge Functions using the Supabase Management API.
 
 ## Environment Variables
 
-The function requires the following environment variables:
+Required environment variables:
 
 - `VITE_SUPABASE_PROJECT_ID`: Your Supabase project ID
-- `SUPABASE_URL`: Your Supabase project URL
-- `SUPABASE_SERVICE_KEY`: Your Supabase service role key (for authentication)
+- `SUPABASE_PERSONAL_ACCESS_TOKEN`: Your Supabase personal access token
 
-## Installation
+## API Usage
 
-1. Clone this repository
-2. Navigate to the function directory: `cd supabase/functions/edge_deployment`
-3. Build the function: `./build.sh`
-4. Deploy the function: `./build.sh --deploy`
+Send a POST request with the following JSON body:
 
-## API Endpoints
-
-### List all Edge Functions
-
-```
-GET /edge_deployment/list
-```
-
-Returns a list of all Edge Functions in your Supabase project.
-
-### Get details of a specific Edge Function
-
-```
-GET /edge_deployment/get/{slug}
-```
-
-Returns details of the specified Edge Function.
-
-### Get the body of a specific Edge Function
-
-```
-GET /edge_deployment/body/{slug}
-```
-
-Returns the body (code) of the specified Edge Function.
-
-### Create a new Edge Function
-
-```
-POST /edge_deployment/create
-```
-
-Creates a new Edge Function with the specified details.
-
-Request body:
 ```json
 {
   "slug": "function-name",
-  "name": "Function Name",
-  "code": "// Function code here",
-  "verify_jwt": false
+  "filePath": "path/to/function/index.ts"
 }
 ```
 
-### Update an existing Edge Function
+Example using curl:
 
+```bash
+curl -X POST 'https://[project-ref].supabase.co/functions/v1/edge_deployment' \
+  -H 'Authorization: Bearer [access-token]' \
+  -H 'Content-Type: application/json' \
+  -d '{"slug": "hello-world", "filePath": "supabase/functions/hello-world/index.ts"}'
 ```
-POST /edge_deployment/update
-```
 
-Updates an existing Edge Function with the specified details.
+## Response
 
-Request body:
+Success response:
+
 ```json
 {
-  "slug": "function-name",
-  "name": "New Function Name",
-  "code": "// Updated function code here",
+  "id": "4be5f143-61c2-411c-9b3b-8e32a8d11062",
+  "slug": "hello-world",
+  "name": "hello-world",
+  "version": 1,
+  "status": "ACTIVE",
+  "created_at": 1741704172280,
+  "updated_at": 1741704172280,
   "verify_jwt": true
 }
 ```
 
-### Delete an Edge Function
+Error response:
 
-```
-GET /edge_deployment/delete/{slug}
-```
-
-Deletes the specified Edge Function.
-
-### Help
-
-```
-GET /edge_deployment/help
+```json
+{
+  "error": "Error message here"
+}
 ```
 
-Returns information about the available endpoints.
+## Local Development
 
-## Development
-
-### Project Structure
-
-- `src/`: Source code directory
-  - `config.ts`: Configuration and environment variables
-  - `api-client.ts`: API client for interacting with the Supabase Edge Function API
-  - `commands.ts`: Command handlers for the Edge Function API
-  - `index.ts`: Main entry point for the Edge Function
-- `index.ts`: Entry point for the Edge Function
-- `deno.json`: Deno configuration file
-- `import_map.json`: Import map for dependencies
-- `build.sh`: Build script for bundling and deploying the Edge Function
-
-### Building and Deploying
-
-To build the function:
-
-```bash
-./build.sh
-```
-
-To build and deploy the function:
-
-```bash
-./build.sh --deploy
-```
-
-## License
-
-MIT
+1. Install Supabase CLI
+2. Set required environment variables
+3. Run `deno task start` to start the function locally
