@@ -52,9 +52,119 @@ interface Agent {
   input_guardrails?: Guardrail[];
 }
 
-interface Context {
+// Enhanced Context Types
+interface UserPreferences {
+  language: string;
+  notifications: boolean;
+  theme: string;
+}
+
+interface AuthInfo {
+  userId?: string;
+  sessionId?: string;
+  permissions?: string[];
+}
+
+interface AgentState {
+  preferences: UserPreferences;
+  auth: AuthInfo;
+  workflow_id?: string;
+  collected_info: Record<string, boolean>;
+  previous_actions: string[];
+  resources: Record<string, any>;
+  memory: Record<string, any>;
+}
+
+class Context {
   conversation: Message[];
-  state: Record<string, any>;
+  state: AgentState;
+  parent?: Context;
+
+  constructor(parent?: Context) {
+    this.conversation = [];
+    this.parent = parent;
+    this.state = {
+      preferences: {
+        language: "en",
+        notifications: true,
+        theme: "light"
+      },
+      auth: {},
+      collected_info: {},
+      previous_actions: [],
+      resources: {},
+      memory: {}
+    };
+  }
+
+  // Message Management
+  addMessage(message: Message): void {
+    this.conversation.push(message);
+  }
+
+  getConversationHistory(): Message[] {
+    return this.conversation;
+  }
+
+  // State Management
+  setState<K extends keyof AgentState>(key: K, value: AgentState[K]): void {
+    this.state[key] = value;
+  }
+
+  getState<K extends keyof AgentState>(key: K): AgentState[K] | undefined {
+    if (key in this.state) {
+      return this.state[key];
+    }
+    if (this.parent) {
+      return this.parent.getState(key);
+    }
+    return undefined;
+  }
+
+  // Resource Management
+  setResource(key: string, value: any): void {
+    this.state.resources[key] = value;
+  }
+
+  getResource(key: string): any {
+    return this.state.resources[key] || (this.parent?.getResource(key));
+  }
+
+  // Memory Management
+  remember(key: string, value: any): void {
+    this.state.memory[key] = value;
+  }
+
+  recall(key: string): any {
+    return this.state.memory[key] || (this.parent?.recall(key));
+  }
+
+  // Action Tracking
+  trackAction(action: string): void {
+    this.state.previous_actions.push(action);
+  }
+
+  getActions(): string[] {
+    return this.state.previous_actions;
+  }
+
+  // Information Collection Tracking
+  markCollected(field: string): void {
+    this.state.collected_info[field] = true;
+  }
+
+  isCollected(field: string): boolean {
+    return this.state.collected_info[field] || false;
+  }
+
+  // Workflow Management
+  initializeWorkflow(): void {
+    this.state.workflow_id = crypto.randomUUID();
+  }
+
+  getWorkflowId(): string | undefined {
+    return this.state.workflow_id;
+  }
 }
 
 interface AgentRunConfig {
@@ -99,6 +209,12 @@ async function runAgentLoop(
   context: Context,
   config?: AgentRunConfig
 ): Promise<string> {
+  // Initialize workflow if not exists
+  if (!context.getWorkflowId()) {
+    context.initializeWorkflow();
+    trace("Initialized workflow", { workflow_id: context.getWorkflowId() }, config);
+  }
+
   // Guardrail check on user input
   if (agent.input_guardrails) {
     for (const guardrail of agent.input_guardrails) {
@@ -111,7 +227,7 @@ async function runAgentLoop(
   }
 
   // Record user input
-  context.conversation.push({ role: "user", content: input });
+  context.addMessage({ role: "user", content: input });
   trace("User input recorded", { input }, config);
 
   let isComplete = false;
@@ -121,7 +237,7 @@ async function runAgentLoop(
     // Build the conversation messages with system prompt
     const messages: Message[] = [
       { role: "system", content: agent.instructions },
-      ...context.conversation,
+      ...context.getConversationHistory(),
     ];
     trace("Sending messages to OpenAI", { messages }, config);
 
@@ -152,7 +268,7 @@ async function runAgentLoop(
 
     if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
       // Record the assistant's tool call message
-      context.conversation.push({
+      context.addMessage({
         role: "assistant",
         content: responseMessage.content || "",
         name: agent.name,
@@ -173,11 +289,14 @@ async function runAgentLoop(
 
         const tool = agent.tools.find((t) => t.name === toolName);
         if (tool) {
+          // Track the tool execution
+          context.trackAction(`${toolName}_executed`);
+
           const toolResult = await tool.execute(toolParams);
           const toolCallId =
             toolCall.id || "tool_call_" + Math.random().toString(36).substr(2, 9);
           // Record tool result with matching call id
-          context.conversation.push({
+          context.addMessage({
             role: "tool",
             tool_call_id: toolCallId,
             name: toolName,
@@ -190,7 +309,7 @@ async function runAgentLoop(
       // Final assistant response (no tool call needed)
       finalOutput = responseMessage.content || "";
       isComplete = true;
-      context.conversation.push({
+      context.addMessage({
         role: "assistant",
         content: finalOutput,
         name: agent.name,
@@ -209,6 +328,12 @@ async function* runAgentLoopStreamed(
   context: Context,
   config?: AgentRunConfig
 ): AsyncGenerator<StreamEvent, void, unknown> {
+  // Initialize workflow if not exists
+  if (!context.getWorkflowId()) {
+    context.initializeWorkflow();
+    trace("Initialized workflow (stream)", { workflow_id: context.getWorkflowId() }, config);
+  }
+
   // Guardrail check on user input
   if (agent.input_guardrails) {
     for (const guardrail of agent.input_guardrails) {
@@ -221,14 +346,14 @@ async function* runAgentLoopStreamed(
   }
 
   // Record user input
-  context.conversation.push({ role: "user", content: input });
+  context.addMessage({ role: "user", content: input });
   trace("User input recorded (stream)", { input }, config);
 
   let isComplete = false;
   while (!isComplete) {
     const messages: Message[] = [
       { role: "system", content: agent.instructions },
-      ...context.conversation,
+      ...context.getConversationHistory(),
     ];
     trace("Sending messages to OpenAI (stream)", { messages }, config);
 
@@ -264,7 +389,7 @@ async function* runAgentLoopStreamed(
       // If the event signals a tool call, record it and execute the tool.
       if (event.tool_calls && event.tool_calls.length > 0) {
         // Record the assistant message that contains the tool call.
-        context.conversation.push({
+        context.addMessage({
           role: "assistant",
           content: event.delta || "",
           name: agent.name,
@@ -282,10 +407,13 @@ async function* runAgentLoopStreamed(
           trace("Executing tool (stream)", { toolName, toolParams }, config);
           const tool = agent.tools.find((t) => t.name === toolName);
           if (tool) {
+            // Track the tool execution
+            context.trackAction(`${toolName}_executed_stream`);
+
             const toolResult = await tool.execute(toolParams);
             const toolCallId =
               toolCall.id || "tool_call_" + Math.random().toString(36).substr(2, 9);
-            context.conversation.push({
+            context.addMessage({
               role: "tool",
               tool_call_id: toolCallId,
               name: toolName,
@@ -313,12 +441,15 @@ class AgentRunner {
     inputs: string[],
     config?: AgentRunConfig
   ): Promise<{ result: string; conversation: Message[] }> {
-    const context: Context = { conversation: [], state: {} };
+    const context = new Context();
     let result = "";
     for (const input of inputs) {
       result = await runAgentLoop(agent, input, context, config);
     }
-    return { result, conversation: context.conversation };
+    return { 
+      result, 
+      conversation: context.getConversationHistory(),
+    };
   }
 
   static run_streamed(
@@ -326,13 +457,41 @@ class AgentRunner {
     inputs: string[],
     config?: AgentRunConfig
   ): AsyncGenerator<StreamEvent, void, unknown> {
-    const context: Context = { conversation: [], state: {} };
+    const context = new Context();
     // For streaming, assume a single input for simplicity; you can extend to multiple inputs if needed.
     return runAgentLoopStreamed(agent, inputs[0], context, config);
   }
 }
 
 // ---------- Tool Implementations ----------
+
+// Handoff tool for transferring control to another agent
+const handoffTool: Tool = {
+  name: "handoff_to_agent",
+  description: "Transfer the conversation to another specialized agent",
+  parameters: {
+    type: "object",
+    properties: {
+      agent_name: {
+        type: "string",
+        description: "The name of the agent to hand off to",
+        enum: ["researcher", "database_expert", "customer_support"]
+      },
+      reason: {
+        type: "string",
+        description: "The reason for the handoff"
+      }
+    },
+    required: ["agent_name", "reason"]
+  },
+  execute: async (params) => {
+    return {
+      status: "success",
+      message: `Handing off to ${params.agent_name} agent. Reason: ${params.reason}`
+    };
+  }
+};
+
 const databaseQueryTool: Tool = {
   name: "database_query",
   description: "Query the Supabase database",
@@ -368,8 +527,8 @@ const databaseQueryTool: Tool = {
 const researchAgent: Agent = {
   name: "researcher",
   instructions:
-    "You are a research agent that finds information using web search and analyzes it. Be thorough and cite your sources. When providing information from web searches, include the citations in your response.",
-  tools: [],
+    "You are a research agent that finds information using web search and analyzes it. Be thorough and cite your sources. When providing information from web searches, include the citations in your response. If a query requires database access or customer support, use the handoff tool to transfer to the appropriate agent.",
+  tools: [handoffTool],
   model: "gpt-4o-search-preview",
   input_guardrails: [defaultGuardrail],
 };
@@ -377,8 +536,18 @@ const researchAgent: Agent = {
 const databaseAgent: Agent = {
   name: "database_expert",
   instructions:
-    "You are a database expert that can query and analyze data from the database. Provide clear explanations of your findings.",
-  tools: [databaseQueryTool],
+    "You are a database expert that can query and analyze data from the database. Provide clear explanations of your findings. If a query requires research or customer support, use the handoff tool to transfer to the appropriate agent.",
+  tools: [databaseQueryTool, handoffTool],
+  model: "gpt-4o-mini",
+  input_guardrails: [defaultGuardrail],
+};
+
+// Customer support agent for handling support-related queries
+const customerSupportAgent: Agent = {
+  name: "customer_support",
+  instructions:
+    "You are a customer support agent that helps users with their inquiries. If a query requires technical database access or research, use the handoff tool to transfer to the appropriate specialized agent.",
+  tools: [handoffTool],
   model: "gpt-4o-mini",
   input_guardrails: [defaultGuardrail],
 };
@@ -389,7 +558,10 @@ async function orchestrateAgents(
   agentMap: Record<string, Agent>,
   config?: AgentRunConfig
 ) {
-  const context: Context = { conversation: [], state: {} };
+  // Create a new context with workflow tracking
+  const context = new Context();
+  context.initializeWorkflow();
+  trace("Orchestration started", { workflow_id: context.getWorkflowId() }, config);
 
   // Determine agent by keyword matching
   let currentAgentName = "researcher";
@@ -399,20 +571,44 @@ async function orchestrateAgents(
     input.toLowerCase().includes("query")
   ) {
     currentAgentName = "database_expert";
+  } else if (
+    input.toLowerCase().includes("support") ||
+    input.toLowerCase().includes("help") ||
+    input.toLowerCase().includes("issue")
+  ) {
+    currentAgentName = "customer_support";
   }
+  
   let currentAgent = agentMap[currentAgentName];
   let result = await runAgentLoop(currentAgent, input, context, config);
 
-  // If result indicates further database info is needed, hand off
-  const needsDatabaseInfo =
-    result.toLowerCase().includes("need database information") ||
-    result.toLowerCase().includes("check the database");
+  // Check if handoff was requested
+  const handoffCall = context.getConversationHistory().find(msg => 
+    msg.role === "tool" && 
+    msg.name === "handoff_to_agent"
+  );
 
-  if (needsDatabaseInfo && currentAgentName !== "database_expert") {
-    const handoffInput = `Based on the previous research: ${result}, please provide database information.`;
-    result = await runAgentLoop(agentMap["database_expert"], handoffInput, context, config);
+  if (handoffCall) {
+    const handoffData = JSON.parse(handoffCall.content);
+    if (handoffData.status === "success") {
+      const targetAgent = agentMap[handoffData.agent_name];
+      if (targetAgent) {
+        // Create child context for handoff
+        const handoffContext = new Context(context);
+        handoffContext.setState("workflow_id", context.getWorkflowId());
+        
+        const handoffInput = `Previous context: ${result}\n\nNew request: ${input}`;
+        result = await runAgentLoop(targetAgent, handoffInput, handoffContext, config);
+      }
+    }
   }
-  return { result, conversation: context.conversation };
+
+  return { 
+    result, 
+    conversation: context.getConversationHistory(),
+    workflow_id: context.getWorkflowId(),
+    actions: context.getActions()
+  };
 }
 
 // ---------- Main Handler for Supabase Edge Function ----------
@@ -431,6 +627,7 @@ serve(async (req) => {
     const agentMap = {
       researcher: researchAgent,
       database_expert: databaseAgent,
+      customer_support: customerSupportAgent,
     };
 
     // If streaming flag is set, use run_streamed; otherwise, use run.
