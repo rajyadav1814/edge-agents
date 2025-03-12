@@ -33,7 +33,7 @@ const server = new OpenAIAgentMCPServer({
     level: 'debug'
   },
   tools: {
-    enabled: ['research', 'database_query', 'customer_support', 'handoff_to_agent', 'summarize'],
+    enabled: ['research', 'database_query', 'customer_support', 'handoff_to_agent', 'summarize', 'websearch'],
     config: {
       database: {
         projectId: SUPABASE_PROJECT_ID,

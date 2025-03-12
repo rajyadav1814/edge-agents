@@ -14,6 +14,7 @@ import { ResearchTool } from './tools/research';
 import { DatabaseTool } from './tools/database';
 import { SupportTool } from './tools/support';
 import { SummarizeTool } from './tools/summarize';
+import { WebSearchTool } from './tools/websearch';
 
 export class OpenAIAgentMCPServer {
   private server: Server;
@@ -80,6 +81,9 @@ export class OpenAIAgentMCPServer {
               console.error('Attempting to register tool: summarize');
             }
             this.toolRegistry.registerTool(summarizeTool);
+            break;
+          case 'websearch':
+            this.toolRegistry.registerTool(new WebSearchTool(config.openai.apiKey));
             break;
           default:
             if (this.tracingEnabled) {

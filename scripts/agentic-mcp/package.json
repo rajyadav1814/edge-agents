@@ -1,6 +1,6 @@
 {
   "name": "@agentics.org/agentic-mcp",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "Agentic MCP Server with advanced AI capabilities including web search, summarization, database querying, and customer support. Built by the Agentics Foundation to enhance AI agents with powerful tools for research, content generation, and data analysis.",
   "main": "dist/index.js",
   "bin": {
@@ -36,8 +36,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/agentics/openai-mcp.git"
+    "url": "https://github.com/agenticsorg/edge-agents.git",
+    "directory": "scripts/agentic-mcp"
   },
+  "homepage": "https://agentics.org",
   "publishConfig": {
     "access": "public"
   },

@@ -1,5 +1,8 @@
 # @agentics.org/agentic-mcp
 
+[![npm version](https://img.shields.io/npm/v/@agentics.org/agentic-mcp.svg)](https://www.npmjs.com/package/@agentics.org/agentic-mcp)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue.svg)](https://github.com/agenticsorg/edge-agents/tree/main/scripts/agentic-mcp)
+
 ![Agentics Foundation](https://img.shields.io/badge/Agentics-Foundation-blue)
 ![Version](https://img.shields.io/npm/v/@agentics.org/agentic-mcp)
 ![License](https://img.shields.io/npm/l/@agentics.org/agentic-mcp)
