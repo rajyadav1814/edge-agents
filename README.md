@@ -95,31 +95,6 @@ Our edge functions fall into several categories:
 - [hello-world](./docs/utility_functions/hello-world.md) - Simple example function
 - [test-function](./docs/utility_functions/test-function.md) - Testing utilities
 
-## Agentic MCP Package
-
-The `scripts/agentic-mcp/` package provides a powerful Model Context Protocol server with advanced AI capabilities. Built on the OpenAI Agents API/SDK using TypeScript, this package implements a comprehensive MCP server that enhances AI agents with sophisticated tools and orchestration capabilities:
-
-### Core Capabilities
-
-- **Web Search Research**: Generate comprehensive reports with up-to-date information from the web
-- **Smart Summarization**: Create concise, well-structured summaries with key points and citations
-- **Database Integration**: Query and analyze data from Supabase databases with structured results
-- **Customer Support**: Handle inquiries and provide assistance with natural language understanding
-- **Agent Orchestration**: Seamlessly transfer control between specialized agents based on query needs
-- **Multi-Agent Workflows**: Create complex agent networks with parent-child relationships
-- **Context Management**: Sophisticated state tracking with memory, resources, and workflow management
-
-### Installation
-
-```bash
-# Install globally
-npm install -g @agentics.org/agentic-mcp
-
-# Or as a project dependency
-npm install @agentics.org/agentic-mcp
-```
-
-For more details on the Agentic MCP package, see the [package README](./scripts/agentic-mcp/README.md).
 
 ## Key Features
 
