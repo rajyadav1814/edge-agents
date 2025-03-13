@@ -13,9 +13,42 @@ Agentic Edge Functions combine serverless edge computing with autonomous AI capa
 
 This infrastructure powers the Agentic Dashboard and Agentic Inbox systems at [agentics.org/dashboard](https://agentics.org/dashboard) and is being actively developed in the open, welcoming community contributions.
 
+
+# ♾️ Agentic MCP
+
+A powerful Model Context Protocol server with advanced AI capabilities by the Agentics Foundation. Built on the OpenAI Agents API/SDK using TypeScript, this package implements a comprehensive MCP server that enhances AI agents with sophisticated tools and orchestration capabilities:
+
+## 🌟 Core Capabilities
+
+- **🔍 Web Search Research**: Generate comprehensive reports with up-to-date information from the web using `gpt-4o-search-preview`
+- **📝 Smart Summarization**: Create concise, well-structured summaries with key points and citations
+- **🗄️ Database Integration**: Query and analyze data from Supabase databases with structured results
+- **👥 Customer Support**: Handle inquiries and provide assistance with natural language understanding
+- **🔄 Agent Orchestration**: Seamlessly transfer control between specialized agents based on query needs
+- **🔀 Multi-Agent Workflows**: Create complex agent networks with parent-child relationships and shared context
+- **🧠 Context Management**: Sophisticated state tracking with memory, resources, and workflow management
+- **🛡️ Guardrails System**: Configurable input and output validation to ensure safe and appropriate responses
+- **📊 Tracing & Debugging**: Comprehensive logging and debugging capabilities for development
+- **🔌 Edge Function Deployment**: Ready for deployment as Supabase Edge Functions
+- **🔄 Streaming Support**: Real-time streaming responses for interactive applications
+
+## 🚀 Installation
+
+```bash
+# Install globally
+npm install -g @agentics.org/agentic-mcp
+
+# Or as a project dependency
+npm install @agentics.org/agentic-mcp
+```
+
+
+
 ## Overview
 
-This repository contains edge functions implementing various patterns for autonomous agent deployment and operation. Built on Supabase's serverless infrastructure and Deno runtime, these functions enable scalable, efficient, and globally distributed agent capabilities.
+This repository contains edge functions implementing various patterns for autonomous agent deployment and operation. Built on Supabase's serverless infrastructure and Deno runtime, these functions enable scalable, efficient, and globally distributed agent capabilities. 
+
+Additionally, it includes the `scripts/agentic-mcp/` package, a powerful Model Context Protocol server that enhances AI agents with advanced tools and orchestration capabilities.
 
 ## What are Edge Functions?
 
@@ -61,6 +94,32 @@ Our edge functions fall into several categories:
 - [meta-function-generator](./docs/utility_functions/meta-function-generator.md) - Dynamic function generation
 - [hello-world](./docs/utility_functions/hello-world.md) - Simple example function
 - [test-function](./docs/utility_functions/test-function.md) - Testing utilities
+
+## Agentic MCP Package
+
+The `scripts/agentic-mcp/` package provides a powerful Model Context Protocol server with advanced AI capabilities. Built on the OpenAI Agents API/SDK using TypeScript, this package implements a comprehensive MCP server that enhances AI agents with sophisticated tools and orchestration capabilities:
+
+### Core Capabilities
+
+- **Web Search Research**: Generate comprehensive reports with up-to-date information from the web
+- **Smart Summarization**: Create concise, well-structured summaries with key points and citations
+- **Database Integration**: Query and analyze data from Supabase databases with structured results
+- **Customer Support**: Handle inquiries and provide assistance with natural language understanding
+- **Agent Orchestration**: Seamlessly transfer control between specialized agents based on query needs
+- **Multi-Agent Workflows**: Create complex agent networks with parent-child relationships
+- **Context Management**: Sophisticated state tracking with memory, resources, and workflow management
+
+### Installation
+
+```bash
+# Install globally
+npm install -g @agentics.org/agentic-mcp
+
+# Or as a project dependency
+npm install @agentics.org/agentic-mcp
+```
+
+For more details on the Agentic MCP package, see the [package README](./scripts/agentic-mcp/README.md).
 
 ## Key Features
 
