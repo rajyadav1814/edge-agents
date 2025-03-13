@@ -1,0 +1,118 @@
+[0;34m=====================================[0m
+[0;34m   OpenAI Vector Store API Test Script   [0m
+[0;34m=====================================[0m
+[1;33mScript directory:[0m /workspaces/edge-agents/scripts/agents/openai-agent/scripts
+[1;33mParent directory:[0m /workspaces/edge-agents/scripts/agents/openai-agent
+[1;33mENV file:[0m /workspaces/edge-agents/scripts/agents/openai-agent/.env
+[1;33mTest file:[0m /workspaces/edge-agents/scripts/agents/openai-agent/assets/example.pdf
+[0;34m=====================================[0m
+[0;34m[SETUP][0m Loading environment variables from .env file...
+[1;33mUsing VITE_OPENAI_API_KEY as OPENAI_API_KEY[0m
+[0;32mOPENAI_API_KEY is set. Testing Vector Store API...[0m
+[0;34m=====================================[0m
+[0;34m[STEP 1][0m Uploading test file to OpenAI API...
+[1;33mFile:[0m /workspaces/edge-agents/scripts/agents/openai-agent/assets/example.pdf (5.3M in size)
+[1;33mPurpose:[0m assistants
+[1;33mSending request...[0m
+[0;32mFile upload successful![0m
+[1;33mResponse:[0m {
+  "object": "file",
+  "id": "file-43eosF8EZMPntm97SMTYVN",
+  "purpose": "assistants",
+  "filename": "example.pdf",
+  "bytes": 5459519,
+  "created_at": 1741881175,
+  "expires_at": null,
+  "status": "processed",
+  "status_details": null
+}
+
+[0;32mFile ID:[0m file-43eosF8EZMPntm97SMTYVN
+
+[0;34m[STEP 2][0m Creating a vector store...
+[1;33mVector store name:[0m test-vector-store-1741881175
+[1;33mSending request...[0m
+[0;32mVector store creation successful![0m
+[1;33mResponse:[0m {
+  "id": "vs_67d2ff580d488191acfef6c45ba85053",
+  "object": "vector_store",
+  "created_at": 1741881176,
+  "name": "test-vector-store-1741881175",
+  "usage_bytes": 0,
+  "file_counts": {
+    "in_progress": 0,
+    "completed": 0,
+    "failed": 0,
+    "cancelled": 0,
+    "total": 0
+  },
+  "status": "completed",
+  "expires_after": null,
+  "expires_at": null,
+  "last_active_at": 1741881176,
+  "metadata": {}
+}
+
+[0;32mVector Store ID:[0m vs_67d2ff580d488191acfef6c45ba85053
+
+Step 3: Adding file to vector store...
+File added to vector store with status: in_progress
+Response: {
+  "id": "file-43eosF8EZMPntm97SMTYVN",
+  "object": "vector_store.file",
+  "usage_bytes": 0,
+  "created_at": 1741881177,
+  "vector_store_id": "vs_67d2ff580d488191acfef6c45ba85053",
+  "status": "in_progress",
+  "last_error": null,
+  "chunking_strategy": {
+    "type": "static",
+    "static": {
+      "max_chunk_size_tokens": 800,
+      "chunk_overlap_tokens": 400
+    }
+  },
+  "attributes": {}
+}
+
+The file is being processed. This is normal and not an error.
+
+Step 4: Checking file processing status...
+File status check successful!
+Response: {
+  "object": "list",
+  "data": [
+    {
+      "id": "file-43eosF8EZMPntm97SMTYVN",
+      "object": "vector_store.file",
+      "usage_bytes": 0,
+      "created_at": 1741881177,
+      "vector_store_id": "vs_67d2ff580d488191acfef6c45ba85053",
+      "status": "in_progress",
+      "last_error": null,
+      "chunking_strategy": {
+        "type": "static",
+        "static": {
+          "max_chunk_size_tokens": 800,
+          "chunk_overlap_tokens": 400
+        }
+      },
+      "attributes": {}
+    }
+  ],
+  "first_id": "file-43eosF8EZMPntm97SMTYVN",
+  "last_id": "file-43eosF8EZMPntm97SMTYVN",
+  "has_more": false
+}
+
+The file is still being processed. This is normal and not an error.
+
+Step 5: Waiting for file processing to complete...
+Checking status every 5 seconds...
+
+Attempt 1 of 12...
+Files still processing. Waiting 5 seconds...
+Attempt 2 of 12...
+Files still processing. Waiting 5 seconds...
+Attempt 3 of 12...
+Files still processing. Waiting 5 seconds...
