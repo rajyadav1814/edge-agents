@@ -42,7 +42,7 @@ interface SearchResults {
   answer?: string | null;
   status: {
     vector_store: boolean;
-    web_search: boolean;
+    web_search: boolean | string;
   };
 }
 
@@ -206,7 +206,10 @@ serve(async (req: Request) => {
         if (webSearch?.enabled) {
           try {
             const webResponse = await openai.chat.completions.create({
-              model: "gpt-4",
+              model: "gpt-4o-search-preview",
+              web_search_options: {
+                search_context_size: webSearch.contextSize || "medium"
+              },
               messages: [{
                 role: "user",
                 content: messages[messages.length - 1].content
@@ -216,12 +219,16 @@ serve(async (req: Request) => {
             if (webResponse.choices[0]?.message?.content) {
               results.web_results = [{
                 type: 'web',
-                content: webResponse.choices[0].message.content
+                content: webResponse.choices[0].message.content,
+              annotations: webResponse.choices[0].message.annotations || []
               }];
 
               // Save web results to vector store
-              const file = new File(
-                [webResponse.choices[0].message.content],
+              const timestamp = new Date().toISOString();
+            const content = `Web Search Results (${timestamp})\n\n${webResponse.choices[0].message.content}`;
+            
+            const file = new File(
+                [content],
                 `web-search-${Date.now()}.txt`,
                 { type: 'text/plain' }
               );
@@ -235,7 +242,7 @@ serve(async (req: Request) => {
                 file_id: uploadedFile.id
               });
 
-              results.status.web_search = true;
+              results.status.web_search = "✨ Web search results saved to vector store! 🎉";
             }
           } catch (error) {
             console.error("Web search error:", error);
@@ -313,7 +320,10 @@ serve(async (req: Request) => {
         if (webSearch?.enabled) {
           try {
             const webResponse = await openai.chat.completions.create({
-              model: "gpt-4",
+              model: "gpt-4o-search-preview",
+              web_search_options: {
+                search_context_size: webSearch.contextSize || "medium"
+              },
               messages: [{
                 role: "user",
                 content: question
@@ -323,12 +333,16 @@ serve(async (req: Request) => {
             if (webResponse.choices[0]?.message?.content) {
               results.web_results = [{
                 type: 'web',
-                content: webResponse.choices[0].message.content
+                content: webResponse.choices[0].message.content,
+              annotations: webResponse.choices[0].message.annotations || []
               }];
 
               // Save web results to vector store
-              const file = new File(
-                [webResponse.choices[0].message.content],
+              const timestamp = new Date().toISOString();
+            const content = `Web Search Results (${timestamp})\n\n${webResponse.choices[0].message.content}`;
+            
+            const file = new File(
+                [content],
                 `web-search-${Date.now()}.txt`,
                 { type: 'text/plain' }
               );
@@ -342,7 +356,7 @@ serve(async (req: Request) => {
                 file_id: uploadedFile.id
               });
 
-              results.status.web_search = true;
+              results.status.web_search = "✨ Web search results saved to vector store! 🎉";
             }
           } catch (error) {
             console.error("Web search error:", error);
