@@ -1,7 +1,7 @@
 import { serve } from "std/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { load } from "std/dotenv/mod.ts";
-import { OpenAI } from "npm:openai@^4.28.0";
+import OpenAI from "openai";
 
 // Load environment variables
 await load({ export: true });
@@ -26,24 +26,6 @@ interface PRFile {
   additions?: number;
   deletions?: number;
   status?: string;
-}
-
-interface SearchResult {
-  vector_results: Array<{
-    type: string;
-    url: string;
-    title: string;
-    content: string;
-  }>;
-  web_results: Array<{
-    type: string;
-    content: string;
-    annotations?: Array<unknown>;
-  }>;
-  status: {
-    vector_store: boolean;
-    web_search: boolean;
-  };
 }
 
 // GitHub API client using existing edge function
@@ -132,38 +114,7 @@ const github = {
   },
 };
 
-// Vector store and web search integration
-const contextManager = {
-  async createVectorStore(name: string) {
-    const vectorStore = await openai.vectorStores.create({ name });
-    return vectorStore.id;
-  },
-
-  async searchContext(vectorStoreId: string, query: string, useWebSearch = true) {
-    const response = await fetch(`${EDGE_FUNCTION_URL}/vector-file`, {
-      method: 'POST',
-      headers: {
-        "Authorization": `Bearer ${GITHUB_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ vectorStoreId, query, useWebSearch })
-    });
-    return await response.json() as SearchResult;
-  },
-
-  async saveToVectorStore(vectorStoreId: string, content: string, filename: string) {
-    const file = new File([content], filename, { type: 'text/plain' });
-    const uploadedFile = await openai.files.create({
-      file,
-      purpose: "assistants"
-    });
-    await openai.vectorStores.files.create(vectorStoreId, {
-      file_id: uploadedFile.id
-    });
-  }
-};
-
-// Analyze PR using Code Interpreter and web search
+// Analyze PR using Code Interpreter
 async function analyzePullRequest(
   owner: string,
   repo: string,
@@ -176,11 +127,6 @@ async function analyzePullRequest(
     // Get PR details
     const pr = await github.getPullRequest(owner, repo, prNumber);
     const prFiles = await github.getPullRequestFiles(owner, repo, prNumber);
-    
-    // Create vector store
-    const vectorStoreId = await contextManager.createVectorStore(
-      `pr-${owner}-${repo}-${prNumber}`
-    );
     
     // Collect file contents
     const codeFiles: PRFile[] = [];
@@ -199,25 +145,11 @@ async function analyzePullRequest(
             sha: fileContent.sha,
             ...file
           });
-          
-          // Add to vector store
-          await contextManager.saveToVectorStore(
-            vectorStoreId,
-            fileContent.content,
-            file.filename
-          );
         } catch (error) {
           console.error(`Error fetching content for ${file.filename}:`, error);
         }
       }
     }
-    
-    // Search for similar patterns and best practices
-    const searchResults = await contextManager.searchContext(
-      vectorStoreId,
-      `Code patterns and best practices for: ${prFiles.map((f: any) => f.filename).join(", ")}`,
-      true
-    );
     
     // Create analysis assistant
     const assistant = await openai.beta.assistants.create({
@@ -230,10 +162,6 @@ async function analyzePullRequest(
         4. Best practices violations
         5. Potential bugs
         
-        Consider these additional resources:
-        ${searchResults.vector_results.map((r: any) => `- ${r.content}`).join("\n")}
-        ${searchResults.web_results.map((r: any) => `- ${r.content}`).join("\n")}
-        
         For each issue found:
         - Explain the problem clearly
         - Suggest specific fixes with code examples
@@ -242,10 +170,7 @@ async function analyzePullRequest(
         If you can fix issues automatically, provide the complete fixed file content.
       `,
       model: modelName,
-      tools: [
-        { type: "code_interpreter" },
-        { type: "retrieval" }
-      ],
+      tools: [{ type: "code_interpreter" }],
     });
     
     // Create thread
@@ -263,7 +188,7 @@ async function analyzePullRequest(
         Description: ${pr.body || "No description provided"}
         
         Changed files:
-        ${prFiles.map((f: any) => `- ${f.filename} (${f.additions} additions, ${f.deletions} deletions)`).join("\n")}
+        ${prFiles.map((f: { filename: string; additions: number; deletions: number }) => `- ${f.filename} (${f.additions} additions, ${f.deletions} deletions)`).join("\n")}
         
         Code files:
         ${codeFiles.map(f => `
@@ -448,11 +373,109 @@ async function analyzePullRequest(
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const { owner, repo, prNumber, modelName = "gpt-4-turbo-preview" } = await req.json();
+    const { owner, repo, prNumber, modelName = "gpt-4-turbo-preview", code } = await req.json();
+
+    if (code) {
+      // Create analysis assistant
+      const assistant = await openai.beta.assistants.create({
+        name: "Code Analyzer",
+        instructions: `
+          You are an expert code analyzer and fixer. Your task is to:
+          1. Execute and analyze the provided code
+          2. Identify any issues or potential improvements
+          3. Suggest and implement fixes
+          4. Explain your reasoning
+          
+          Be thorough in your analysis and provide detailed explanations.
+          If you encounter any errors, try to fix them and explain your solution.
+        `,
+        model: "gpt-4o-mini",
+        tools: [{ type: "code_interpreter" }],
+      });
+      
+      // Create thread
+      const thread = await openai.beta.threads.create();
+      
+      // Add code to thread
+      await openai.beta.threads.messages.create(thread.id, {
+        role: "user",
+        content: `Please analyze this code:\n\n\`\`\`\n${code}\n\`\`\``,
+      });
+      
+      // Run analysis
+      const run = await openai.beta.threads.runs.create(thread.id, {
+        assistant_id: assistant.id,
+      });
+      
+      // Poll for completion
+      let runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+      while (runStatus.status !== "completed" && runStatus.status !== "failed") {
+        console.log(`Run status: ${runStatus.status}`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        runStatus = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+      }
+      
+      if (runStatus.status === "failed") {
+        // Try with a different model
+        console.log("First attempt failed, trying with GPT-4...");
+        
+        const retryAssistant = await openai.beta.assistants.create({
+          name: "Code Analyzer (Retry)",
+          instructions: `
+            You are an expert code analyzer and fixer. Your task is to:
+            1. Execute and analyze the provided code
+            2. Identify any issues or potential improvements
+            3. Suggest and implement fixes
+            4. Explain your reasoning
+            
+            Be thorough in your analysis and provide detailed explanations.
+            If you encounter any errors, try to fix them and explain your solution.
+          `,
+          model: "gpt-4",
+          tools: [{ type: "code_interpreter" }],
+        });
+        
+        const retryRun = await openai.beta.threads.runs.create(thread.id, {
+          assistant_id: retryAssistant.id,
+        });
+        
+        runStatus = await openai.beta.threads.runs.retrieve(thread.id, retryRun.id);
+        while (runStatus.status !== "completed" && runStatus.status !== "failed") {
+          console.log(`Retry run status: ${runStatus.status}`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          runStatus = await openai.beta.threads.runs.retrieve(thread.id, retryRun.id);
+        }
+        
+        if (runStatus.status === "failed") {
+          throw new Error(`Analysis failed: ${runStatus.last_error}`);
+        }
+      }
+      
+      // Get the messages
+      const messages = await openai.beta.threads.messages.list(thread.id);
+      const latestMessage = messages.data.filter(m => m.role === "assistant")[0];
+      
+      if (!latestMessage) {
+        throw new Error("No response from assistant");
+      }
+      
+      // Extract analysis
+      let analysis = "";
+      for (const contentPart of latestMessage.content) {
+        if (contentPart.type === "text") {
+          analysis += contentPart.text.value + "\n\n";
+        }
+      }
+      
+      return new Response(
+        JSON.stringify({ result: analysis }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!owner || !repo || !prNumber) {
       return new Response(
@@ -468,10 +491,10 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
-  } catch (error: any) {
-    console.error("Error:", error);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
