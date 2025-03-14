@@ -110,32 +110,19 @@ async function searchFiles(vectorStoreId: string, query: string, maxResults = 5,
     // Perform web search if enabled
     if (useWebSearch) {
       const webResponse = await openai.chat.completions.create({
-        model: "gpt-4-turbo-preview",
+        model: "gpt-4o-search-preview",
         messages: [{
           role: "user",
           content: query
         }],
-        tools: [{
-          type: "function",
-          function: {
-            name: "web_search",
-            description: "Search the web for information",
-            parameters: {
-              type: "object",
-              properties: {
-                query: { type: "string" }
-              },
-              required: ["query"]
-            }
-          }
-        }]
+        web_search_options: {}
       });
 
       if (webResponse.choices[0]?.message?.tool_calls?.[0]) {
         results.web_results = [{
           type: 'web',
-          content: webResponse.choices[0].message.content
-        }];
+          content: webResponse.choices[0].message.content,
+          annotations: webResponse.choices[0].message.annotations || [] }];
       }
     }
 
