@@ -1,9 +1,0 @@
-{
-  "tasks": {
-    "start": "deno run --allow-net --allow-env --allow-read index.ts"
-  },
-  "imports": {
-    "@openai/openai": "npm:openai@^4.28.0",
-    "std/": "https://deno.land/std@0.215.0/"
-  }
-}
