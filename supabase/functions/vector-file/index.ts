@@ -256,7 +256,7 @@ serve(async (req: Request) => {
         ].join("\n\n");
 
         const chatResponse = await openai.chat.completions.create({
-          model: "gpt-4",
+          model: "gpt-4o-mini",
           messages: [
             {
               role: "system",
@@ -370,7 +370,7 @@ serve(async (req: Request) => {
         ].join("\n\n");
 
         const answerResponse = await openai.chat.completions.create({
-          model: "gpt-4",
+          model: "gpt-4o-mini",
           messages: [
             {
               role: "system",
