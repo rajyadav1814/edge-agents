@@ -1,9 +1,9 @@
 {
   "tasks": {
-    "start": "deno run --allow-net --allow-env --allow-read index.ts",
-    "dev": "deno run --watch --allow-net --allow-env --allow-read index.ts"
+    "test": "deno test --allow-env --allow-net --allow-read test.ts",
+    "deploy": "supabase functions deploy vector-file --project-ref your-project-ref"
   },
   "imports": {
-    "@openai/openai": "jsr:@openai/openai@^0.1.1"
+    "@openai/openai": "jsr:@openai/openai@^0.5.0"
   }
 }
