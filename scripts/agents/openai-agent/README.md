@@ -1,148 +1,380 @@
-# OpenAI Agent Development Environment
+# Vector Agent: AI-Powered Document Intelligence
 
-This directory contains the development environment for the OpenAI Agent SDK. It serves as a testing ground for new features and improvements before they are integrated into the Supabase Edge Function.
+😎 Vector Agent: Built with OpenAI's new Vector & Web Search, this autonomous agent turns static docs into auto updating knowledge hubs.
 
-## Directory Structure
+I built this in under an hour on todays Ai Hacker League live Coding session. Crazy. 
 
-```
-openai-agent/
-├── .env                 # Environment variables configuration
-├── agent.ts            # Main agent implementation
-├── deno.json           # Deno configuration
-├── deno.lock           # Deno lock file
-└── supabase/          # Supabase-related files
-```
+Imagine uploading thousands of PDFs, docs, and markdown files, then asking complex questions and getting precise, ranked responses, not just from your stored documents but fused with real-time web data for a complete answer.
 
-## Environment Variables
+## How It Works
 
-The `.env` file contains all necessary configuration:
+At its core, this is a vector search agent that transforms unstructured files into a dynamic knowledge base. Instead of dumping files into a blob of data, you create vector stores, self-contained repositories with expiration rules to keep information relevant. 
 
-- OpenAI Configuration
-  - `OPENAI_API_KEY`: OpenAI API key
-  - `OPENROUTER_MODEL`: Model configuration for OpenRouter
-  - `OPENROUTER_API_KEY`: API key for OpenRouter
+You then upload text, PDFs, code (entire repositories), or documents, and the system chunks them into searchable contextual segments, enabling deep, context-aware retrieval rather than just surface-level keyword matching. 
 
-- Supabase Configuration
-  - `SUPABASE_URL`: Supabase project URL
-  - `SUPABASE_ANON_KEY`: Anonymous client key
-  - `SUPABASE_PROJECT_ID`: Project identifier
-  - Various other Supabase-related keys and configurations
+Think not just saving your documents or code, but enabling real time & continuous updates to contextually related information. This could include related news, code vulnerabilities, case law, competitors, basically things that change over time.
 
-## Development
+The hybrid search blends vector-based embeddings with keyword ranking, giving you the best of both worlds, semantic understanding with precision tuning. The agent automatically handles this. 
 
-### Running Locally
+The Web search integration pulls in real-time updates, ensuring responses stay accurate and relevant, eliminating AI hallucinations.
 
-```bash
-# Start the development server
-deno run --allow-net --allow-env agent.ts
+You can chat with your data. 
 
-# With debug logging enabled
-LLM_DEBUG=true AGENT_LIFECYCLE=true TOOL_DEBUG=true deno run --allow-net --allow-env agent.ts
-```
+Ask questions, get responses grounded in your documents, and refine results dynamically, turning traditional search into something that feels as natural as messaging a deep research assistant. 
 
-### Testing Features
+Plus, real-time indexing ensures that newly added files become immediately searchable within seconds.
 
-The agent supports:
+### Real World Example: Law Firm Knowledge Management Agent
 
-1. Web Search
-   - Uses `gpt-4o-search-preview` model
-   - Location-aware search capabilities
-   - Citation handling
+A legal team needs to find key precedents for intellectual property disputes. Instead of manually searching through case files, they ask: "What are the most relevant rulings in the last five years?" 
 
-2. Database Operations
-   - Supabase database integration
-   - Query and analysis capabilities
-   - Error handling
+The system:
+1. Searches stored case law in their vector database.
+2. Cross-checks recent court decisions using OpenAI's web search capability.
+3. Returns a ranked, high-confidence answer, ensuring compliance with legal and ethical/legal guardrails.
 
-3. Content Filtering
-   - Default guardrail implementation
-   - Custom guardrail support
+## Features
 
-4. Streaming Support
-   - Real-time response streaming
-   - Tool execution in stream mode
+- Create and manage vector stores with expiration policies
+- Upload and index files with customizable chunking
+- Direct semantic search with filters and ranking options
+- Conversational search with context
+- Question answering with context
+- Web search integration with result fusion
+- Hybrid search combining vector and keyword matching
+- Real-time content updates and reindexing
+- Customizable result ranking and scoring
 
-## Relationship to SDK
+## Prerequisites
 
-This development environment is used to test and refine features before they are integrated into the [OpenAI Agent SDK](../../supabase/functions/openai-agent-sdk/). The main differences are:
+- Supabase project
+- OpenAI API key
+- Environment variable: `OPENAI_API_KEY`
 
-1. Development Focus
-   - This environment: Feature development and testing
-   - SDK: Production-ready implementation
+## Endpoints
 
-2. Configuration
-   - This environment: Local environment variables
-   - SDK: Supabase Edge Function environment
+### Create Vector Store
 
-3. Deployment
-   - This environment: Local development server
-   - SDK: Supabase Edge Function deployment
-
-## Contributing
-
-1. Make changes in this development environment
-2. Test thoroughly using the provided tools
-3. Once stable, port changes to the SDK
-4. Update documentation in both locations
-5. Submit pull request
-
-## Testing
-
-Test your changes using the provided curl commands:
+Creates a new vector store for indexing files.
 
 ```bash
-# Basic query
-curl -i -X POST "http://localhost:8000" \
+curl -X POST "https://[PROJECT_REF].supabase.co/functions/v1/vector-file/create-store" \
+  -H "Authorization: Bearer [ANON_KEY]" \
   -H "Content-Type: application/json" \
   -d '{
-    "input": "What are the latest developments in AI?"
-  }'
-
-# Web search with location
-curl -i -X POST "http://localhost:8000" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input": "What are the best restaurants near Times Square?",
-    "web_search_options": {
-      "user_location": {
-        "type": "approximate",
-        "approximate": {
-          "country": "US",
-          "city": "New York",
-          "region": "New York"
-        }
-      }
+    "name": "my-documents",
+    "expiresAfter": {
+      "anchor": "last_active_at",
+      "days": 7
     }
   }'
+```
 
-# Database query
-curl -i -X POST "http://localhost:8000" \
+Response:
+```json
+{
+  "id": "vs_..."
+}
+```
+
+### Upload File
+
+Upload a file to be indexed. Supports both local files and URLs.
+
+```bash
+# Local file
+curl -X POST "https://[PROJECT_REF].supabase.co/functions/v1/vector-file/upload-file" \
+  -H "Authorization: Bearer [ANON_KEY]" \
+  -F "file=@/path/to/file.pdf"
+
+# URL
+curl -X POST "https://[PROJECT_REF].supabase.co/functions/v1/vector-file/upload-file" \
+  -H "Authorization: Bearer [ANON_KEY]" \
+  -F "file=https://example.com/document.pdf"
+```
+
+Response:
+```json
+{
+  "id": "file-..."
+}
+```
+
+### Add File to Vector Store
+
+Index an uploaded file in a vector store with custom chunking options.
+
+```bash
+curl -X POST "https://[PROJECT_REF].supabase.co/functions/v1/vector-file/add-file" \
+  -H "Authorization: Bearer [ANON_KEY]" \
   -H "Content-Type: application/json" \
   -d '{
-    "input": "Query the users table",
-    "agent": "database_expert"
-  }'
-
-# Streaming mode
-curl -i -X POST "http://localhost:8000" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input": "Tell me a story",
-    "stream": true
+    "vectorStoreId": "vs_...",
+    "fileId": "file-...",
+    "chunkingStrategy": {
+      "max_chunk_size_tokens": 1000,
+      "chunk_overlap_tokens": 200
+    }
   }'
 ```
 
-## Deployment
+Response:
+```json
+{
+  "success": true
+}
+```
 
-After testing, deploy your changes to the SDK:
+### Check Processing Status
 
-1. Copy the tested changes to `supabase/functions/openai-agent-sdk/`
-2. Update the SDK documentation
-3. Deploy using Supabase CLI:
-   ```bash
-   supabase functions deploy openai-agent-sdk
-   ```
+Check the status of file processing in a vector store.
 
-## License
+```bash
+curl -X POST "https://[PROJECT_REF].supabase.co/functions/v1/vector-file/check-status" \
+  -H "Authorization: Bearer [ANON_KEY]" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vectorStoreId": "vs_..."
+  }'
+```
 
-[Your License Here]
+### Search
+
+Direct semantic search with filters and ranking options.
+
+```bash
+curl -X POST "https://[PROJECT_REF].supabase.co/functions/v1/vector-file/search" \
+  -H "Authorization: Bearer [ANON_KEY]" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vectorStoreId": "vs_...",
+    "query": "What are the key features?",
+    "maxResults": 5,
+    "filters": {
+      "type": "eq",
+      "key": "type",
+      "value": "blog"
+    },
+    "webSearch": {
+      "enabled": true,
+      "maxResults": 3,
+      "recentOnly": true
+    }
+  }'
+```
+
+### Chat
+
+Conversational interface that uses vector search results as context.
+
+```bash
+curl -X POST "https://[PROJECT_REF].supabase.co/functions/v1/vector-file/chat" \
+  -H "Authorization: Bearer [ANON_KEY]" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vectorStoreId": "vs_...",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What are the key features?"
+      }
+    ],
+    "maxResults": 5,
+    "filters": {
+      "type": "eq",
+      "key": "type", 
+      "value": "blog"
+    },
+    "webSearch": {
+      "enabled": true,
+      "maxResults": 3
+    }
+  }'
+```
+
+### Query
+
+Single question answering that uses vector search results as context.
+
+```bash
+curl -X POST "https://[PROJECT_REF].supabase.co/functions/v1/vector-file/query" \
+  -H "Authorization: Bearer [ANON_KEY]" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vectorStoreId": "vs_...",
+    "question": "What are the key features?",
+    "maxResults": 5,
+    "filters": {
+      "type": "eq",
+      "key": "type",
+      "value": "blog"
+    },
+    "rankingOptions": {
+      "ranker": "default_2024_08_21",
+      "score_threshold": 0.8
+    },
+    "webSearch": {
+      "enabled": true,
+      "maxResults": 3,
+      "recentOnly": true,
+      "domains": ["docs.example.com", "blog.example.com"]
+    }
+  }'
+```
+
+## Advanced Features
+
+### Web Search Integration
+
+Enhance vector search with real-time web results:
+
+```json
+{
+  "webSearch": {
+    "enabled": true,           // Enable web search
+    "maxResults": 3,          // Number of web results
+    "recentOnly": true,       // Only recent content
+    "domains": [              // Restrict to domains
+      "docs.example.com",
+      "blog.example.com"
+    ]
+  }
+}
+```
+
+### Hybrid Search
+
+Combine vector and keyword search capabilities:
+
+```json
+{
+  "hybridSearch": {
+    "enabled": true,
+    "keywordWeight": 0.3,    // Weight for keyword matches
+    "vectorWeight": 0.7      // Weight for semantic matches
+  }
+}
+```
+
+### Chunking Strategy
+
+Control how files are split into chunks for indexing:
+
+```json
+{
+  "chunkingStrategy": {
+    "max_chunk_size_tokens": 1000,  // Between 100-4096
+    "chunk_overlap_tokens": 200     // Non-negative, <= max_chunk_size_tokens/2
+  }
+}
+```
+
+### Ranking Options
+
+Improve result relevance with ranking configuration:
+
+```json
+{
+  "rankingOptions": {
+    "ranker": "default_2024_08_21", // or "auto" for latest
+    "score_threshold": 0.8          // 0.0 to 1.0
+  }
+}
+```
+
+### Metadata Filtering
+
+Filter search results based on file metadata:
+
+```json
+{
+  "filters": {
+    "type": "eq",          // Exact match
+    "key": "type",         // Metadata field
+    "value": "blog"        // Target value
+  }
+}
+```
+
+### Expiration Policies
+
+Manage vector store lifecycle:
+
+```json
+{
+  "expiresAfter": {
+    "anchor": "last_active_at",
+    "days": 7
+  }
+}
+```
+
+## Benefits of Web Search Integration
+
+1. Real-time Information
+   - Augment stored knowledge with current data
+   - Access latest updates and developments
+   - Incorporate time-sensitive information
+
+2. Broader Context
+   - Expand search scope beyond stored documents
+   - Fill knowledge gaps in vector store
+   - Provide comprehensive answers
+
+3. Enhanced Accuracy
+   - Cross-validate information from multiple sources
+   - Reduce outdated or incorrect responses
+   - Improve answer confidence scores
+
+4. Dynamic Results
+   - Adapt to changing information landscapes
+   - Stay current with evolving topics
+   - Provide fresh perspectives
+
+## System Limits
+
+- Project total size: 100GB
+- Vector stores per project: 10,000 files
+- Individual file size: 512MB (~5M tokens)
+- Token budgets:
+  - GPT-3.5: 4,000 tokens
+  - GPT-4: 16,000 tokens
+- Web search:
+  - Max results per query: 10
+  - Max domains per query: 5
+  - Rate limit: 100 requests/minute
+
+## Supported File Types
+
+- Text: .txt, .md
+- Code: .py, .js, .ts, .c, .cpp, .cs, .java, .rb, .go
+- Documents: .pdf, .doc, .docx, .pptx
+- Web: .html, .css
+- Data: .json
+
+Text encoding must be UTF-8, UTF-16, or ASCII.
+
+## Error Handling
+
+The function returns standard HTTP status codes:
+- 200: Success
+- 400: Bad request (invalid parameters)
+- 401: Unauthorized
+- 500: Server error
+
+Error responses include a message:
+```json
+{
+  "error": "Error message here"
+}
+```
+
+## Security Considerations
+
+- Use environment variables for API keys
+- Implement proper access control
+- Validate file types and sizes
+- Monitor usage and implement rate limiting
+- First 1GB vector storage is free
+- Beyond 1GB: $0.10/GB/day
+- Web search usage: $0.01 per request
