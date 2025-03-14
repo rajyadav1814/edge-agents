@@ -280,7 +280,7 @@ This information has been saved to the Supabase contacts table.
           return { recipient, success: true, data };
         } catch (error) {
           console.error(`Exception sending to ${recipient}:`, error);
-          return { recipient, success: false, error: error.message };
+          return { recipient, success: false, error: error instanceof Error ? error.message : 'Unknown error' };
         }
       })
     );
@@ -304,7 +304,7 @@ This information has been saved to the Supabase contacts table.
   } catch (error) {
     console.error('Error sending email:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { 
         status: 500, 
         headers: { 
