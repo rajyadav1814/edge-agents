@@ -1,0 +1,198 @@
+#!/usr/bin/env bash
+
+# SPARC2 Runner Script
+# This script runs the SPARC2 system with the specified configuration and loads environment variables
+
+# Load environment variables from .env file if it exists
+ENV_FILE="$(dirname "$0")/sparc2/.env"
+if [[ -f "$ENV_FILE" ]]; then
+  echo "Loading environment variables from $ENV_FILE"
+  # Export all variables from .env file
+  export $(grep -v '^#' "$ENV_FILE" | xargs)
+  
+  # Map variables that might have different names
+  if [[ -z "$OPENAI_API_KEY" && -n "$VITE_OPENAI_API_KEY" ]]; then
+    export OPENAI_API_KEY="$VITE_OPENAI_API_KEY"
+  fi
+  
+  # Set GITHUB_ORG if not present
+  if [[ -z "$GITHUB_ORG" ]]; then
+    export GITHUB_ORG="edge-agents"
+  fi
+  
+  # Set EDGE_FUNCTION_URL if not present
+  if [[ -z "$EDGE_FUNCTION_URL" ]]; then
+    export EDGE_FUNCTION_URL="$SUPABASE_URL/functions/v1"
+  fi
+  
+  # Set VECTOR_DB_URL if not present
+  if [[ -z "$VECTOR_DB_URL" ]]; then
+    export VECTOR_DB_URL="$SUPABASE_DB_URL"
+  fi
+fi
+
+# Set default values
+CONFIG_FILE="config.toml"
+DIFF_MODE="file"
+EXECUTION_MODE="automatic"
+PROCESSING_MODE="sequential"
+PLAN=""
+FILES=""
+MODEL=""
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --config=*)
+      CONFIG_FILE="${1#*=}"
+      shift
+      ;;
+    --config)
+      CONFIG_FILE="$2"
+      shift 2
+      ;;
+    --diff-mode=*)
+      DIFF_MODE="${1#*=}"
+      shift
+      ;;
+    --diff-mode)
+      DIFF_MODE="$2"
+      shift 2
+      ;;
+    --mode=*)
+      EXECUTION_MODE="${1#*=}"
+      shift
+      ;;
+    --mode)
+      EXECUTION_MODE="$2"
+      shift 2
+      ;;
+    --processing=*)
+      PROCESSING_MODE="${1#*=}"
+      shift
+      ;;
+    --processing)
+      PROCESSING_MODE="$2"
+      shift 2
+      ;;
+    --plan=*)
+      PLAN="${1#*=}"
+      shift
+      ;;
+    --plan)
+      PLAN="$2"
+      shift 2
+      ;;
+    --files=*)
+      FILES="${1#*=}"
+      shift
+      ;;
+    --files)
+      FILES="$2"
+      shift 2
+      ;;
+    --model=*)
+      MODEL="${1#*=}"
+      shift
+      ;;
+    --model)
+      MODEL="$2"
+      shift 2
+      ;;
+    --help)
+      echo "SPARC2 Runner Script"
+      echo "Usage: sparc2run [options]"
+      echo ""
+      echo "Options:"
+      echo "  --config=<path>         Specify a TOML config file (default: config.toml)"
+      echo "  --diff-mode=<mode>      Diff logging strategy (file|function) (default: file)"
+      echo "  --mode=<mode>           Execution mode (automatic|semi|manual|custom) (default: automatic)"
+      echo "  --processing=<mode>     Processing mode (sequential|parallel|concurrent|swarm) (default: sequential)"
+      echo "  --plan=<description>    Provide a task description for planning and execution"
+      echo "  --files=<file paths>    Comma-separated list of files to process"
+      echo "  --model=<model name>    Override the model specified in the config"
+      echo "  --help                  Show this help message"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Use --help for usage information"
+      exit 1
+      ;;
+  esac
+done
+
+# Validate options
+if [[ "$DIFF_MODE" != "file" && "$DIFF_MODE" != "function" ]]; then
+  echo "Error: diff-mode must be 'file' or 'function'"
+  exit 1
+fi
+
+if [[ "$EXECUTION_MODE" != "automatic" && "$EXECUTION_MODE" != "semi" && "$EXECUTION_MODE" != "manual" && "$EXECUTION_MODE" != "custom" ]]; then
+  echo "Error: mode must be 'automatic', 'semi', 'manual', or 'custom'"
+  exit 1
+fi
+
+if [[ "$PROCESSING_MODE" != "sequential" && "$PROCESSING_MODE" != "parallel" && "$PROCESSING_MODE" != "concurrent" && "$PROCESSING_MODE" != "swarm" ]]; then
+  echo "Error: processing must be 'sequential', 'parallel', 'concurrent', or 'swarm'"
+  exit 1
+fi
+
+# Check if config file exists
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  echo "Warning: Config file '$CONFIG_FILE' not found. Using default configuration."
+fi
+
+# Run SPARC2 with the specified options
+echo "Starting SPARC2 with the following configuration:"
+echo "  Config file: $CONFIG_FILE"
+echo "  Diff mode: $DIFF_MODE"
+echo "  Execution mode: $EXECUTION_MODE"
+echo "  Processing mode: $PROCESSING_MODE"
+if [[ -n "$PLAN" ]]; then
+  echo "  Plan: $PLAN"
+fi
+if [[ -n "$FILES" ]]; then
+  echo "  Files: $FILES"
+fi
+if [[ -n "$MODEL" ]]; then
+  echo "  Model: $MODEL"
+fi
+echo ""
+echo "Environment variables:"
+echo "  OPENAI_API_KEY: ${OPENAI_API_KEY:0:5}... (truncated for security)"
+echo "  GITHUB_ORG: $GITHUB_ORG"
+echo "  EDGE_FUNCTION_URL: $EDGE_FUNCTION_URL"
+echo "  E2B_API_KEY: ${E2B_API_KEY:0:5}... (truncated for security)"
+echo "  VECTOR_DB_URL: $VECTOR_DB_URL"
+echo ""
+
+# Execute the SPARC2 system
+# This is where we would call the actual SPARC2 entry point
+cd "$(dirname "$0")/sparc2" || {
+  echo "Error: Failed to change directory to $(dirname "$0")/sparc2"
+  exit 1
+}
+
+# Build the command with all options
+CMD="deno run --allow-all src/index.ts"
+CMD="$CMD --config=\"$CONFIG_FILE\""
+CMD="$CMD --diff-mode=\"$DIFF_MODE\""
+CMD="$CMD --mode=\"$EXECUTION_MODE\""
+CMD="$CMD --processing=\"$PROCESSING_MODE\""
+
+# Add optional parameters if provided
+if [[ -n "$PLAN" ]]; then
+  CMD="$CMD --plan=\"$PLAN\""
+fi
+
+if [[ -n "$FILES" ]]; then
+  CMD="$CMD --files=\"$FILES\""
+fi
+
+if [[ -n "$MODEL" ]]; then
+  CMD="$CMD --model=\"$MODEL\""
+fi
+
+# Execute the command
+eval $CMD
