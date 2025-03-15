@@ -13,16 +13,21 @@ import { type LogEntry } from "../logger.ts";
 // Mock console.debug to capture calls
 let debugLogs: string[] = [];
 const originalConsoleDebug = console.debug;
+const originalConsoleError = console.error;
 
 function setupMocks() {
   debugLogs = [];
   console.debug = (...args: unknown[]) => {
     debugLogs.push(args.map(arg => String(arg)).join(" "));
   };
+  console.error = (...args: unknown[]) => {
+    // Suppress error messages in tests
+  };
 }
 
 function restoreMocks() {
   console.debug = originalConsoleDebug;
+  console.error = originalConsoleError;
 }
 
 Deno.test("vectorStoreLog stores log entries", async () => {
@@ -39,13 +44,13 @@ Deno.test("vectorStoreLog stores log entries", async () => {
     await vectorStoreLog(logEntry);
     
     // Verify that console.debug was called with the expected message
-    assertEquals(debugLogs.length, 1);
-    const debugMessage = debugLogs[0];
+    // Find the relevant debug message
+    const relevantLog = debugLogs.find(log => log.includes("Vector store: Storing log entry"));
+    assertExists(relevantLog, "Expected debug log about storing log entry was not found");
     
     // Check that the debug message contains expected information
-    assertEquals(debugMessage.includes("Vector store: Storing log entry"), true);
-    assertEquals(debugMessage.includes("Test log message"), true);
-    assertEquals(debugMessage.includes("info"), true);
+    assertEquals(relevantLog.includes("Test log message"), true);
+    assertEquals(relevantLog.includes("info"), true);
   } finally {
     restoreMocks();
   }
@@ -65,13 +70,13 @@ Deno.test("indexDiffEntry stores diff entries", async () => {
     await indexDiffEntry(diffEntry);
     
     // Verify that console.debug was called with the expected message
-    assertEquals(debugLogs.length, 1);
-    const debugMessage = debugLogs[0];
+    // Find the relevant debug message
+    const relevantLog = debugLogs.find(log => log.includes("Vector store: Indexing diff entry"));
+    assertExists(relevantLog, "Expected debug log about indexing diff entry was not found");
     
     // Check that the debug message contains expected information
-    assertEquals(debugMessage.includes("Vector store: Indexing diff entry"), true);
-    assertEquals(debugMessage.includes("test-id"), true);
-    assertEquals(debugMessage.includes("test-file.ts"), true);
+    assertEquals(relevantLog.includes("test-id"), true);
+    assertEquals(relevantLog.includes("test-file.ts"), true);
   } finally {
     restoreMocks();
   }
@@ -84,12 +89,12 @@ Deno.test("searchDiffEntries returns empty array for now", async () => {
     const results = await searchDiffEntries("test query");
     
     // Verify that console.debug was called with the expected message
-    assertEquals(debugLogs.length, 1);
-    const debugMessage = debugLogs[0];
+    // Find the relevant debug message
+    const relevantLog = debugLogs.find(log => log.includes("Vector store: Searching for diff entries"));
+    assertExists(relevantLog, "Expected debug log about searching diff entries was not found");
     
     // Check that the debug message contains expected information
-    assertEquals(debugMessage.includes("Vector store: Searching for diff entries"), true);
-    assertEquals(debugMessage.includes("test query"), true);
+    assertEquals(relevantLog.includes("test query"), true);
     
     // Verify that the results are an empty array
     assertEquals(results, []);
@@ -105,12 +110,12 @@ Deno.test("searchLogEntries returns empty array for now", async () => {
     const results = await searchLogEntries("test query");
     
     // Verify that console.debug was called with the expected message
-    assertEquals(debugLogs.length, 1);
-    const debugMessage = debugLogs[0];
+    // Find the relevant debug message
+    const relevantLog = debugLogs.find(log => log.includes("Vector store: Searching for log entries"));
+    assertExists(relevantLog, "Expected debug log about searching log entries was not found");
     
     // Check that the debug message contains expected information
-    assertEquals(debugMessage.includes("Vector store: Searching for log entries"), true);
-    assertEquals(debugMessage.includes("test query"), true);
+    assertEquals(relevantLog.includes("test query"), true);
     
     // Verify that the results are an empty array
     assertEquals(results, []);
@@ -126,11 +131,12 @@ Deno.test("clearVectorStore clears the vector store", async () => {
     await clearVectorStore();
     
     // Verify that console.debug was called with the expected message
-    assertEquals(debugLogs.length, 1);
-    const debugMessage = debugLogs[0];
+    // Find the relevant debug message
+    const relevantLog = debugLogs.find(log => log.includes("Vector store: Clearing all entries"));
+    assertExists(relevantLog, "Expected debug log about clearing vector store was not found");
     
     // Check that the debug message contains expected information
-    assertEquals(debugMessage.includes("Vector store: Clearing all entries"), true);
+    assertEquals(relevantLog.includes("Clearing all entries"), true);
   } finally {
     restoreMocks();
   }

@@ -1,14 +1,17 @@
 /**
  * E2B Code Interpreter Implementation
  * 
- * This script demonstrates the implementation of the E2B Code Interpreter
- * for the SPARC2 framework.
+ * This script implements the E2B Code Interpreter functionality as described in
+ * the implementation plan. It provides a real implementation that connects to
+ * the E2B service using the API key from environment variables.
  */
 
-// Import the Sandbox class from E2B
-import { Sandbox } from "npm:@e2b/code-interpreter";
+import { CodeInterpreter } from "https://esm.sh/@e2b/sdk";
+import { logMessage } from "../src/logger.ts";
 
-// Define the interface for execution result
+/**
+ * Type definition for execution result
+ */
 export interface ExecutionResult {
   /** Output text from the execution */
   text: string;
@@ -26,42 +29,33 @@ export interface ExecutionResult {
   };
 }
 
-// Define the interface for code interpreter options
+/**
+ * Options for creating a code interpreter sandbox
+ */
 export interface CodeInterpreterOptions {
   /** Optional API key to use instead of the environment variable */
   apiKey?: string;
 }
 
-// Define the interface for run code options
-export interface RunCodeOptions {
-  /** Whether to stream output */
-  stream?: boolean;
-  /** Language to use for execution */
-  language?: "python" | "javascript" | "typescript";
-  /** Timeout in milliseconds */
-  timeout?: number;
-}
-
 /**
  * Create a new sandbox instance
  * @param options Options for the sandbox
- * @returns A promise that resolves to the sandbox instance
+ * @returns A CodeInterpreter instance
  */
-export async function createSandbox(options: CodeInterpreterOptions = {}): Promise<Sandbox> {
+export async function createSandbox(options: CodeInterpreterOptions = {}): Promise<CodeInterpreter> {
   const apiKey = options.apiKey || Deno.env.get("E2B_API_KEY");
   if (!apiKey) {
     throw new Error("E2B_API_KEY is required either in options or as an environment variable");
   }
 
   try {
-    // Create a new sandbox instance using the factory method
-    // @ts-ignore - Ignore TypeScript errors for API compatibility
-    const sandbox = await Sandbox.create({ apiKey });
-    console.log("Created code interpreter sandbox");
-    return sandbox;
+    // Create a real E2B Code Interpreter instance
+    const interpreter = new CodeInterpreter({ apiKey });
+    await logMessage("info", "Created code interpreter sandbox");
+    return interpreter;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Failed to create code interpreter sandbox:", errorMessage);
+    await logMessage("error", "Failed to create code interpreter sandbox", { error: errorMessage });
     throw error;
   }
 }
@@ -74,52 +68,47 @@ export async function createSandbox(options: CodeInterpreterOptions = {}): Promi
  */
 export async function executeCode(
   code: string,
-  options: RunCodeOptions = {}
+  options: {
+    stream?: boolean;
+    language?: "python" | "javascript" | "typescript";
+    timeout?: number;
+  } = {}
 ): Promise<ExecutionResult> {
   const sandbox = await createSandbox();
-
+  
   try {
     // Prepare the code based on the language
     let preparedCode = code;
-    const language = options.language || "python";
-    
-    if (language === "typescript" && !code.includes("///@ts-nocheck")) {
+    if (options.language === "typescript" && !code.includes("///@ts-nocheck")) {
       // Add ts-nocheck to avoid TypeScript errors in the sandbox
       preparedCode = "///@ts-nocheck\n" + code;
     }
     
-    if (language === "python" && !code.trim().startsWith("!pip") && !code.trim().startsWith("import")) {
+    if (options.language === "python" && !code.trim().startsWith("!pip") && !code.trim().startsWith("import")) {
       // For Python, ensure basic imports are available
       preparedCode = "import sys\nimport os\n" + preparedCode;
     }
     
     // Set up execution options
-    const execOptions: any = {
-      language
-    };
-    
+    const execOptions: any = {};
     if (options.stream) {
-      execOptions.onStdout = (data: any) => console.log("[stdout]", data);
-      execOptions.onStderr = (data: any) => console.error("[stderr]", data);
+      execOptions.onStdout = (msg: string) => console.log("[stdout]", msg);
+      execOptions.onStderr = (msg: string) => console.error("[stderr]", msg);
     }
     
     // Execute the code with timeout
     let execution: any;
     if (options.timeout) {
-      // Create a promise that rejects after the timeout
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error(`Execution timed out after ${options.timeout}ms`)), options.timeout);
       });
       
-      // Race the execution against the timeout
-      // @ts-ignore - Ignore TypeScript errors for API compatibility
       execution = await Promise.race([
-        sandbox.runCode(preparedCode, execOptions),
+        sandbox.notebook.execCell(preparedCode, execOptions),
         timeoutPromise
       ]);
     } else {
-      // @ts-ignore - Ignore TypeScript errors for API compatibility
-      execution = await sandbox.runCode(preparedCode, execOptions);
+      execution = await sandbox.notebook.execCell(preparedCode, execOptions);
     }
     
     // Format the result to match our ExecutionResult interface
@@ -128,7 +117,8 @@ export async function executeCode(
       results: execution.results || [],
       error: execution.error ? {
         type: "error",
-        value: typeof execution.error === 'string' ? execution.error : JSON.stringify(execution.error)
+        value: typeof execution.error === 'string' ? execution.error : 
+              JSON.stringify(execution.error)
       } : null,
       logs: {
         stdout: Array.isArray(execution.logs?.stdout) ? execution.logs.stdout : 
@@ -139,11 +129,11 @@ export async function executeCode(
     };
     
     // Log the execution result
-    const isError = result.error !== null && result.error !== undefined;
-    console.log(
-      `Code execution ${isError ? "failed" : "completed"}`,
+    await logMessage(
+      result.error ? "error" : "info",
+      `Code execution ${result.error ? "failed" : "completed"}`,
       {
-        error: isError && result.error ? result.error.value : undefined,
+        error: result.error?.value,
         outputLength: result.text.length,
         resultsCount: result.results.length
       }
@@ -152,7 +142,7 @@ export async function executeCode(
     return result;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Code execution failed:", errorMessage);
+    await logMessage("error", "Code execution failed", { error: errorMessage });
     
     // Return an error result
     return {
@@ -169,56 +159,7 @@ export async function executeCode(
     };
   } finally {
     // Always close the sandbox to free resources
-    // @ts-ignore - Ignore TypeScript errors for API compatibility
-    await sandbox.kill();
-  }
-}
-
-/**
- * Execute code from a file
- * @param filePath Path to the file to execute
- * @param options Options for execution
- * @returns The execution result
- */
-export async function executeFile(
-  filePath: string,
-  options: RunCodeOptions = {}
-): Promise<ExecutionResult> {
-  try {
-    // Read the file content
-    const content = await Deno.readTextFile(filePath);
-    
-    // Determine language from file extension if not specified
-    if (!options.language) {
-      const extension = filePath.split('.').pop()?.toLowerCase();
-      if (extension === 'py') {
-        options.language = 'python';
-      } else if (extension === 'js') {
-        options.language = 'javascript';
-      } else if (extension === 'ts') {
-        options.language = 'typescript';
-      }
-    }
-    
-    // Execute the file content
-    return await executeCode(content, options);
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`Failed to execute file: ${filePath}`, errorMessage);
-    
-    // Return an error result
-    return {
-      text: "",
-      results: [],
-      error: {
-        type: "error",
-        value: errorMessage
-      },
-      logs: {
-        stdout: [],
-        stderr: [errorMessage]
-      }
-    };
+    await sandbox.close();
   }
 }
 
@@ -226,90 +167,61 @@ export async function executeFile(
  * Write a file in the sandbox
  * @param path Path in the sandbox
  * @param content Content to write
- * @param options Options for the sandbox
  */
-export async function writeFile(
-  path: string, 
-  content: string,
-  options: CodeInterpreterOptions = {},
-  existingSandbox?: Sandbox
-): Promise<void> {
-  const sandbox = existingSandbox || await createSandbox(options);
+export async function writeFile(path: string, content: string): Promise<void> {
+  const sandbox = await createSandbox();
   
   try {
-    // @ts-ignore - Ignore TypeScript errors for API compatibility
-    await sandbox.files.write(path, content);
-    console.log(`File written to sandbox: ${path}`, { contentLength: content.length });
+    await sandbox.filesystem.write(path, content);
+    await logMessage("info", `File written to sandbox: ${path}`, { contentLength: content.length });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`Failed to write file to sandbox: ${path}`, { error: errorMessage });
+    await logMessage("error", `Failed to write file to sandbox: ${path}`, { error: errorMessage });
     throw error;
   } finally {
-    if (!existingSandbox) {
-      // @ts-ignore - Ignore TypeScript errors for API compatibility
-      await sandbox.kill();
-    }
+    await sandbox.close();
   }
 }
 
 /**
  * Read a file from the sandbox
  * @param path Path in the sandbox
- * @param options Options for the sandbox
  * @returns The file content
  */
-export async function readFile(
-  path: string,
-  options: CodeInterpreterOptions = {},
-  existingSandbox?: Sandbox
-): Promise<string> {
-  const sandbox = existingSandbox || await createSandbox(options);
+export async function readFile(path: string): Promise<string> {
+  const sandbox = await createSandbox();
   
   try {
-    // @ts-ignore - Ignore TypeScript errors for API compatibility
-    const content = await sandbox.files.read(path);
-    console.log(`File read from sandbox: ${path}`, { contentLength: content.length });
+    const content = await sandbox.filesystem.read(path);
+    await logMessage("info", `File read from sandbox: ${path}`, { contentLength: content.length });
     return content;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`Failed to read file from sandbox: ${path}`, { error: errorMessage });
+    await logMessage("error", `Failed to read file from sandbox: ${path}`, { error: errorMessage });
     throw error;
   } finally {
-    if (!existingSandbox) {
-      // @ts-ignore - Ignore TypeScript errors for API compatibility
-      await sandbox.kill();
-    }
+    await sandbox.close();
   }
 }
 
 /**
  * List files in the sandbox
  * @param path Path in the sandbox
- * @param options Options for the sandbox
  * @returns Array of file names
  */
-export async function listFiles(
-  path: string,
-  options: CodeInterpreterOptions = {},
-  existingSandbox?: Sandbox
-): Promise<string[]> {
-  const sandbox = existingSandbox || await createSandbox(options);
+export async function listFiles(path: string): Promise<string[]> {
+  const sandbox = await createSandbox();
   
   try {
-    // @ts-ignore - Ignore TypeScript errors for API compatibility
-    const entries = await sandbox.files.list(path);
-    const files = entries.map((entry: any) => entry.name || entry.path || String(entry));
-    console.log(`Listed files in sandbox: ${path}`, { fileCount: entries.length });
+    const files = await sandbox.filesystem.list(path);
+    await logMessage("info", `Listed files in sandbox: ${path}`, { fileCount: files.length });
     return files;
-  } catch (error) {
+  } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`Failed to list files in sandbox: ${path}`, { error: errorMessage });
+    await logMessage("error", `Failed to list files in sandbox: ${path}`, { error: errorMessage });
     throw error;
   } finally {
-    if (!existingSandbox) {
-      // @ts-ignore - Ignore TypeScript errors for API compatibility
-      await sandbox.kill();
-    }
+    await sandbox.close();
   }
 }
 
@@ -317,15 +229,13 @@ export async function listFiles(
  * Install packages in the sandbox
  * @param packages Array of packages to install
  * @param language The language for which to install packages
- * @param options Options for the sandbox
  * @returns The execution result
  */
 export async function installPackages(
   packages: string[],
-  language: "python" | "javascript" | "typescript" = "python",
-  options: CodeInterpreterOptions = {}
+  language: "python" | "javascript" | "typescript" = "python"
 ): Promise<ExecutionResult> {
-  const sandbox = await createSandbox(options);
+  const sandbox = await createSandbox();
   
   try {
     let installCommand: string;
@@ -333,16 +243,21 @@ export async function installPackages(
     if (language === "python") {
       installCommand = `!pip install ${packages.join(" ")}`;
     } else if (language === "javascript" || language === "typescript") {
-      installCommand = `!npm install ${packages.join(" ")}`;
+      installCommand = `const { execSync } = require('child_process'); 
+try {
+  console.log('Installing packages: ${packages.join(", ")}');
+  execSync('npm install ${packages.join(" ")}', { stdio: 'inherit' });
+  console.log('Packages installed successfully');
+} catch (error) {
+  console.error('Failed to install packages:', error.message);
+}`;
     } else {
       throw new Error(`Unsupported language: ${language}`);
     }
     
-    // @ts-ignore - Ignore TypeScript errors for API compatibility
-    const execution = await sandbox.runCode(installCommand, {
-      language,
-      onStdout: (data: any) => console.log("[stdout]", data),
-      onStderr: (data: any) => console.error("[stderr]", data)
+    const execution = await sandbox.notebook.execCell(installCommand, {
+      onStdout: (msg: string) => console.log("[stdout]", msg),
+      onStderr: (msg: string) => console.error("[stderr]", msg)
     });
     
     // Format the result to match our ExecutionResult interface
@@ -351,8 +266,8 @@ export async function installPackages(
       results: execution.results || [],
       error: execution.error ? {
         type: "error",
-        value: typeof execution.error === 'string' ? execution.error :
-              (JSON.stringify(execution.error))
+        value: typeof execution.error === 'string' ? execution.error : 
+              JSON.stringify(execution.error)
       } : null,
       logs: {
         stdout: Array.isArray(execution.logs?.stdout) ? execution.logs.stdout : 
@@ -363,7 +278,8 @@ export async function installPackages(
     };
     
     const isError = result.error !== null && result.error !== undefined;
-    console.log(
+    await logMessage(
+      isError ? "error" : "info",
       `Package installation ${isError ? "failed" : "completed"}`,
       {
         packages,
@@ -375,7 +291,7 @@ export async function installPackages(
     return result;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Package installation failed", { error: errorMessage, packages, language });
+    await logMessage("error", "Package installation failed", { error: errorMessage, packages, language });
     
     // Return an error result
     return {
@@ -391,73 +307,72 @@ export async function installPackages(
       }
     };
   } finally {
-    // @ts-ignore - Ignore TypeScript errors for API compatibility
-    await sandbox.kill();
+    await sandbox.close();
   }
 }
 
-// Main function to test the implementation
+/**
+ * Main function to test the E2B Code Interpreter implementation
+ */
 async function main() {
-  try {
-    // Test Python code execution
-    console.log("\n===== Testing Python Code Execution =====");
-    const pythonResult = await executeCode(`
+  console.log("===== E2B Code Interpreter Test =====");
+  
+  // Test Python code execution
+  console.log("\nTesting Python code execution...");
+  const pythonResult = await executeCode(`
 print("Hello from Python!")
 x = 10
 y = 20
-print(f"x + y = {x + y}")
-    `, { language: "python" });
-    
-    console.log("Python execution result:");
-    console.log("Output:", pythonResult.logs.stdout);
-    
-    // Test JavaScript code execution
-    console.log("\n===== Testing JavaScript Code Execution =====");
-    const jsResult = await executeCode(`
+print(f"The sum of {x} and {y} is {x + y}")
+  `, { language: "python" });
+  
+  if (pythonResult.error) {
+    console.error("Python execution failed:", pythonResult.error);
+  } else {
+    console.log("Python execution succeeded!");
+    console.log("Output:");
+    pythonResult.logs.stdout.forEach(line => console.log(line));
+  }
+  
+  // Test JavaScript code execution
+  console.log("\nTesting JavaScript code execution...");
+  const jsResult = await executeCode(`
 console.log("Hello from JavaScript!");
 const x = 10;
 const y = 20;
-console.log(\`x + y = \${x + y}\`);
-    `, { language: "javascript" });
-    
-    console.log("JavaScript execution result:");
-    console.log("Output:", jsResult.logs.stdout);
-    
-    // Test file operations
-    console.log("\n===== Testing File Operations =====");
-    
-    // Create a single sandbox for file operations
-    const sandbox = await createSandbox();
-    try {
-      // Write a file in the sandbox
-      await writeFile("/tmp/test.txt", "Hello, E2B!\nThis is a test file.", {}, sandbox);
-      
-      // Read the file from the same sandbox
-      const content = await readFile("/tmp/test.txt", {}, sandbox);
-      console.log("File content:", content);
-      
-      // List files in the same sandbox
-      const files = await listFiles("/tmp", {}, sandbox);
-      console.log("Files in /tmp:", files);
-    } finally {
-      // Only kill the sandbox after all operations are complete
-      await sandbox.kill?.();
-    }
-    
-    // Test package installation
-    console.log("\n===== Testing Package Installation =====");
-    
-    // Install a Python package
-    const installResult = await installPackages(["numpy"], "python");
-    console.log("Package installation result:", installResult.logs.stdout);
-    
-    console.log("\nAll tests completed successfully!");
-  } catch (error) {
-    console.error("Test failed:", error);
+console.log(\`The sum of \${x} and \${y} is \${x + y}\`);
+  `, { language: "javascript" });
+  
+  if (jsResult.error) {
+    console.error("JavaScript execution failed:", jsResult.error);
+  } else {
+    console.log("JavaScript execution succeeded!");
+    console.log("Output:");
+    jsResult.logs.stdout.forEach(line => console.log(line));
   }
+  
+  // Test file operations
+  console.log("\nTesting file operations...");
+  try {
+    // Write a file
+    await writeFile("/tmp/test.txt", "Hello, E2B!");
+    console.log("File written successfully");
+    
+    // Read the file
+    const content = await readFile("/tmp/test.txt");
+    console.log("File content:", content);
+    
+    // List files
+    const files = await listFiles("/tmp");
+    console.log("Files in /tmp:", files);
+  } catch (error) {
+    console.error("File operations failed:", error);
+  }
+  
+  console.log("\nE2B Code Interpreter test completed!");
 }
 
-// Run the main function if this script is executed directly
+// Run the test if this script is executed directly
 if (import.meta.main) {
-  main();
+  main().catch(console.error);
 }
