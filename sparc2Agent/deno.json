@@ -1,0 +1,18 @@
+{
+  "tasks": {
+    "start": "deno run --allow-read --allow-write --allow-env --allow-net src/index.ts",
+    "test": "deno test --allow-read --allow-write --allow-env --allow-net",
+    "example:simple": "deno run --allow-read --allow-write --allow-env --allow-net src/examples/simple.ts",
+    "example:openai": "deno run --allow-read --allow-write --allow-env --allow-net src/examples/openai-example.ts",
+    "example:openrouter": "deno run --allow-read --allow-write --allow-env --allow-net src/examples/openrouter-example.ts",
+    "example:react": "deno run --allow-read --allow-write --allow-env --allow-net src/examples/react-example.ts"
+  },
+  "imports": {
+    "openai": "npm:openai@4.20.1",
+    "toml": "https://deno.land/std@0.203.0/toml/mod.ts",
+    "std/": "https://deno.land/std@0.203.0/",
+    "path": "https://deno.land/std@0.203.0/path/mod.ts",
+    "fs": "https://deno.land/std@0.203.0/fs/mod.ts",
+    "dotenv": "https://deno.land/std@0.203.0/dotenv/mod.ts"
+  }
+}
