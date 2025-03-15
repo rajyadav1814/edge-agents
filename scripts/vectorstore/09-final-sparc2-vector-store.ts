@@ -4,8 +4,8 @@
  * using OpenAI's vector store API
  */
 
-import { LogEntry } from "../logger.ts";
-import { load } from "https://deno.land/std@0.203.0/dotenv/mod.ts";
+import { LogEntry } from "../sparc2/src/logger.ts";
+import { load } from "https://deno.land/std@0.215.0/dotenv/mod.ts";
 
 // Dynamically import OpenAI to avoid issues in test environments
 let OpenAI: any;
@@ -68,7 +68,7 @@ export async function initializeVectorStore(name: string = "sparc2-vector-store"
     // If we already have a vector store ID, return it
     if (vectorStoreId !== null) {
       console.debug("Using existing vector store", { id: vectorStoreId });
-      return vectorStoreId as string;
+      return vectorStoreId;
     }
     
     // If OpenAI client is not available, use mock implementation
@@ -84,10 +84,10 @@ export async function initializeVectorStore(name: string = "sparc2-vector-store"
     
     console.debug("Vector store initialized", { id: vectorStoreId });
     
-    return vectorStoreId as string;
+    return vectorStoreId;
   } catch (error: unknown) {
     console.debug("Failed to initialize vector store, using mock", { error: String(error) });
-    vectorStoreId = "mock-vector-store-id" as string;
+    vectorStoreId = "mock-vector-store-id";
     return vectorStoreId;
   }
 }

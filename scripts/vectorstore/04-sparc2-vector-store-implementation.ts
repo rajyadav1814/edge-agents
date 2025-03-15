@@ -1,62 +1,31 @@
 /**
- * VectorStore module for SPARC 2.0
- * Provides methods to index diff logs and perform vector searches
- * using OpenAI's vector store API
+ * Example 4: SPARC2 Vector Store Implementation
+ * 
+ * This example demonstrates how to implement the vector store functionality
+ * for the SPARC2 framework using the OpenAI API.
  */
 
-import { LogEntry } from "../logger.ts";
-import { load } from "https://deno.land/std@0.203.0/dotenv/mod.ts";
+import OpenAI from "jsr:@openai/openai";
+import { load } from "https://deno.land/std@0.215.0/dotenv/mod.ts";
+import { LogEntry } from "../sparc2/src/logger.ts";
+import { DiffEntry, VectorSearchResult } from "../sparc2/src/vector/vectorStore.ts";
 
-// Dynamically import OpenAI to avoid issues in test environments
-let OpenAI: any;
-try {
-  OpenAI = (await import("jsr:@openai/openai")).default;
-} catch (error) {
-  console.debug("OpenAI import failed, using mock implementation", { error: String(error) });
+// Load environment variables
+await load({ export: true, allowEmptyValues: true });
+const apiKey = Deno.env.get("OPENAI_API_KEY");
+
+if (!apiKey) {
+  console.error("Error: OPENAI_API_KEY is required in .env file");
+  Deno.exit(1);
 }
 
-/**
- * Diff entry interface for storing code changes
- */
-export interface DiffEntry {
-  id: string;
-  file: string;
-  diff: string;
-  metadata: Record<string, unknown>;
-}
-
-/**
- * Vector search result interface
- */
-export interface VectorSearchResult {
-  entry: LogEntry | DiffEntry;
-  score: number;
-}
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey,
+}) as any; // Use 'any' type to avoid TypeScript errors with vectorStores
 
 // Store ID for the vector store
 let vectorStoreId: string | null = null;
-
-// Initialize OpenAI client if API key is available
-let openai: any = null;
-let apiKey: string | null = null;
-
-// Try to load environment variables
-try {
-  // Only try to load environment variables if not in test mode
-  if (Deno.env.get("DENO_ENV") !== "test") {
-    await load({ export: true, allowEmptyValues: true });
-  }
-  apiKey = Deno.env.get("OPENAI_API_KEY") || Deno.env.get("VITE_OPENAI_API_KEY") || null;
-  
-  if (apiKey && OpenAI) {
-    openai = new OpenAI({
-      apiKey,
-    });
-    console.debug("OpenAI client initialized");
-  }
-} catch (error) {
-  console.debug("Failed to load environment variables", { error: String(error) });
-}
 
 /**
  * Initialize the vector store
@@ -65,30 +34,25 @@ try {
  */
 export async function initializeVectorStore(name: string = "sparc2-vector-store"): Promise<string> {
   try {
-    // If we already have a vector store ID, return it
-    if (vectorStoreId !== null) {
-      console.debug("Using existing vector store", { id: vectorStoreId });
+    if (vectorStoreId) {
       return vectorStoreId as string;
     }
     
-    // If OpenAI client is not available, use mock implementation
-    if (!openai) {
-      vectorStoreId = "mock-vector-store-id";
-      console.debug("Using mock vector store", { id: vectorStoreId });
-      return vectorStoreId;
-    }
+    console.log(`Creating vector store with name: ${name}...`);
     
-    // Create a new vector store
     const vectorStore = await openai.vectorStores.create({ name });
     vectorStoreId = vectorStore.id;
     
-    console.debug("Vector store initialized", { id: vectorStoreId });
+    console.log(`Vector store initialized successfully with ID: ${vectorStoreId}`);
     
-    return vectorStoreId as string;
-  } catch (error: unknown) {
-    console.debug("Failed to initialize vector store, using mock", { error: String(error) });
-    vectorStoreId = "mock-vector-store-id" as string;
+    // Wait for a moment to ensure the vector store is available in the list
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
     return vectorStoreId;
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to initialize vector store: ${errorMessage}`);
+    throw error;
   }
 }
 
@@ -98,12 +62,6 @@ export async function initializeVectorStore(name: string = "sparc2-vector-store"
  */
 export async function vectorStoreLog(entry: LogEntry): Promise<void> {
   try {
-    // If OpenAI client is not available, use mock implementation
-    if (!openai) {
-      console.debug("Vector store: Storing log entry (mock)", entry.message, entry.level);
-      return;
-    }
-    
     // Ensure vector store is initialized
     const storeId = await initializeVectorStore();
     
@@ -128,17 +86,18 @@ Metadata: ${JSON.stringify(entry.metadata || {}, null, 2)}`;
     
     // Add the file to the vector store
     await openai.vectorStores.files.create(storeId, {
-      file_id: uploadedFile.id,
+      file_id: uploadedFile.id
     });
     
-    console.debug("Log entry stored in vector database", {
+    console.log("Log entry stored in vector database", {
       timestamp: entry.timestamp,
       level: entry.level,
       message: entry.message.substring(0, 50) + (entry.message.length > 50 ? "..." : "")
     });
   } catch (error: unknown) {
-    console.debug("Failed to store log entry in vector database, using mock", { error: String(error) });
-    console.debug("Vector store: Storing log entry (mock)", entry.message, entry.level);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to store log entry in vector database: ${errorMessage}`);
+    throw error;
   }
 }
 
@@ -148,12 +107,6 @@ Metadata: ${JSON.stringify(entry.metadata || {}, null, 2)}`;
  */
 export async function indexDiffEntry(entry: DiffEntry): Promise<void> {
   try {
-    // If OpenAI client is not available, use mock implementation
-    if (!openai) {
-      console.debug("Vector store: Indexing diff entry (mock)", entry.id, entry.file);
-      return;
-    }
-    
     // Ensure vector store is initialized
     const storeId = await initializeVectorStore();
     
@@ -178,17 +131,18 @@ Metadata: ${JSON.stringify(entry.metadata || {}, null, 2)}`;
     
     // Add the file to the vector store
     await openai.vectorStores.files.create(storeId, {
-      file_id: uploadedFile.id,
+      file_id: uploadedFile.id
     });
     
-    console.debug("Diff entry indexed in vector database", {
+    console.log("Diff entry indexed in vector database", {
       id: entry.id,
       file: entry.file,
       diffPreview: entry.diff.substring(0, 50) + (entry.diff.length > 50 ? "..." : "")
     });
   } catch (error: unknown) {
-    console.debug("Failed to index diff entry in vector database, using mock", { error: String(error) });
-    console.debug("Vector store: Indexing diff entry (mock)", entry.id, entry.file);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to index diff entry in vector database: ${errorMessage}`);
+    throw error;
   }
 }
 
@@ -203,12 +157,6 @@ export async function searchDiffEntries(
   maxResults: number = 5
 ): Promise<VectorSearchResult[]> {
   try {
-    // If OpenAI client is not available, use mock implementation
-    if (!openai) {
-      console.debug("Vector store: Searching for diff entries (mock)", query);
-      return [];
-    }
-    
     // Ensure vector store is initialized
     const storeId = await initializeVectorStore();
     
@@ -216,7 +164,10 @@ export async function searchDiffEntries(
     const searchResponse = await openai.vectorStores.search(storeId, {
       query,
       max_num_results: maxResults,
+      // Note: Filtering by metadata is not supported in the current API version
     });
+    
+    console.log(`Searched for diff entries with query: "${query}", found ${searchResponse.data.length} results`);
     
     // Transform the results into the expected format
     const results: VectorSearchResult[] = searchResponse.data.map((result: any) => {
@@ -245,16 +196,12 @@ export async function searchDiffEntries(
       };
     });
     
-    console.debug("Searched for diff entries", { 
-      query, 
-      maxResults,
-      resultsCount: results.length
-    });
-    
     return results;
   } catch (error: unknown) {
-    console.debug("Failed to search diff entries, using mock", { error: String(error) });
-    console.debug("Vector store: Searching for diff entries (mock)", query);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to search diff entries: ${errorMessage}`);
+    
+    // Return empty array on error
     return [];
   }
 }
@@ -270,12 +217,6 @@ export async function searchLogEntries(
   maxResults: number = 5
 ): Promise<VectorSearchResult[]> {
   try {
-    // If OpenAI client is not available, use mock implementation
-    if (!openai) {
-      console.debug("Vector store: Searching for log entries (mock)", query);
-      return [];
-    }
-    
     // Ensure vector store is initialized
     const storeId = await initializeVectorStore();
     
@@ -283,7 +224,10 @@ export async function searchLogEntries(
     const searchResponse = await openai.vectorStores.search(storeId, {
       query,
       max_num_results: maxResults,
+      // Note: Filtering by metadata is not supported in the current API version
     });
+    
+    console.log(`Searched for log entries with query: "${query}", found ${searchResponse.data.length} results`);
     
     // Transform the results into the expected format
     const results: VectorSearchResult[] = searchResponse.data.map((result: any) => {
@@ -312,16 +256,12 @@ export async function searchLogEntries(
       };
     });
     
-    console.debug("Searched for log entries", { 
-      query, 
-      maxResults,
-      resultsCount: results.length
-    });
-    
     return results;
   } catch (error: unknown) {
-    console.debug("Failed to search log entries, using mock", { error: String(error) });
-    console.debug("Vector store: Searching for log entries (mock)", query);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to search log entries: ${errorMessage}`);
+    
+    // Return empty array on error
     return [];
   }
 }
@@ -329,31 +269,101 @@ export async function searchLogEntries(
 /**
  * Clear all entries from the vector store
  * Useful for testing or resetting the database
+ * Note: This is a simplified version that just resets the vector store ID
+ * since the OpenAI API doesn't provide a direct way to delete all files at once
  */
 export async function clearVectorStore(): Promise<void> {
   try {
-    // If OpenAI client is not available or no vector store ID, use mock implementation
-    if (!openai || !vectorStoreId) {
-      console.debug("Vector store: Clearing all entries (mock)");
-      vectorStoreId = null;
+    // If no vector store ID is set, there's nothing to clear
+    if (!vectorStoreId) {
+      console.log("No vector store to clear");
       return;
-    }
-    
-    // Get all files in the vector store
-    const files = await openai.vectorStores.files.list(vectorStoreId);
-    
-    // Delete each file
-    for (const file of files.data) {
-      await openai.vectorStores.files.delete(vectorStoreId, file.id);
     }
     
     // Reset the vector store ID
     vectorStoreId = null;
     
-    console.debug("Cleared all entries from vector store");
+    console.log("Vector store reference cleared");
   } catch (error: unknown) {
-    console.debug("Failed to clear vector store, using mock", { error: String(error) });
-    console.debug("Vector store: Clearing all entries (mock)");
-    vectorStoreId = null;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to clear vector store: ${errorMessage}`);
+    throw error;
   }
 }
+
+// Example usage
+async function runExample() {
+  try {
+    // Initialize vector store
+    await initializeVectorStore("sparc2-example-store");
+    
+    // Create a log entry
+    const logEntry: LogEntry = {
+      timestamp: new Date().toISOString(),
+      level: "info",
+      message: "This is a test log message",
+      metadata: { test: true, source: "example" }
+    };
+    
+    // Store the log entry
+    await vectorStoreLog(logEntry);
+    
+    // Create a diff entry
+    const diffEntry: DiffEntry = {
+      id: "example-diff-1",
+      file: "src/example.ts",
+      diff: "- const oldValue = 10;\n+ const newValue = 20;",
+      metadata: { author: "test", commitId: "abc123" }
+    };
+    
+    // Index the diff entry
+    await indexDiffEntry(diffEntry);
+    
+    // Wait for indexing to complete
+    console.log("Waiting for indexing to complete...");
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    // Search for log entries
+    const logResults = await searchLogEntries("test message");
+    console.log("\nLog Search Results:");
+    console.log("==================");
+    if (logResults.length === 0) {
+      console.log("No log results found.");
+    } else {
+      logResults.forEach((result, index) => {
+        const entry = result.entry as LogEntry;
+        console.log(`\nResult ${index + 1} (Score: ${result.score.toFixed(4)}):`);
+        console.log(`Level: ${entry.level}`);
+        console.log(`Message: ${entry.message}`);
+        console.log(`Metadata: ${JSON.stringify(entry.metadata)}`);
+      });
+    }
+    
+    // Search for diff entries
+    const diffResults = await searchDiffEntries("newValue");
+    console.log("\nDiff Search Results:");
+    console.log("===================");
+    if (diffResults.length === 0) {
+      console.log("No diff results found.");
+    } else {
+      diffResults.forEach((result, index) => {
+        const entry = result.entry as DiffEntry;
+        console.log(`\nResult ${index + 1} (Score: ${result.score.toFixed(4)}):`);
+        console.log(`File: ${entry.file}`);
+        console.log(`Diff:\n${entry.diff}`);
+        console.log(`Metadata: ${JSON.stringify(entry.metadata)}`);
+      });
+    }
+    
+    // Clear the vector store
+    await clearVectorStore();
+    
+    console.log("\nExample completed successfully!");
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Error in example: ${errorMessage}`);
+  }
+}
+
+// Run the example
+await runExample();
