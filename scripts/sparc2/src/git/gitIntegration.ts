@@ -259,8 +259,16 @@ export async function rollbackChanges(
  * @param name Name of the checkpoint
  * @returns The checkpoint identifier (commit hash or tag)
  */
-export async function createCheckpoint(name: string): Promise<string> {
-  // Create a tag for the checkpoint
+export async function createCheckpoint(baseName: string): Promise<string> {
+  // Make the tag name unique by adding a timestamp
+  const timestamp = Date.now();
+  const name = `${baseName}_${timestamp}`;
+  
+  // Log the checkpoint creation
+  await logMessage("info", "Creating checkpoint", { 
+    name
+  });
+  
   const tagCmd = new Deno.Command("git", {
     args: ["tag", name],
     stdout: "piped",
