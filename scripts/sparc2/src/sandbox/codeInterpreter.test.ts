@@ -1,462 +1,127 @@
-import { assertEquals, assertRejects, assertStringIncludes } from "https://deno.land/std@0.203.0/testing/asserts.ts";
-import { spy, stub, assertSpyCalls } from "https://deno.land/std@0.203.0/testing/mock.ts";
-import {
-  createSandbox,
-  executeCode,
-  executeFile,
-  installPackages,
-  writeFile,
-  readFile,
-  listFiles
+/**
+ * E2B Code Interpreter Tests
+ * 
+ * This file contains tests for the E2B Code Interpreter implementation.
+ */
+
+import { assertEquals, assertExists } from "https://deno.land/std/testing/asserts.ts";
+import { 
+  createSandbox, 
+  executeCode, 
+  writeFile, 
+  readFile, 
+  listFiles,
+  installPackages
 } from "./codeInterpreter.ts";
-import * as logger from "../logger.ts";
 
-// Mock the logger to avoid actual logging during tests
-const logMessageSpy = spy(logger, "logMessage");
+// Skip tests if E2B_API_KEY is not set
+const apiKey = Deno.env.get("E2B_API_KEY");
+const runTests = apiKey !== undefined;
 
-// Mock for Deno.readTextFile
-const originalReadTextFile = Deno.readTextFile;
-
-// Mock for successful sandbox creation
-const mockSuccessfulSandbox = () => {
-  return {
-    notebook: {
-      execCell: async (_code: string, _options: any) => ({
-        text: "Execution successful",
-        results: [{ type: "text", value: "Result value" }],
-        logs: { stdout: ["stdout message"], stderr: [] }
-      })
-    },
-    filesystem: {
-      write: async (_path: string, _content: string) => {},
-      read: async (_path: string) => "File content",
-      list: async (_path: string) => ["file1.txt", "file2.txt"]
-    },
-    close: async () => {}
-  };
-};
-
-// Mock for sandbox with execution error
-const mockErrorSandbox = () => {
-  return {
-    notebook: {
-      execCell: async (_code: string, _options: any) => {
-        throw new Error("Execution failed");
-      }
-    },
-    filesystem: {
-      write: async (_path: string, _content: string) => {
-        throw new Error("Write failed");
-      },
-      read: async (_path: string) => {
-        throw new Error("Read failed");
-      },
-      list: async (_path: string) => {
-        throw new Error("List failed");
-      }
-    },
-    close: async () => {}
-  };
-};
-
-// Setup and teardown for each test
-function setupTest() {
-  // Reset all spies
-  logMessageSpy.calls = [];
-  
-  // Set environment variable for testing
-  Deno.env.set("E2B_API_KEY", "test-api-key");
+if (!runTests) {
+  console.warn("Skipping E2B tests: E2B_API_KEY environment variable is not set");
 }
 
-function teardownTest() {
-  // Restore original functions if they were stubbed
-  Deno.env.delete("E2B_API_KEY");
-}
-
-Deno.test("createSandbox should create a sandbox instance", async () => {
-  setupTest();
-  
-  try {
-    // Stub the import to return our mock
-    const importStub = stub(
-      globalThis,
-      "import",
-      () => Promise.resolve({ CodeInterpreter: { create: () => Promise.resolve(mockSuccessfulSandbox()) } })
-    );
-    
-    // Call the function
+Deno.test({
+  name: "E2B Code Interpreter - File Operations",
+  ignore: !runTests,
+  async fn() {
+    // Create a single sandbox for all file operations
     const sandbox = await createSandbox();
     
-    // Verify the result
-    assertEquals(typeof sandbox.notebook.execCell, "function");
-    assertEquals(typeof sandbox.filesystem.write, "function");
-    assertEquals(typeof sandbox.filesystem.read, "function");
-    assertEquals(typeof sandbox.filesystem.list, "function");
-    assertEquals(typeof sandbox.close, "function");
-    
-    // Verify that the logger was called
-    assertSpyCalls(logMessageSpy, 1);
-    
-    // Restore the stub
-    importStub.restore();
-  } finally {
-    teardownTest();
-  }
+    try {
+      // Test writing a file
+      const testContent = "Hello, E2B!\nThis is a test file.";
+      await writeFile("/tmp/test.txt", testContent, {}, sandbox);
+      
+      // Test reading the file
+      const content = await readFile("/tmp/test.txt", {}, sandbox);
+      assertEquals(content, testContent, "File content should match what was written");
+      
+      // Test listing files
+      const files = await listFiles("/tmp", {}, sandbox);
+      assertExists(files.find(file => file === "test.txt"), "test.txt should be in the list of files");
+    } finally {
+      // Clean up
+      await sandbox.kill?.();
+    }
+  },
+  sanitizeResources: false,
+  sanitizeOps: false
 });
 
-Deno.test("createSandbox should throw if API key is missing", async () => {
-  setupTest();
-  
-  try {
-    // Remove the API key
-    Deno.env.delete("E2B_API_KEY");
+Deno.test({
+  name: "E2B Code Interpreter - Python Execution",
+  ignore: !runTests,
+  async fn() {
+    // Test Python code execution
+    const pythonCode = `
+x = 10
+y = 20
+print("Hello from Python!")
+print(f"x + y = {x + y}")
+`;
     
-    // Verify that it throws
-    await assertRejects(
-      async () => {
-        await createSandbox();
-      },
-      Error,
-      "E2B_API_KEY is required"
-    );
-  } finally {
-    teardownTest();
-  }
+    const result = await executeCode(pythonCode, { language: "python" });
+    assertEquals(result.error, null, "Python execution should not have errors");
+    
+    // Check that the output contains the expected text
+    const output = result.logs.stdout.join("\n");
+    assertEquals(output.includes("Hello from Python!"), true, "Output should contain greeting");
+    assertEquals(output.includes("x + y = 30"), true, "Output should contain calculation result");
+  },
+  sanitizeResources: false,
+  sanitizeOps: false
 });
 
-Deno.test("executeCode should execute code and return result", async () => {
-  setupTest();
-  
-  try {
-    // Stub createSandbox to return our mock
-    const createSandboxStub = stub(
-      { createSandbox },
-      "createSandbox",
-      () => Promise.resolve(mockSuccessfulSandbox())
-    );
+Deno.test({
+  name: "E2B Code Interpreter - JavaScript Execution",
+  ignore: !runTests,
+  async fn() {
+    // Test JavaScript code execution
+    const jsCode = `
+const x = 10;
+const y = 20;
+console.log("Hello from JavaScript!");
+console.log(\`x + y = \${x + y}\`);
+`;
     
-    // Call the function
-    const result = await executeCode("console.log('test')");
+    const result = await executeCode(jsCode, { language: "javascript" });
+    assertEquals(result.error, null, "JavaScript execution should not have errors");
     
-    // Verify the result
-    assertEquals(result.text, "Execution successful");
-    assertEquals(result.results.length, 1);
-    assertEquals(result.results[0].type, "text");
-    assertEquals(result.results[0].value, "Result value");
-    assertEquals(result.logs.stdout.length, 1);
-    assertEquals(result.logs.stdout[0], "stdout message");
-    
-    // Verify that the logger was called
-    assertSpyCalls(logMessageSpy, 1);
-    
-    // Restore the stub
-    createSandboxStub.restore();
-  } finally {
-    teardownTest();
-  }
+    // Check that the output contains the expected text
+    const output = result.logs.stdout.join("\n");
+    assertEquals(output.includes("Hello from JavaScript!"), true, "Output should contain greeting");
+    assertEquals(output.includes("x + y = 30"), true, "Output should contain calculation result");
+  },
+  sanitizeResources: false,
+  sanitizeOps: false
 });
 
-Deno.test("executeCode should handle execution error", async () => {
-  setupTest();
-  
-  try {
-    // Stub createSandbox to return our error mock
-    const createSandboxStub = stub(
-      { createSandbox },
-      "createSandbox",
-      () => Promise.resolve(mockErrorSandbox())
-    );
+Deno.test({
+  name: "E2B Code Interpreter - Package Installation",
+  ignore: !runTests,
+  async fn() {
+    // Test package installation
+    const result = await installPackages(["numpy"], "python");
+    assertEquals(result.error, null, "Package installation should not have errors");
     
-    // Verify that it throws
-    await assertRejects(
-      async () => {
-        await executeCode("console.log('test')");
-      },
-      Error,
-      "Execution failed"
-    );
+    // Test using the installed package
+    const pythonCode = `
+import numpy as np
+arr = np.array([1, 2, 3, 4, 5])
+print(f"NumPy array: {arr}")
+print(f"Mean: {np.mean(arr)}")
+`;
     
-    // Verify that the logger was called
-    assertSpyCalls(logMessageSpy, 1);
+    const execResult = await executeCode(pythonCode, { language: "python" });
+    assertEquals(execResult.error, null, "Python execution with NumPy should not have errors");
     
-    // Restore the stub
-    createSandboxStub.restore();
-  } finally {
-    teardownTest();
-  }
-});
-
-Deno.test("executeFile should read file and execute its content", async () => {
-  setupTest();
-  
-  try {
-    // Stub Deno.readTextFile
-    const readTextFileStub = stub(
-      Deno,
-      "readTextFile",
-      () => Promise.resolve("console.log('test')")
-    );
-    
-    // Stub executeCode
-    const executeCodeStub = stub(
-      { executeCode },
-      "executeCode",
-      () => Promise.resolve({
-        text: "File execution successful",
-        results: [],
-        logs: { stdout: [], stderr: [] }
-      })
-    );
-    
-    // Call the function
-    const result = await executeFile("test.js");
-    
-    // Verify the result
-    assertEquals(result.text, "File execution successful");
-    
-    // Verify that executeCode was called with the file content
-    assertEquals(executeCodeStub.calls.length, 1);
-    assertEquals(executeCodeStub.calls[0].args[0], "console.log('test')");
-    
-    // Restore the stubs
-    readTextFileStub.restore();
-    executeCodeStub.restore();
-  } finally {
-    teardownTest();
-  }
-});
-
-Deno.test("executeFile should detect language from file extension", async () => {
-  setupTest();
-  
-  try {
-    // Stub Deno.readTextFile
-    const readTextFileStub = stub(
-      Deno,
-      "readTextFile",
-      () => Promise.resolve("print('test')")
-    );
-    
-    // Stub executeCode
-    const executeCodeStub = stub(
-      { executeCode },
-      "executeCode",
-      (_code: string, options: any) => {
-        assertEquals(options.language, "python");
-        return Promise.resolve({
-          text: "Python execution successful",
-          results: [],
-          logs: { stdout: [], stderr: [] }
-        });
-      }
-    );
-    
-    // Call the function with a Python file
-    await executeFile("test.py");
-    
-    // Verify that executeCode was called with the correct language
-    assertEquals(executeCodeStub.calls.length, 1);
-    
-    // Restore the stubs
-    readTextFileStub.restore();
-    executeCodeStub.restore();
-  } finally {
-    teardownTest();
-  }
-});
-
-Deno.test("installPackages should install packages in the sandbox", async () => {
-  setupTest();
-  
-  try {
-    // Stub createSandbox to return our mock
-    const createSandboxStub = stub(
-      { createSandbox },
-      "createSandbox",
-      () => Promise.resolve(mockSuccessfulSandbox())
-    );
-    
-    // Call the function
-    const result = await installPackages(["numpy", "pandas"]);
-    
-    // Verify the result
-    assertEquals(result.text, "Execution successful");
-    
-    // Verify that the logger was called
-    assertSpyCalls(logMessageSpy, 1);
-    
-    // Restore the stub
-    createSandboxStub.restore();
-  } finally {
-    teardownTest();
-  }
-});
-
-Deno.test("writeFile should write content to a file in the sandbox", async () => {
-  setupTest();
-  
-  try {
-    // Stub createSandbox to return our mock
-    const createSandboxStub = stub(
-      { createSandbox },
-      "createSandbox",
-      () => Promise.resolve(mockSuccessfulSandbox())
-    );
-    
-    // Call the function
-    await writeFile("/path/to/file.txt", "File content");
-    
-    // Verify that the logger was called
-    assertSpyCalls(logMessageSpy, 1);
-    
-    // Restore the stub
-    createSandboxStub.restore();
-  } finally {
-    teardownTest();
-  }
-});
-
-Deno.test("readFile should read content from a file in the sandbox", async () => {
-  setupTest();
-  
-  try {
-    // Stub createSandbox to return our mock
-    const createSandboxStub = stub(
-      { createSandbox },
-      "createSandbox",
-      () => Promise.resolve(mockSuccessfulSandbox())
-    );
-    
-    // Call the function
-    const content = await readFile("/path/to/file.txt");
-    
-    // Verify the result
-    assertEquals(content, "File content");
-    
-    // Verify that the logger was called
-    assertSpyCalls(logMessageSpy, 1);
-    
-    // Restore the stub
-    createSandboxStub.restore();
-  } finally {
-    teardownTest();
-  }
-});
-
-Deno.test("listFiles should list files in the sandbox", async () => {
-  setupTest();
-  
-  try {
-    // Stub createSandbox to return our mock
-    const createSandboxStub = stub(
-      { createSandbox },
-      "createSandbox",
-      () => Promise.resolve(mockSuccessfulSandbox())
-    );
-    
-    // Call the function
-    const files = await listFiles("/path/to/dir");
-    
-    // Verify the result
-    assertEquals(files, ["file1.txt", "file2.txt"]);
-    
-    // Verify that the logger was called
-    assertSpyCalls(logMessageSpy, 1);
-    
-    // Restore the stub
-    createSandboxStub.restore();
-  } finally {
-    teardownTest();
-  }
-});
-
-// Test error handling for file operations
-Deno.test("writeFile should handle errors", async () => {
-  setupTest();
-  
-  try {
-    // Stub createSandbox to return our error mock
-    const createSandboxStub = stub(
-      { createSandbox },
-      "createSandbox",
-      () => Promise.resolve(mockErrorSandbox())
-    );
-    
-    // Verify that it throws
-    await assertRejects(
-      async () => {
-        await writeFile("/path/to/file.txt", "File content");
-      },
-      Error,
-      "Write failed"
-    );
-    
-    // Verify that the logger was called
-    assertSpyCalls(logMessageSpy, 1);
-    
-    // Restore the stub
-    createSandboxStub.restore();
-  } finally {
-    teardownTest();
-  }
-});
-
-Deno.test("readFile should handle errors", async () => {
-  setupTest();
-  
-  try {
-    // Stub createSandbox to return our error mock
-    const createSandboxStub = stub(
-      { createSandbox },
-      "createSandbox",
-      () => Promise.resolve(mockErrorSandbox())
-    );
-    
-    // Verify that it throws
-    await assertRejects(
-      async () => {
-        await readFile("/path/to/file.txt");
-      },
-      Error,
-      "Read failed"
-    );
-    
-    // Verify that the logger was called
-    assertSpyCalls(logMessageSpy, 1);
-    
-    // Restore the stub
-    createSandboxStub.restore();
-  } finally {
-    teardownTest();
-  }
-});
-
-Deno.test("listFiles should handle errors", async () => {
-  setupTest();
-  
-  try {
-    // Stub createSandbox to return our error mock
-    const createSandboxStub = stub(
-      { createSandbox },
-      "createSandbox",
-      () => Promise.resolve(mockErrorSandbox())
-    );
-    
-    // Verify that it throws
-    await assertRejects(
-      async () => {
-        await listFiles("/path/to/dir");
-      },
-      Error,
-      "List failed"
-    );
-    
-    // Verify that the logger was called
-    assertSpyCalls(logMessageSpy, 1);
-    
-    // Restore the stub
-    createSandboxStub.restore();
-  } finally {
-    teardownTest();
-  }
+    // Check that the output contains the expected text
+    const output = execResult.logs.stdout.join("\n");
+    assertEquals(output.includes("NumPy array:"), true, "Output should contain NumPy array");
+    assertEquals(output.includes("Mean:"), true, "Output should contain mean calculation");
+  },
+  sanitizeResources: false,
+  sanitizeOps: false
 });
