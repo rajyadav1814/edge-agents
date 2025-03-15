@@ -1,9 +1,45 @@
 {
   "version": "4",
   "specifiers": {
+    "npm:@e2b/code-interpreter@*": "1.0.4",
+    "npm:@e2b/sdk@*": "1.0.7_@bufbuild+protobuf@2.2.3_@connectrpc+connect@2.0.0-rc.3__@bufbuild+protobuf@2.2.3",
+    "npm:@types/node@*": "22.12.0",
     "npm:openai@*": "4.87.3"
   },
   "npm": {
+    "@bufbuild/protobuf@2.2.3": {
+      "integrity": "sha512-tFQoXHJdkEOSwj5tRIZSPNUuXK3RaR7T1nUrPgbYX1pUbvqqaaZAsfo+NXBPsz5rZMSKVFrgK1WL8Q/MSLvprg=="
+    },
+    "@connectrpc/connect-web@2.0.0-rc.3_@bufbuild+protobuf@2.2.3_@connectrpc+connect@2.0.0-rc.3__@bufbuild+protobuf@2.2.3": {
+      "integrity": "sha512-w88P8Lsn5CCsA7MFRl2e6oLY4J/5toiNtJns/YJrlyQaWOy3RO8pDgkz+iIkG98RPMhj2thuBvsd3Cn4DKKCkw==",
+      "dependencies": [
+        "@bufbuild/protobuf",
+        "@connectrpc/connect"
+      ]
+    },
+    "@connectrpc/connect@2.0.0-rc.3_@bufbuild+protobuf@2.2.3": {
+      "integrity": "sha512-ARBt64yEyKbanyRETTjcjJuHr2YXorzQo0etyS5+P6oSeW8xEuzajA9g+zDnMcj1hlX2dQE93foIWQGfpru7gQ==",
+      "dependencies": [
+        "@bufbuild/protobuf"
+      ]
+    },
+    "@e2b/code-interpreter@1.0.4": {
+      "integrity": "sha512-8y82UMXBdf/hye8bX2Fn04JlL72rvOenVgsvMZ+cAJqo6Ijdl4EmzzuFpM4mz9s+EJ29+34lGHBp277tiLWuiA==",
+      "dependencies": [
+        "e2b"
+      ]
+    },
+    "@e2b/sdk@1.0.7_@bufbuild+protobuf@2.2.3_@connectrpc+connect@2.0.0-rc.3__@bufbuild+protobuf@2.2.3": {
+      "integrity": "sha512-S9EgPVFA6xAHD15p0yKfqBrHYOiqf12vyM5vfsUjFw5Q5wdVIrQaPR+K1GDT1+vpPyoVYmXQyuJ9vfXxOgNGiQ==",
+      "dependencies": [
+        "@bufbuild/protobuf",
+        "@connectrpc/connect",
+        "@connectrpc/connect-web",
+        "compare-versions",
+        "openapi-fetch",
+        "platform"
+      ]
+    },
     "@types/node-fetch@2.6.12": {
       "integrity": "sha512-8nneRWKCg3rMtF69nLQJnOYUcbafYeFSjqkw3jCRLsqkWFlHaoQrr5mXmofFGOx3DKn7UfmBMyov8ySvLRVldA==",
       "dependencies": [
@@ -51,6 +87,9 @@
         "delayed-stream"
       ]
     },
+    "compare-versions@6.1.1": {
+      "integrity": "sha512-4hm4VPpIecmlg59CHXnRDnqGplJFrbLG4aFEl5vl6cK1u76ws3LLvX7ikFnTDl5vo39sjWD6AaDPYodJp/NNHg=="
+    },
     "delayed-stream@1.0.0": {
       "integrity": "sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ=="
     },
@@ -60,6 +99,17 @@
         "call-bind-apply-helpers",
         "es-errors",
         "gopd"
+      ]
+    },
+    "e2b@1.0.7_@bufbuild+protobuf@2.2.3_@connectrpc+connect@2.0.0-rc.3__@bufbuild+protobuf@2.2.3": {
+      "integrity": "sha512-7msagBbQ8tm51qaGp+hdaaaMjGG3zCzZtUS8bnz+LK7wdwtVTA1PmX+1Br9E3R7v6XIchnNWRpei+VjvGcfidA==",
+      "dependencies": [
+        "@bufbuild/protobuf",
+        "@connectrpc/connect",
+        "@connectrpc/connect-web",
+        "compare-versions",
+        "openapi-fetch",
+        "platform"
       ]
     },
     "es-define-property@1.0.1": {
@@ -190,6 +240,18 @@
         "node-fetch"
       ]
     },
+    "openapi-fetch@0.9.8": {
+      "integrity": "sha512-zM6elH0EZStD/gSiNlcPrzXcVQ/pZo3BDvC6CDwRDUt1dDzxlshpmQnpD6cZaJ39THaSmwVCxxRrPKNM1hHrDg==",
+      "dependencies": [
+        "openapi-typescript-helpers"
+      ]
+    },
+    "openapi-typescript-helpers@0.0.8": {
+      "integrity": "sha512-1eNjQtbfNi5Z/kFhagDIaIRj6qqDzhjNJKz8cmMW0CVdGwT6e1GLbAfgI0d28VTJa1A8jz82jm/4dG8qNoNS8g=="
+    },
+    "platform@1.3.6": {
+      "integrity": "sha512-fnWVljUchTro6RiCFvCXBbNhJc2NijN7oIQxbwsyL0buWJPG85v81ehlHI9fXrJsMNgTofEoWIQeClKpgxFLrg=="
+    },
     "tr46@0.0.3": {
       "integrity": "sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw=="
     },
@@ -212,6 +274,24 @@
         "webidl-conversions"
       ]
     }
+  },
+  "redirects": {
+    "https://deno.land/x/dotenv/mod.ts": "https://deno.land/x/dotenv@v3.2.2/mod.ts",
+    "https://esm.sh/@bufbuild/protobuf@^1.10.0?target=denonext": "https://esm.sh/@bufbuild/protobuf@1.10.0?target=denonext",
+    "https://esm.sh/@bufbuild/protobuf@^2.2.0/codegenv1?target=denonext": "https://esm.sh/@bufbuild/protobuf@2.2.3/codegenv1?target=denonext",
+    "https://esm.sh/@bufbuild/protobuf@^2.2.0/wire?target=denonext": "https://esm.sh/@bufbuild/protobuf@2.2.3/wire?target=denonext",
+    "https://esm.sh/@bufbuild/protobuf@^2.2.0/wkt?target=denonext": "https://esm.sh/@bufbuild/protobuf@2.2.3/wkt?target=denonext",
+    "https://esm.sh/@bufbuild/protobuf@^2.2.0?target=denonext": "https://esm.sh/@bufbuild/protobuf@2.2.3?target=denonext",
+    "https://esm.sh/@bufbuild/protobuf@^2.2.2/codegenv1?target=denonext": "https://esm.sh/@bufbuild/protobuf@2.2.3/codegenv1?target=denonext",
+    "https://esm.sh/@connectrpc/connect-web@^1.4.0?target=denonext": "https://esm.sh/@connectrpc/connect-web@1.6.1?target=denonext",
+    "https://esm.sh/@connectrpc/connect@^1.4.0?target=denonext": "https://esm.sh/@connectrpc/connect@1.6.1?target=denonext",
+    "https://esm.sh/@e2b/code-interpreter": "https://esm.sh/@e2b/code-interpreter@1.0.4",
+    "https://esm.sh/@e2b/sdk": "https://esm.sh/@e2b/sdk@1.0.7",
+    "https://esm.sh/@types/platform@~1.3.6/index.d.ts": "https://esm.sh/@types/platform@1.3.6/index.d.ts",
+    "https://esm.sh/compare-versions@^6.1.0?target=denonext": "https://esm.sh/compare-versions@6.1.1?target=denonext",
+    "https://esm.sh/e2b@^1.0.5?target=denonext": "https://esm.sh/e2b@1.0.7?target=denonext",
+    "https://esm.sh/openapi-fetch@^0.9.7?target=denonext": "https://esm.sh/openapi-fetch@0.9.8?target=denonext",
+    "https://esm.sh/platform@^1.3.6?target=denonext": "https://esm.sh/platform@1.3.6?target=denonext"
   },
   "remote": {
     "https://deno.land/std@0.203.0/assert/_constants.ts": "8a9da298c26750b28b326b297316cdde860bc237533b07e1337c021379e6b2a9",
@@ -259,6 +339,167 @@
     "https://deno.land/std@0.215.0/toml/_parser.ts": "187560eb4465977808b18c68299e1f5a6e4631c0a181d868c8f24722cf9146d1",
     "https://deno.land/std@0.215.0/toml/mod.ts": "a457ea7877a6d5e7f3d6985c43da4d2ecd7461038d5c4c7a0089737e90a7ee90",
     "https://deno.land/std@0.215.0/toml/parse.ts": "2f0729a8f62c7e508af8dfada0386a4bc2c0d664ef4d26090df03cf495dcb25a",
-    "https://deno.land/std@0.215.0/toml/stringify.ts": "8b9ba3c1bf8fa7d58d7b62ad62b3174dbbc51050d5cc302aa8e2834089c00d73"
+    "https://deno.land/std@0.215.0/toml/stringify.ts": "8b9ba3c1bf8fa7d58d7b62ad62b3174dbbc51050d5cc302aa8e2834089c00d73",
+    "https://deno.land/x/dotenv@v3.2.2/mod.ts": "077b48773de9205266a0b44c3c3a3c3083449ed64bb0b6cc461b95720678d38e",
+    "https://deno.land/x/dotenv@v3.2.2/util.ts": "693730877b13f8ead2b79b2aa31e2a0652862f7dc0c5f6d2f313f4d39c7b7670",
+    "https://esm.sh/@bufbuild/protobuf@1.10.0/denonext/protobuf.mjs": "127c158ae25da95dfb436071f36bcbd0cf04592b25883264be44e2e6d360c523",
+    "https://esm.sh/@bufbuild/protobuf@1.10.0?target=denonext": "9a1fee01d65e43c4479918b8e52bcfa10aee77cd3b8258c290ee82672074e39a",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/codegenv1?target=denonext": "41a7df1ddd382d3076a71952ba0254433bcbcd4fb766b5c713f8568338366185",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/codegenv1.mjs": "cc8ca5b2527fb650186261fa0756593503b9532b5434f84a4fb2f47a5ef4879d",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/clone.mjs": "d21e9c3f12a06332849f3a19763a0be230542e9bf9868dee48a91c93006c289a",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/codegenv1/boot.mjs": "6aedf1e966119d2077a8fb715a7ea4a9ed54f5dea712c2f9667e64a2bd32af84",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/codegenv1/enum.mjs": "6b378e3abf5412c71f1e314c473a7d2f2778dc2b58a16097c7daef4515711c1f",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/codegenv1/file.mjs": "518121ad8af4f2e4396ce21f805f2c17b34145d84f7759ad5a946ed50f35896d",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/codegenv1/message.mjs": "ddbb3364fa3f8de814ae218f5c413a1800323ab169f792e3258a89b52f4661d8",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/codegenv1/restore-json-names.mjs": "c65105b3ee3bea9e1ebabfd516eaa35aefb32333a404a60cf4f412d62ade4ef2",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/create.mjs": "7c8490fd290710586eef107973f443239dd2590cc82df92613878c9788f2bef1",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/descriptors.mjs": "ba4020c781c6fac3d769664a69ecb1e122b52b9dbfa65c9415d1ff63757793b7",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/fields.mjs": "6319e3b69b1927957edae2a91cbf21b2197bd64e7b87833b1140b32e5cc4a3ee",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/from-binary.mjs": "9668abe5f457cddb4eac738feca5e65c96092ca5ea707e8e4b2bb34c08b124ce",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/is-message.mjs": "9878d24f19cf029a29c3ffc804648851d04eaaa24db726ac84b09ac78395daa0",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/proto-int64.mjs": "8b580c4b67b15888abda89a691ff7400a66e71a1d0d64cd746ab5e3b79f7569e",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/reflect/error.mjs": "c134bb0d70885f9f77cc8ea369ce91766eea2c9cfbecdec9312ab4bf83e9dc15",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/reflect/guard.mjs": "7bdc822f6b197172e16f483802495acbe5e71da67ed70e1e01af20a77653c59e",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/reflect/names.mjs": "7eb96b03b1c01d1f1d358341ee1c8a3f10c6228c94d6f33f1c53f6e29b96eb19",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/reflect/nested-types.mjs": "31d635a649ea4ef09ae5d1a5193e67398843666e842cda0641666bf82d6d2f4b",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/reflect/reflect-check.mjs": "a51003c7cc617b8b02a304ca3f4ea2cd0f9a8bd33985c757b819f30e248aaa45",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/reflect/reflect.mjs": "5d7763277965933d3f2926d6d1685011d8cf1764113817971d28b597069b5ec4",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/reflect/scalar.mjs": "45fbfca65b43e86349ef44ec7ad8f4e98fdba7387a1812caca1cdbd20aee4748",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/reflect/unsafe.mjs": "0c5dc297992ac97c3bba9a0b89f183752d7742a1beaf7f7b2120bcbc1e3af3cd",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/registry.mjs": "8c4362f640a12bf2767548fd3da9dff2fd5faa0248b9c600decbccead1a2902a",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/to-binary.mjs": "4fb7bf52f7e0f1d495cde40166ba0d8532c72be2d18b0e979246a529f039c1f3",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/wire/base64-encoding.mjs": "af85aae6b4790b4d7a82fad0127cc9bc5552786d49a72a88d7bd9e482a549c33",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/wire/binary-encoding.mjs": "32db7d89cb4451aeef1fa40d33f48e880b9e0a57e30be71d5886cb1479770ccb",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/wire/text-encoding.mjs": "a71213eaaa3919bed7ed8e0bab6da5af8ca8bbe5ef044f848a6244263a5e03f1",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/wire/text-format.mjs": "8b398fab372e9479d8c2cbb4d45e59e00e80163841586e79dab85534d28aabc4",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/wire/varint.mjs": "abdba5b5eb771d95aa78d1ecf02a5043cbd1cc68878d6629cd4f7db0360d1481",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/wkt/gen/google/protobuf/descriptor_pb.mjs": "056ca291f32e9743b5b192824613244084d9b7244c1b51341b60fbacf268e50b",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/dist/esm/wkt/wrappers.mjs": "9aec171aa014bad848c3bff96d0be943891087453974fa7446a0b7bd810ebca3",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/protobuf.mjs": "20507f7db78e9be8cac0aa743e58f8d96ffc6c26cd152d4db217177e56db9769",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/wire.mjs": "c8f8375dfbb33ad550a2089b9d6a8bda30beb8e363d23026544dc45138ff81b7",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/denonext/wkt.mjs": "2e930e9de2da0fb3c65d6178e21110f9288ef2c4f863ea10a4831980d22a0894",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/wire?target=denonext": "0427f9d0f7205796b8c8409fb179bcf9908a54d196c00590b78fd0c043ac30e9",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3/wkt?target=denonext": "835b99b1153f7e979f3603f82f24e99bf8baf6700bb30530bfd81962bea25f80",
+    "https://esm.sh/@bufbuild/protobuf@2.2.3?target=denonext": "13d081184664b2b9e510e4b2408803c8730068c27e2d65c6c30b22c512e52b21",
+    "https://esm.sh/@connectrpc/connect-web@1.6.1/denonext/connect-web.mjs": "5bdf607412f814f2cd8c6017cce4b54d82217c3efadfbdbfd0f48c894e1064ee",
+    "https://esm.sh/@connectrpc/connect-web@1.6.1?target=denonext": "5764ce278ac7d9b7e9ed57676e9cb42aae1bc5a9758682481944965b40a43052",
+    "https://esm.sh/@connectrpc/connect-web@2.0.0-rc.3/denonext/connect-web.mjs": "5609ed0edc8e878f7b39a1c50010d7824adc7b1d6bc973f60aa2748ae6847391",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/connect.mjs": "0607bcc56e24b3d1e859b10b0352881618d55368790bdc21b3a49fe727e5a3ec",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/code.mjs": "bb3e48d700c0413cf3a4dd20850eadc5de97024c11e328540cce39727ae1dffc",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/connect-error.mjs": "cefaa7a96c80a647f1d220e01953a82f172376906f20294c8437341583d8a55b",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/context-values.mjs": "2390581721487981f45681ac586e829ed1c2c22a4a0e7c6007d622a36c5726f4",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/http-headers.mjs": "6916cafc4fbaad91d655d32ad8fbde0e37d65b523ce210e1968b2cab07188f5d",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/implementation.mjs": "743eff2f97e6a28b4b0b9efcd08323ad8002ed11e9f400e9206bc5bd1a3e197e",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/interceptor.mjs": "bb8f3a23100f5d075c7cc057f1a69759cc1556ef9f48b89d6826e4b7ea145d8d",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/code-string.mjs": "1e0cabf0ee465b33976875fc716459cf52ef08c86083161e634aaa5e700924ea",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/content-type.mjs": "0778329eb650f6bb4877046d55dfc59ff2cc1915caca84923f4919cfcdeacf33",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/end-stream.mjs": "fa129157ff3d5519d47414fba2f173e3516b334235410ea6e5a18320558dfa88",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/error-json.mjs": "c0ccd8d503a1084587785cb3bd9f438c8d84305635acc088de7ce5c5e6542dc9",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/get-request.mjs": "b416ecddf4f53af68eb644fc87b70de44270cf4934b1570fd8bbde94896e24ef",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/handler-factory.mjs": "5d75fa20d49c28c733ddf65efd03b8e0c2f52ce6b4686475e0a085bda3bda9a6",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/headers.mjs": "d404070fa07a11dba6af47cf58d1b51fba1d072e77741b0aa42d731e9ecb766c",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/http-status.mjs": "e6c6a9223968929a6f2d69146049da644d229da9e765d51541a9595ba9bb4ec4",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/parse-timeout.mjs": "b19baa43fefa4c08e000a7031bab6569ae40a531e5ad5c69e4c468e6f455be26",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/query-params.mjs": "ef0af1e63d602f81ad62c3f3521b1c60cd79c3c314868d15e5fafc2d0c01958a",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/request-header.mjs": "b2788c88dbb2ebf8e4cbfb727d054df2f9f3b9085143d98245b03b9eca239506",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/trailer-mux.mjs": "23fc5a4b4350495b2fb6ab78892d993c891d16b78f4e4fc90fd2a5cfd2c7d933",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/transport.mjs": "8439433431907d5b7d6afd4361f9c5efec33c27e2b2889f4d3b82fc9bccb3009",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/validate-response.mjs": "faa2968f7d2ec25ef4b39bbd250c3e57a0609e15a6fc2c7f63d8aad79b016fa5",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-connect/version.mjs": "5e4c19da0af7b92e743d933dcd8d084dd27ec40f9fe241b1e36ce2de06cbc976",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-grpc-web/content-type.mjs": "a1d28cdf7648605be25de5e49e8ff35dda51b1cef46182a22c6b7636542b44e4",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-grpc-web/handler-factory.mjs": "7d95801a91576634bc83fc5ed70612df29e6d4e77f55da741281e99bf97baaa1",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-grpc-web/headers.mjs": "3142cfa30675742727fd15a49c2eb5b6c26edc6c4ea600bfe7dd914b3ff92f80",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-grpc-web/trailer.mjs": "b9a0eeb13f21da26cb4ec05f3854f25cb7b777912921fa361ea20de10f3d5cde",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-grpc/content-type.mjs": "443d530672d7923cb52a748a4280a169b0a90dba4669147082a1a7f852a2fda8",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-grpc/handler-factory.mjs": "3255d2cbe14a60266e8224063c086f32fa98fba9eccd91b3910f30d9e2983b46",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-grpc/headers.mjs": "cc480a8e872a1cb20dda4305a1596809fcfa032490f6f25b05d375c9ed285aa0",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-grpc/http-status.mjs": "24b58b3aa065456d8a50b922f29711363106cf7cbba4bc964abe881c54fa4c68",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-grpc/parse-timeout.mjs": "5698979e427c6ad98a2740bdcab89fb85dbfe8cd740c3254ce6c47c03712cb4e",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-grpc/trailer-status.mjs": "80924b1712e72600c26e988b478779930bcbef6f9c8dc53aa2c128da431d8078",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol-grpc/validate-trailer.mjs": "5a7d38370b606bc6de2ff92202308fa0e547c7b406dc2c87db2169dcd8eb412a",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/async-iterable.mjs": "c9bc6d4415b4fecbdae9a4dd8d252355c03d72c4b5ee23a36acc432717af6280",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/compression.mjs": "996ccdf2dc88c8f0d4ab8bb04b7aa4a2163f77a308de787294fe58d38891e0d9",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/content-type-matcher.mjs": "3be9cfaf36304b7b7286efb18ea43df0624ef5b24417049d2e51d8d6b2423740",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/create-method-url.mjs": "226914195a35955fe49224d46d17cd167789870e3de1d976d49aed79244c48e4",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/envelope.mjs": "485513e2a942929ff07e9c094c995c70059c921b082844daf0f5cabe085b79ac",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/invoke-implementation.mjs": "83de3d187a8a25b645c5ce2b035a69951ef34f41821101afae957dedc1ce56af",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/limit-io.mjs": "0f14930676501c837f82534ca1bec88cd2b5fa105956b37e383fff37e49dc6f9",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/normalize.mjs": "1e24a917a57e0e2ca6d958b796cb4cccf787287dc496eedce420baf7337e8a2b",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/run-call.mjs": "689372d0a4e37bd13f64fcf74b388d485d4b69b4a72446a24f408f9c49ef9c5e",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/serialization.mjs": "d68786387a6ad9202dc31f8ede87487bebfc99eecaef080961b88370c8bc0c06",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/signals.mjs": "f8609eff5c14429b86a7970df38ae6adb7fca18e4dbf0bcd0a8ec36000f87a3e",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/universal-handler-client.mjs": "e1cac0b7cd08513e998c91054a9464cbb85a04f63cf62db19fb7c1b2aeabf155",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/universal-handler.mjs": "7dfecdffae317bcb530c0688a57ed3b193337d9cdd531e0a93d159f893b9f942",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/dist/esm/protocol/universal.mjs": "38759b45d21dacbc55fee46c7900dda514df252362ab6fa94c365bb7d7ac8b83",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/protocol-connect.mjs": "1f4850e8fb48c61d8d1e1ddadd77a7ae5d05281ad5696cccae1ee0faf5fa6d12",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/protocol-grpc-web.mjs": "db2f88d1c899c64e1daf60a4fc8a5d86732e563ac441b386b8a64a616d8273cb",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/protocol-grpc.mjs": "9e542c27f6dea1f99a5931706af2c97fe56d427bb5d0f2ff2b1b0b4d203f35bf",
+    "https://esm.sh/@connectrpc/connect@1.6.1/denonext/protocol.mjs": "272e47432e025be08cfd590aef915aa248c5d8c995b9446b678e042fa0a51dbe",
+    "https://esm.sh/@connectrpc/connect@1.6.1?target=denonext": "4c4989bcf4fc4abea7e5a5f5a7ea77297f318f64d7225286edbb8377f658e902",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/connect.mjs": "4ad84c2eed195a1660e76108fcc93e1abb9207187a443a9ab9aafe28b8c0c80d",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/code.mjs": "346ba92c78a18dd725d2016b50c480900766e27106dba8e9183cde812dcefe42",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/connect-error.mjs": "8ca7d4a6ca4b4a6891fbe0831197bf42521823da6101bf0cbae98011e70e2f18",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/context-values.mjs": "517a5213a7072b431b69c6c64a5989bb3ea2e6c79de923c535838990251042b5",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/http-headers.mjs": "e59a7440032edbe8dc19cb3c5cfe5997b205ef1d822166c698420f6f2bffc7bd",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/implementation.mjs": "0a1a415c69f5cd76d04014b8efc19c13bf329c072bc9dd58a81b41f2e26179f1",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/interceptor.mjs": "af2692f4fd5e1bc95538f345e417ce1d050ba7cb9f0fd2a57f8590908364fc79",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/code-string.mjs": "60bbf4a6c67f86309eb03de2224b6af06de5627e9fa4371a058b594374a54df7",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/content-type.mjs": "787e94eaa3db071dc5fc3c5c225c3cef0c0235e0fa4edf491ba90295f8fb111f",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/end-stream.mjs": "7b0604baa9961658b38c48da13588b4fc321c0719deb20607709da111af22e12",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/error-json.mjs": "82cce643822a8d46b341552a1bd9d5ebff2157f8b63c9244fb970c00eaa4c38b",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/get-request.mjs": "a8242cdfc5f46051d917999f05f187916f07227da8004f46797b169fcaf503b3",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/handler-factory.mjs": "5f72364b389664f5970dc91989dd21cb8f9b4d5ce291fd1a42a52469d6f9373b",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/headers.mjs": "7e5481686a37d8420170dd86509712366e57dd492a94defa36b54314e763175c",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/http-status.mjs": "41d55d0b4dd49fb0544312cfc7c0e9b9902cfd51966ed6c2f7d4d08647a49052",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/parse-timeout.mjs": "486d5de07f3c86392fa28ddb160e99e0a3549e694b333946ce3ce69b236d2dbd",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/query-params.mjs": "2b68ddbc542edab1fcb9f7b0b0f23a9b4a14ca0657cd387e840a7d83ef4c64e2",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/request-header.mjs": "040c3d4e25523b16c808207a18fdf99f4b4e5b710c1c2132e0f3a290b2f1f933",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/trailer-mux.mjs": "195aae62633035305dd20c262d17db64acd5e23f86711e2193c9a697e6e8f288",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/transport.mjs": "f3d32d8b18042767247c3a24211fb82e140188ec98d84cb1b9f2c98c7333a485",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/validate-response.mjs": "86b32644f8310f41c7489878629ee848866ddaa3a7ef01dc27178bdfe2ba3a8a",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-connect/version.mjs": "d9177fdadde11ace49ddffddcd0b3d5f2ee5eee60f9e78a79f038655a6f473c3",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-grpc-web/content-type.mjs": "56996b55e83d23b0bd0e293e450f44d5af547f1bde7b64a59bc09ef67b50c863",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-grpc-web/handler-factory.mjs": "8c140f9f378e5ad90347f03dcf29c61444ad46c1686468e976596d11d29efca0",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-grpc-web/headers.mjs": "cee035ec9bb13704018e41eb2ef53c6a679bb98e214e32c491a1a7853427e978",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-grpc-web/trailer.mjs": "3b66722d6293b4bb4a21fc6f3def9720d4c20854953236499f3b2a23e9fd18c0",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-grpc/content-type.mjs": "d662fb32d1b8cf940c82aac1fa6c8af5f6a749762c17c37396e5fedd0b219830",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-grpc/handler-factory.mjs": "bba2b783787a5749c62e3ed5947969c67c248e156dd66adf51d713d5d8b70d42",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-grpc/headers.mjs": "2ef476759c712decdf8aeb7c1c2a4c848330c3cd74239e4a5461bd3e998c959f",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-grpc/http-status.mjs": "77c40a9bd7b8bd8b86dc5b5a386e5745396abd242be8a93493269f5cc25e99f9",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-grpc/parse-timeout.mjs": "d543c11325ba194585069765de2a736c6129ca277fa6fe77e298345bba7ca7f0",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-grpc/trailer-status.mjs": "e79dfb831eb814ff5b2741b01a6d755a69896344bc1dbb38b1a4b98d6ac24a60",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol-grpc/validate-trailer.mjs": "56db126a60ddbd262fdaa403aa2bde903cb02247b80dd5cd191922110c698782",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/async-iterable.mjs": "e3049d1b1eb0ecfe891b3cd6d01dccd7ad920d486f8b82f2f84ff4c3c6d9ae25",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/compression.mjs": "fae361775291d5916b6744d8d90a1fa21df37643cf466e0b72e0b5253e9009b1",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/content-type-matcher.mjs": "8bdaf7cf5be14b3829939fd37e25da4e6df2e0c94492349f36a3075795664901",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/create-method-url.mjs": "0a6abe8b8f148e13e527aee54c0673aac3032805da63262fe6d985224bb6c6eb",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/envelope.mjs": "7f39bae8fc6dce290c73923c8d0ef270a061b870770ae5e58f8776b9a2f8e924",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/invoke-implementation.mjs": "10b1d212421f0dc756c16024abbd5749427aa24b9967b82a2a8b62e13a92e339",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/limit-io.mjs": "4d9260ac85b3b0418b9dbe4736fd33b29c5a3f8701efb78031219f13340595d6",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/normalize.mjs": "0b4f703f57f27f293f7665ce03786317f037abd8e4c18f73150e092c2527420d",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/run-call.mjs": "0fa29a315c29b38f95e525ef2ac71194cbf3c27872b72f581e24306c51297d7c",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/serialization.mjs": "f2e541afdde4dcd0ebbd7b87741e85de7840b0b84e5e80585848f18d40994faf",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/signals.mjs": "c975481e7b5fe9c64501351edae1ebd78a93ce3ae03d28a5cdb178c091b34239",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/universal-handler-client.mjs": "1fea0f0c678471aaefd36892b18a5e233d2a7160667a11345d3273c4bf55e18d",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/universal-handler.mjs": "3abef50339edd461fec3b761e7b37283827caedaa3331f3d676521dd2d06f834",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/dist/esm/protocol/universal.mjs": "4f343995dccccda1becd8c10dda4b49df3674d72e033c2efa9f271bf08b774d1",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/protocol-connect.mjs": "bce983e47a1a972b253e8f8a0324e74796783ac312753779b5eea34501ee2959",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/protocol-grpc-web.mjs": "a0a3d3cffaff48e4c7690e7255b0600c4460ae5f1dbf5c37a6509c3b2d7e9e10",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/protocol-grpc.mjs": "0f83fb8e090c0f5f05a98791affb0aa6fe1ac20ea1dd0f83b567038c0fd02f09",
+    "https://esm.sh/@connectrpc/connect@2.0.0-rc.3/denonext/protocol.mjs": "e58092ea1f7b36919e4734f69f4dbad813d165d12970230c54b67d38cd8bd5c2",
+    "https://esm.sh/@e2b/code-interpreter@1.0.4": "2166de3018f6ca77c27c4b6fa8c9d06932ce3ceb18cdecd629ae7f9a28707a8c",
+    "https://esm.sh/@e2b/code-interpreter@1.0.4/denonext/code-interpreter.mjs": "a59addff2797bf05e135edfc2862077db80822dc0d4982a758a8f7ed7787ffe7",
+    "https://esm.sh/@e2b/sdk@1.0.0": "790b91df8eb4c1de66e68b1b13ef172660d1351828aa722ebc292b6a62945dc6",
+    "https://esm.sh/@e2b/sdk@1.0.0/denonext/sdk.mjs": "fe8f341516badba575a7927ea00c30e2848de88315565b5d1a5bac5039a4d8f1",
+    "https://esm.sh/@e2b/sdk@1.0.7": "45649d0e7e5f5c31ab69994bdd8fcb867af342da73580ae1aa32fdbd8beb3b92",
+    "https://esm.sh/@e2b/sdk@1.0.7/denonext/sdk.mjs": "40145bb92ab9c0dcf04b1fe73fb2ba1c2575512920d641850612f29421980cc2",
+    "https://esm.sh/compare-versions@6.1.1/denonext/compare-versions.mjs": "7ec1c3385386a93dff3edb8047c33ab13efd82a9542b2a964d9193d6e5167e01",
+    "https://esm.sh/compare-versions@6.1.1?target=denonext": "785f05abefe8e951722e79ae7de0f93a0b5337edff0f7c7b84d754e74f61deab",
+    "https://esm.sh/e2b@1.0.7/denonext/e2b.mjs": "f902e5f1adfb70bd9fd9ed95e3c91faf15ddd831ffa62652d25954650a1a9167",
+    "https://esm.sh/e2b@1.0.7?target=denonext": "18defc7fd7c104c5ff1ccf36a65a5a693ccb14c21e8b394afabd5a2353cf3322",
+    "https://esm.sh/openapi-fetch@0.9.8/denonext/openapi-fetch.mjs": "1b6ff54d9309f5eba3e240b041267515e86107c87682adacccb2aabee823f0dd",
+    "https://esm.sh/openapi-fetch@0.9.8?target=denonext": "68091fddc1da3f8270791dd42cd048668e2bb171d09d67ffadf120bda978df2e",
+    "https://esm.sh/platform@1.3.6/denonext/platform.mjs": "37d3eee68ae5fef83a6e4efaa6435128bd782ce335f2be6c3642a7580a70e25f",
+    "https://esm.sh/platform@1.3.6?target=denonext": "f8608eeab5a65b73c890fce7bae80d48e73771de806b801f5eaf01f40235709d"
   }
 }
