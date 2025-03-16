@@ -1,0 +1,74 @@
+[
+  {
+    "id": "multiply-function-fix",
+    "description": "Fix the multiply function in test-file.js",
+    "prompt": "The multiply function in test-file.js has a bug. It's currently returning a + b instead of a * b. Fix this bug.",
+    "language": "javascript",
+    "safetyCritical": false,
+    "stepDependencies": [
+      {
+        "stepNumber": 1,
+        "requiredTools": ["read_file"],
+        "maxTokens": 1000
+      },
+      {
+        "stepNumber": 2,
+        "requiredTools": ["apply_diff"],
+        "maxTokens": 1000
+      },
+      {
+        "stepNumber": 3,
+        "requiredTools": ["execute_command"],
+        "maxTokens": 1000
+      }
+    ]
+  },
+  {
+    "id": "divide-function-improvement",
+    "description": "Improve the divide function in test-file.js",
+    "prompt": "The divide function in test-file.js could be improved. It currently uses 'var' for variable declaration and doesn't have proper error handling. Update it to use 'const' and improve the error message.",
+    "language": "javascript",
+    "safetyCritical": true,
+    "stepDependencies": [
+      {
+        "stepNumber": 1,
+        "requiredTools": ["read_file"],
+        "maxTokens": 1000
+      },
+      {
+        "stepNumber": 2,
+        "requiredTools": ["apply_diff"],
+        "maxTokens": 1000
+      },
+      {
+        "stepNumber": 3,
+        "requiredTools": ["execute_command"],
+        "maxTokens": 1000
+      }
+    ]
+  },
+  {
+    "id": "add-power-function",
+    "description": "Add a power function to test-file.js",
+    "prompt": "Add a new function called 'power' to test-file.js that takes two parameters 'base' and 'exponent' and returns base raised to the power of exponent.",
+    "language": "javascript",
+    "safetyCritical": false,
+    "stepDependencies": [
+      {
+        "stepNumber": 1,
+        "requiredTools": ["read_file"],
+        "maxTokens": 1000
+      },
+      {
+        "stepNumber": 2,
+        "requiredTools": ["apply_diff"],
+        "maxTokens": 1000
+      },
+      {
+        "stepNumber": 3,
+        "requiredTools": ["execute_command"],
+        "maxTokens": 1000
+      }
+    ]
+  }
+]
