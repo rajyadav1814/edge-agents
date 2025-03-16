@@ -38,6 +38,10 @@ export async function runSparcBench(
     useCache?: boolean;
     forceRun?: boolean;
     runAll?: boolean;
+    model?: string;
+    temperature?: number;
+    maxTokens?: number;
+    dataPath?: string;
   } = {}
 ) {
   return await tryExec(async () => {
