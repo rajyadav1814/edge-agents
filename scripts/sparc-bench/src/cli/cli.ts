@@ -25,7 +25,14 @@ export async function runCli(): Promise<void> {
     .option("-f, --file <file:string>", "Output file")
     .option("-v, --verbose", "Verbose output")
     .option("-b, --benchmark <name:string>", "Benchmark name")
-    .option("-t, --type <type:string>", "Benchmark type")
+    .option("-t, --type <type:string>", "Benchmark type (humaneval, swebench, redcode)")
+    .option("-p, --parallel", "Run benchmarks in parallel")
+    .option("-m, --max-concurrent <number:number>", "Maximum number of concurrent benchmarks", { default: 2 })
+    .option("-r, --results-dir <dir:string>", "Directory to save results", { default: "./results" })
+    .option("--timeout <ms:number>", "Timeout in milliseconds", { default: 60000 })
+    .option("--no-cache", "Disable result caching")
+    .option("--force", "Force run even if cached result exists")
+    .option("--all", "Run all benchmarks")
     .action(async (options) => {
       // Run the benchmark
       await runSparcBench(options.config, {
@@ -33,7 +40,14 @@ export async function runCli(): Promise<void> {
         outputFile: options.file,
         verbose: options.verbose,
         benchmarkName: options.benchmark,
-        benchmarkType: options.type
+        benchmarkType: options.type,
+        parallel: options.parallel,
+        maxConcurrent: options.maxConcurrent,
+        resultsDir: options.resultsDir,
+        timeout: options.timeout,
+        useCache: options.cache !== false,
+        forceRun: options.force,
+        runAll: options.all
       }).catch(error => handleError(error, options.verbose));
       
       console.log("Benchmark completed successfully!");

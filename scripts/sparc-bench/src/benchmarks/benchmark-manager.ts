@@ -150,8 +150,18 @@ export class BenchmarkManager {
       // Wait for one to complete
       if (running.length > 0) {
         await Promise.race(running);
-        // Filter out completed promises
-        const pendingPromises = running.filter(p => !p.hasOwnProperty('_state') || p._state !== 'fulfilled');
+        // Create a new array of pending promises
+        const pendingPromises = [];
+        for (const promise of running) {
+          // Check if the promise is still pending
+          const status = await Promise.race([
+            promise.then(() => "fulfilled"),
+            Promise.resolve("pending")
+          ]);
+          if (status === "pending") {
+            pendingPromises.push(promise);
+          }
+        }
         running.length = 0; // Clear the array
         running.push(...pendingPromises); // Add back only pending promises
       }

@@ -31,6 +31,13 @@ export async function runSparcBench(
     verbose?: boolean;
     benchmarkName?: string;
     benchmarkType?: string;
+    parallel?: boolean;
+    maxConcurrent?: number;
+    resultsDir?: string;
+    timeout?: number;
+    useCache?: boolean;
+    forceRun?: boolean;
+    runAll?: boolean;
   } = {}
 ) {
   return await tryExec(async () => {
