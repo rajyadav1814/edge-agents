@@ -45,9 +45,19 @@ export class AgenticMetricsCollector {
    * @returns Tool accuracy
    */
   private calculateToolAccuracy(step: AgentStep): number {
-    // In a real implementation, this would compare the tools used with the required tools
-    // For now, we'll simulate it with a random value between 0.7 and 1.0
-    return 0.7 + Math.random() * 0.3;
+    // Handle both new format (tools) and old format (toolsUsed) for backward compatibility
+    if (step.tools && step.tools.length > 0) {
+      // Calculate the ratio of successful tools to total tools using the new format
+      const successfulTools = step.tools.filter(tool => tool.success).length;
+      const totalTools = step.tools.length;
+      return successfulTools / totalTools;
+    } else if (step.toolsUsed && step.toolsUsed.length > 0) {
+      // For backward compatibility, if using toolsUsed, assume all tools were successful
+      return 1.0;
+    } else {
+      // If no tools were used (in either format), accuracy is 100%
+      return 1.0; // If no tools were used, accuracy is 100%
+    }
   }
   
   /**
@@ -56,10 +66,13 @@ export class AgenticMetricsCollector {
    * @returns Overall metrics
    */
   calculateOverallMetrics(steps: AgentStep[]): {
+    stepCompletion: number;
     toolAccuracy: number;
     tokenEfficiency: number;
     trajectoryOptimality: number;
   } {
+    // Calculate step completion (completed steps / total steps)
+    const stepCompletion = this.metrics.length / steps.length;
     // Calculate tool accuracy
     const toolAccuracy = this.metrics.reduce((acc, m) => acc + m.toolAccuracy, 0) / this.metrics.length;
     
@@ -71,6 +84,7 @@ export class AgenticMetricsCollector {
     const trajectoryOptimality = this.calculateTrajectoryScore(steps);
     
     return {
+      stepCompletion,
       toolAccuracy,
       tokenEfficiency,
       trajectoryOptimality,

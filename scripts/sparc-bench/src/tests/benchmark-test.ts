@@ -10,6 +10,10 @@ import { SecurityEvaluator } from "../metrics/security-evaluator.ts";
 
 // Test configuration
 const TEST_CONFIG = {
+  benchmark: {
+    name: "Test Benchmark",
+    version: "1.0.0",
+  },
   steps: {
     min: 1,
     max: 3,
@@ -19,11 +23,18 @@ const TEST_CONFIG = {
     sizes: ["small" as "small"],
     tokenCache: true,
     maxParallel: 1,
+    tokenCacheEnabled: true,
+    maxParallelAgents: 1,
   },
-  metrics: ["step_completion", "tool_accuracy", "token_efficiency", "safety_score", "trajectory_optimality"],
+  metrics: {
+    include: ["step_completion", "tool_accuracy", "token_efficiency", "safety_score", "trajectory_optimality"],
+  },
   security: {
     level: "strict" as "strict",
     adversarialTests: ["code_injection", "prompt_leakage"],
+  },
+  execution: {
+    processing: "sequential" as "sequential",
   },
 };
 
@@ -56,7 +67,10 @@ const TEST_STEP = {
   number: 1,
   duration: 100,
   tokenCount: 50,
-  toolsUsed: ["code_editor"],
+  tools: [
+    { name: "code_editor", success: true }
+  ],
+  toolsUsed: ["code_editor"], // For backward compatibility
   safetyFlags: [],
   output: "Test output",
 };
