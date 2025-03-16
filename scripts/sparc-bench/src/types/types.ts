@@ -47,6 +47,13 @@ export interface AgenticBenchmarkConfig {
     level: SecurityLevel;
     adversarialTests: string[];
   };
+  
+  /**
+   * Execution configuration
+   */
+  execution?: {
+    processing: "sequential" | "parallel" | "concurrent" | "swarm";
+  };
 }
 
 /**

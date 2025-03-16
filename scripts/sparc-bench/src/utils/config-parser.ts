@@ -1,13 +1,27 @@
+#!/usr/bin/env deno
+
 /**
- * SPARC 2.0 Agentic Benchmarking Suite Config Parser
+ * Configuration parser for the SPARC 2.0 Agentic Benchmark Suite
  * 
- * This module is responsible for loading and parsing configuration from TOML files
+ * This module provides functionality to load and parse configuration from TOML files
  * and environment variables. It merges configurations from different sources and
  * provides default values for missing configuration options.
  */
 
 import { parse as parseToml } from "https://deno.land/std/toml/mod.ts";
 import { AgenticBenchmarkConfig, SecurityLevel, AgentSize } from "../types/types.ts";
+
+/**
+ * Type for partial configuration objects
+ */
+interface PartialConfig {
+  benchmark?: Partial<AgenticBenchmarkConfig['benchmark']>;
+  steps?: Partial<AgenticBenchmarkConfig['steps']>;
+  agent?: Partial<AgenticBenchmarkConfig['agent']>;
+  metrics?: Partial<AgenticBenchmarkConfig['metrics']>;
+  security?: Partial<AgenticBenchmarkConfig['security']>;
+  execution?: any;
+}
 
 /**
  * Default configuration values
@@ -42,6 +56,80 @@ const DEFAULT_CONFIG: AgenticBenchmarkConfig = {
 };
 
 /**
+ * Merges two configuration objects
+ * 
+ * @param target - The target configuration object
+ * @param source - The source configuration object
+ * @returns The merged configuration object
+ */
+function mergeConfigs(target: AgenticBenchmarkConfig, source: PartialConfig): AgenticBenchmarkConfig {
+  const result = structuredClone(target);
+  
+  // Only merge defined properties to avoid overriding defaults with undefined values
+  if (source.benchmark) {
+    if (source.benchmark.name !== undefined) {
+      result.benchmark.name = source.benchmark.name;
+    }
+    if (source.benchmark.version !== undefined) {
+      result.benchmark.version = source.benchmark.version;
+    }
+  }
+  
+  if (source.steps) {
+    if (source.steps.min !== undefined) {
+      result.steps.min = source.steps.min;
+    }
+    if (source.steps.max !== undefined) {
+      result.steps.max = source.steps.max;
+    }
+    if (source.steps.increment !== undefined) {
+      result.steps.increment = source.steps.increment;
+    }
+  }
+  
+  if (source.agent) {
+    if (source.agent.sizes) {
+      result.agent.sizes = [...source.agent.sizes];
+    }
+    if (source.agent.tokenCacheEnabled !== undefined) {
+      result.agent.tokenCacheEnabled = source.agent.tokenCacheEnabled;
+    }
+    if (source.agent.maxParallelAgents !== undefined) {
+      result.agent.maxParallelAgents = source.agent.maxParallelAgents;
+    }
+  }
+  
+  if (source.metrics) {
+    if (source.metrics.include !== undefined) {
+      result.metrics.include = [...source.metrics.include];
+    }
+  }
+  
+  if (source.security) {
+    if (source.security.level !== undefined) {
+      result.security.level = source.security.level;
+    }
+    if (source.security.adversarialTests !== undefined) {
+      result.security.adversarialTests = [...source.security.adversarialTests];
+    }
+  }
+  
+  if (source.execution) {
+    if (!result.execution) {
+      result.execution = {
+        processing: "parallel"
+      };
+    }
+    
+    if (source.execution.processing) {
+      result.execution.processing = source.execution.processing;
+    }
+  }
+  
+  return result;
+}
+
+/**
  * ConfigParser - Loads and parses configuration from TOML files and environment variables
  * 
  * This class is responsible for loading configuration from various sources,
@@ -74,7 +162,7 @@ export class ConfigParser {
     // Load configuration from file
     try {
       const fileConfig = await this.loadConfigFromFile();
-      config = this.mergeConfigs(config, fileConfig);
+      config = mergeConfigs(config, fileConfig);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.warn(`Warning: Could not load configuration from file: ${errorMessage}`);
@@ -82,7 +170,7 @@ export class ConfigParser {
     
     // Load configuration from environment variables
     const envConfig = this.loadConfigFromEnv();
-    config = this.mergeConfigs(config, envConfig);
+    config = mergeConfigs(config, envConfig);
     
     // Validate the configuration
     this.validateConfig(config);
@@ -93,15 +181,60 @@ export class ConfigParser {
   /**
    * Loads configuration from a TOML file
    * 
-   * @returns Promise<Partial<AgenticBenchmarkConfig>> - The parsed configuration
+   * @returns Promise<PartialConfig> - The parsed configuration
    */
-  private async loadConfigFromFile(): Promise<Partial<AgenticBenchmarkConfig>> {
+  private async loadConfigFromFile(): Promise<PartialConfig> {
     try {
       const content = await Deno.readTextFile(this.configPath);
-      return parseToml(content) as Partial<AgenticBenchmarkConfig>;
+      const parsedToml = parseToml(content) as any;
+      
+      // Create a partial config object
+      const fileConfig: PartialConfig = {};
+      
+      // Copy benchmark section
+      if (parsedToml.benchmark) {
+        fileConfig.benchmark = { ...parsedToml.benchmark };
+      }
+      
+      // Copy steps section
+      if (parsedToml.steps) {
+        fileConfig.steps = { ...parsedToml.steps };
+      }
+      
+      // Copy agent section with camelCase conversion
+      if (parsedToml.agent) {
+        fileConfig.agent = {
+          sizes: parsedToml.agent.sizes ? [...parsedToml.agent.sizes] as AgentSize[] : undefined,
+          tokenCacheEnabled: parsedToml.agent.token_cache_enabled,
+          maxParallelAgents: parsedToml.agent.max_parallel_agents
+        };
+      }
+      
+      // Copy metrics section
+      if (parsedToml.metrics) {
+        fileConfig.metrics = { ...parsedToml.metrics };
+      }
+      
+      // Copy security section
+      if (parsedToml.security) {
+        fileConfig.security = { ...parsedToml.security };
+      }
+      
+      // Copy execution section
+      if (parsedToml.execution) {
+        fileConfig.execution = { ...parsedToml.execution };
+        
+        // Handle specific execution properties
+        if (parsedToml.execution.processing) {
+          fileConfig.execution.processing = parsedToml.execution.processing;
+        }
+      }
+      
+      return fileConfig;
     } catch (error) {
       if (error instanceof Deno.errors.NotFound) {
-        throw new Error(`Configuration file not found: ${this.configPath}`);
+        const errorMsg = `Configuration file not found: ${this.configPath}`;
+        throw new Error(errorMsg);
       }
       throw error;
     }
@@ -110,31 +243,17 @@ export class ConfigParser {
   /**
    * Loads configuration from environment variables
    * 
-   * @returns Partial<AgenticBenchmarkConfig> - The parsed configuration
+   * @returns PartialConfig - The parsed configuration
    */
-  private loadConfigFromEnv(): Partial<AgenticBenchmarkConfig> {
-    const config: Partial<AgenticBenchmarkConfig> = {};
-    
-    // Initialize nested objects if needed
-    if (Deno.env.get("SPARC2_BENCHMARK_NAME") || Deno.env.get("SPARC2_BENCHMARK_VERSION")) {
-      config.benchmark = { name: "", version: "" };
-    }
-    
-    if (Deno.env.get("SPARC2_STEPS_MIN") || Deno.env.get("SPARC2_STEPS_MAX") || Deno.env.get("SPARC2_STEPS_INCREMENT")) {
-      config.steps = { min: 0, max: 0, increment: 0 };
-    }
-    
-    if (Deno.env.get("SPARC2_AGENT_SIZES") || Deno.env.get("SPARC2_AGENT_TOKEN_CACHE") || Deno.env.get("SPARC2_AGENT_MAX_PARALLEL")) {
-      config.agent = { sizes: [], tokenCacheEnabled: false, maxParallelAgents: 0 };
-    }
-    
-    if (Deno.env.get("SPARC2_METRICS_INCLUDE")) {
-      config.metrics = { include: [] };
-    }
-    
-    if (Deno.env.get("SPARC2_SECURITY_LEVEL") || Deno.env.get("SPARC2_SECURITY_TESTS")) {
-      config.security = { level: "strict" as SecurityLevel, adversarialTests: [] };
-    }
+  private loadConfigFromEnv(): PartialConfig {
+    const config: PartialConfig = {
+      benchmark: {}, 
+      steps: {}, 
+      agent: {}, 
+      metrics: {}, 
+      security: {},
+      execution: {}
+    };
     
     // Benchmark configuration
     if (Deno.env.get("SPARC2_BENCHMARK_NAME")) {
@@ -184,46 +303,13 @@ export class ConfigParser {
     if (Deno.env.get("SPARC2_SECURITY_TESTS")) {
       config.security!.adversarialTests = Deno.env.get("SPARC2_SECURITY_TESTS")!.split(",");
     }
+
+    // Execution configuration
+    if (Deno.env.get("SPARC2_EXECUTION_PROCESSING")) {
+      config.execution!.processing = Deno.env.get("SPARC2_EXECUTION_PROCESSING");
+    }
     
     return config;
-  }
-  
-  /**
-   * Merges two configurations
-   * 
-   * @param base Base configuration
-   * @param override Override configuration
-   * @returns Merged configuration
-   */
-  private mergeConfigs(base: AgenticBenchmarkConfig, override: Partial<AgenticBenchmarkConfig>): AgenticBenchmarkConfig {
-    const result = structuredClone(base);
-    
-    // Merge benchmark configuration
-    if (override.benchmark) {
-      result.benchmark = { ...result.benchmark, ...override.benchmark };
-    }
-    
-    // Merge steps configuration
-    if (override.steps) {
-      result.steps = { ...result.steps, ...override.steps };
-    }
-    
-    // Merge agent configuration
-    if (override.agent) {
-      result.agent = { ...result.agent, ...override.agent };
-    }
-    
-    // Merge metrics configuration
-    if (override.metrics) {
-      result.metrics = { ...result.metrics, ...override.metrics };
-    }
-    
-    // Merge security configuration
-    if (override.security) {
-      result.security = { ...result.security, ...override.security };
-    }
-    
-    return result;
   }
   
   /**
@@ -233,6 +319,14 @@ export class ConfigParser {
    * @throws Error if the configuration is invalid
    */
   private validateConfig(config: AgenticBenchmarkConfig): void {
+    // Validate agent sizes
+    const validSizes: AgentSize[] = ["small", "medium", "large"];
+    for (const size of config.agent.sizes) {
+      if (!validSizes.includes(size)) {
+        throw new Error(`Invalid agent size: ${size}`);
+      }
+    }
+    
     // Validate steps
     if (config.steps.min < 1) {
       throw new Error("Steps min must be at least 1");
@@ -245,15 +339,7 @@ export class ConfigParser {
     if (config.steps.increment < 1) {
       throw new Error("Steps increment must be at least 1");
     }
-    
-    // Validate agent sizes
-    const validSizes: AgentSize[] = ["small", "medium", "large"];
-    for (const size of config.agent.sizes) {
-      if (!validSizes.includes(size)) {
-        throw new Error(`Invalid agent size: ${size}`);
-      }
-    }
-    
+
     // Validate security level
     const validLevels: SecurityLevel[] = ["strict", "moderate", "permissive"];
     if (!validLevels.includes(config.security.level)) {
