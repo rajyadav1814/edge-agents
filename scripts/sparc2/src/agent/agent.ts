@@ -83,7 +83,7 @@ export class SPARC2Agent {
       mode: options.mode || "automatic",
       diffMode: options.diffMode || "file",
       processing: options.processing || "sequential",
-      configPath: options.configPath || "scripts/sparc2/config/agent-config.toml"
+      configPath: options.configPath || "config/agent-config.toml"
     };
     
     // Initialize OpenAI client
@@ -101,7 +101,7 @@ export class SPARC2Agent {
   async init(): Promise<void> {
     try {
       // Load configuration
-      this.config = await parseAgentConfig(this.options.configPath || "scripts/sparc2/config/agent-config.toml");
+      this.config = await parseAgentConfig(this.options.configPath || "/workspaces/edge-agents/scripts/sparc2/config/agent-config.toml");
       
       // Create executor
       this.executor = new AgentExecutor(this.config);
