@@ -103,3 +103,61 @@ export interface BenchmarkOptions {
   /** Whether to run in verbose mode */
   verbose?: boolean;
 }
+
+/**
+ * Agent size for benchmarking
+ */
+export type AgentSize = "small" | "medium" | "large";
+
+/**
+ * Security level for benchmarking
+ */
+export type SecurityLevel = "strict" | "moderate" | "permissive";
+
+/**
+ * Configuration for the agentic benchmark suite
+ */
+export interface AgenticBenchmarkConfig {
+  /** Benchmark information */
+  benchmark: {
+    /** Name of the benchmark */
+    name: string;
+    /** Version of the benchmark */
+    version: string;
+  };
+  /** Step configuration */
+  steps: {
+    /** Minimum number of steps */
+    min: number;
+    /** Maximum number of steps */
+    max: number;
+    /** Step increment */
+    increment: number;
+  };
+  /** Agent configuration */
+  agent: {
+    /** Agent sizes to benchmark */
+    sizes: AgentSize[];
+    /** Whether to enable token caching */
+    tokenCacheEnabled: boolean;
+    /** Maximum number of parallel agents */
+    maxParallelAgents: number;
+  };
+  /** Metrics configuration */
+  metrics: {
+    /** Metrics to include in the benchmark */
+    include: string[];
+  };
+  /** Security configuration */
+  security: {
+    /** Security level */
+    level: SecurityLevel;
+    /** Adversarial tests to run */
+    adversarialTests: string[];
+  };
+  /** Execution configuration */
+  execution?: {
+    /** Processing mode */
+    processing?: string;
+  };
+}

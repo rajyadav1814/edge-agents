@@ -1,44 +1,43 @@
 /**
- * HumanEval Benchmark Runner
+ * SWE-bench Benchmark Runner
  * 
- * This module implements a runner for the HumanEval benchmark using the E2B code interpreter.
+ * This module implements a runner for the SWE-bench benchmark using the E2B code interpreter.
  * It executes code in a secure sandbox environment and evaluates the results against expected outputs.
  */
 
 import { BenchmarkConfig, BenchmarkResult, TestResult, BenchmarkOptions } from "./types.ts";
-import { executeCode, installPackages } from "../../../e2b/e2b-code-interpreter.ts";
+import { executeCode, executeFile, installPackages } from "../../../e2b/e2b-code-interpreter.ts";
 
 /**
- * Run the HumanEval benchmark
+ * Run the SWE-bench benchmark
  * @param config Benchmark configuration
  * @param options Benchmark options
  * @returns Benchmark result
  */
-export async function runHumanEval(
+export async function runSWEBench(
   config: BenchmarkConfig, 
   options: BenchmarkOptions = {}
 ): Promise<BenchmarkResult> {
-  console.log(`Running HumanEval benchmark: ${config.name}`);
+  console.log(`Running SWE-bench benchmark: ${config.name}`);
   
   const testResults: TestResult[] = [];
   let passedTests = 0;
   let failedTests = 0;
   let skippedTests = 0;
   
-  // Install required packages for Python tests
+  // Install required packages for the tests
   if (config.testCases.some(tc => tc.language === "python" || !tc.language)) {
     if (options.verbose) {
-      console.log("Installing Python packages for HumanEval benchmark...");
+      console.log("Installing Python packages for SWE-bench benchmark...");
     }
-    await installPackages(["numpy", "pandas"], "python");
+    await installPackages(["pytest", "numpy", "pandas"], "python");
   }
   
-  // Install required packages for JavaScript/TypeScript tests
   if (config.testCases.some(tc => tc.language === "javascript" || tc.language === "typescript")) {
     if (options.verbose) {
-      console.log("Installing JavaScript packages for HumanEval benchmark...");
+      console.log("Installing JavaScript packages for SWE-bench benchmark...");
     }
-    await installPackages(["lodash"], "javascript");
+    await installPackages(["jest", "ts-jest", "typescript"], "javascript");
   }
   
   // Run each test case
@@ -50,11 +49,24 @@ export async function runHumanEval(
     const startTime = performance.now();
     
     try {
-      const result = await executeCode(testCase.input, {
-        language: testCase.language || "python",
-        timeout: testCase.timeout || 30000,
-        stream: options.stream || false
-      });
+      // For SWE-bench, we might need to execute a file instead of inline code
+      let result;
+      if (testCase.input.startsWith("file:")) {
+        // Execute a file
+        const filePath = testCase.input.substring(5);
+        result = await executeFile(filePath, {
+          language: testCase.language || "python",
+          timeout: testCase.timeout || 60000,
+          stream: options.stream || false
+        });
+      } else {
+        // Execute inline code
+        result = await executeCode(testCase.input, {
+          language: testCase.language || "python",
+          timeout: testCase.timeout || 60000,
+          stream: options.stream || false
+        });
+      }
       
       const executionTime = performance.now() - startTime;
       
@@ -104,7 +116,7 @@ export async function runHumanEval(
   const accuracy = config.testCases.length > 0 ? passedTests / config.testCases.length : 0;
   
   const result: BenchmarkResult = {
-    benchmarkType: "humaneval",
+    benchmarkType: "swebench",
     benchmarkName: config.name,
     totalTests: config.testCases.length,
     passedTests,
@@ -139,7 +151,7 @@ function calculateEfficiency(results: TestResult[]): number {
   if (results.length === 0) return 0;
   const avgExecutionTime = results.reduce((sum, r) => sum + r.executionTime, 0) / results.length;
   // Normalize to a 0-1 scale (lower is better)
-  return Math.max(0, Math.min(1, 1 - (avgExecutionTime / 30000)));
+  return Math.max(0, Math.min(1, 1 - (avgExecutionTime / 60000)));
 }
 
 /**
@@ -154,7 +166,8 @@ function calculateSafety(results: TestResult[]): number {
       r.error.includes("unsafe") || 
       r.error.includes("security") || 
       r.error.includes("permission") ||
-      r.error.includes("forbidden")
+      r.error.includes("forbidden") ||
+      r.error.includes("vulnerability")
     )
   ).length;
   
@@ -167,7 +180,7 @@ function calculateSafety(results: TestResult[]): number {
  * @returns Adaptability score (0-1, higher is better)
  */
 function calculateAdaptability(results: TestResult[]): number {
-  // This is a placeholder - in a real implementation, this would measure
-  // performance across different languages or problem types
+  // For SWE-bench, adaptability is measured by the ability to handle different
+  // types of software engineering tasks
   return results.filter(r => r.passed).length / (results.length || 1);
 }
