@@ -1,27 +1,12 @@
-#!/usr/bin/env deno
-
 /**
- * Configuration parser for the SPARC 2.0 Agentic Benchmark Suite
+ * Config Parser
  * 
- * This module provides functionality to load and parse configuration from TOML files
- * and environment variables. It merges configurations from different sources and
- * provides default values for missing configuration options.
+ * This module is responsible for loading and parsing configuration from TOML files and environment variables.
+ * It merges configurations from different sources and provides default values for missing configuration options.
  */
 
 import { parse as parseToml } from "https://deno.land/std/toml/mod.ts";
 import { AgenticBenchmarkConfig, SecurityLevel, AgentSize } from "../types/types.ts";
-
-/**
- * Type for partial configuration objects
- */
-interface PartialConfig {
-  benchmark?: Partial<AgenticBenchmarkConfig['benchmark']>;
-  steps?: Partial<AgenticBenchmarkConfig['steps']>;
-  agent?: Partial<AgenticBenchmarkConfig['agent']>;
-  metrics?: Partial<AgenticBenchmarkConfig['metrics']>;
-  security?: Partial<AgenticBenchmarkConfig['security']>;
-  execution?: any;
-}
 
 /**
  * Default configuration values
@@ -56,80 +41,6 @@ const DEFAULT_CONFIG: AgenticBenchmarkConfig = {
 };
 
 /**
- * Merges two configuration objects
- * 
- * @param target - The target configuration object
- * @param source - The source configuration object
- * @returns The merged configuration object
- */
-function mergeConfigs(target: AgenticBenchmarkConfig, source: PartialConfig): AgenticBenchmarkConfig {
-  const result = structuredClone(target);
-  
-  // Only merge defined properties to avoid overriding defaults with undefined values
-  if (source.benchmark) {
-    if (source.benchmark.name !== undefined) {
-      result.benchmark.name = source.benchmark.name;
-    }
-    if (source.benchmark.version !== undefined) {
-      result.benchmark.version = source.benchmark.version;
-    }
-  }
-  
-  if (source.steps) {
-    if (source.steps.min !== undefined) {
-      result.steps.min = source.steps.min;
-    }
-    if (source.steps.max !== undefined) {
-      result.steps.max = source.steps.max;
-    }
-    if (source.steps.increment !== undefined) {
-      result.steps.increment = source.steps.increment;
-    }
-  }
-  
-  if (source.agent) {
-    if (source.agent.sizes) {
-      result.agent.sizes = [...source.agent.sizes];
-    }
-    if (source.agent.tokenCacheEnabled !== undefined) {
-      result.agent.tokenCacheEnabled = source.agent.tokenCacheEnabled;
-    }
-    if (source.agent.maxParallelAgents !== undefined) {
-      result.agent.maxParallelAgents = source.agent.maxParallelAgents;
-    }
-  }
-  
-  if (source.metrics) {
-    if (source.metrics.include !== undefined) {
-      result.metrics.include = [...source.metrics.include];
-    }
-  }
-  
-  if (source.security) {
-    if (source.security.level !== undefined) {
-      result.security.level = source.security.level;
-    }
-    if (source.security.adversarialTests !== undefined) {
-      result.security.adversarialTests = [...source.security.adversarialTests];
-    }
-  }
-  
-  if (source.execution) {
-    if (!result.execution) {
-      result.execution = {
-        processing: "parallel"
-      };
-    }
-    
-    if (source.execution.processing) {
-      result.execution.processing = source.execution.processing;
-    }
-  }
-  
-  return result;
-}
-
-/**
  * ConfigParser - Loads and parses configuration from TOML files and environment variables
  * 
  * This class is responsible for loading configuration from various sources,
@@ -157,20 +68,90 @@ export class ConfigParser {
    */
   async loadConfig(): Promise<AgenticBenchmarkConfig> {
     // Start with default configuration
-    let config = structuredClone(DEFAULT_CONFIG);
+    const config = structuredClone(DEFAULT_CONFIG);
     
     // Load configuration from file
     try {
       const fileConfig = await this.loadConfigFromFile();
-      config = mergeConfigs(config, fileConfig);
+      
+      // Merge benchmark configuration
+      if (fileConfig.benchmark) {
+        if (fileConfig.benchmark.name) {
+          config.benchmark.name = fileConfig.benchmark.name;
+        }
+        if (fileConfig.benchmark.version) {
+          config.benchmark.version = fileConfig.benchmark.version;
+        }
+      }
+      
+      // Merge steps configuration
+      if (fileConfig.steps) {
+        if (fileConfig.steps.min !== undefined) {
+          config.steps.min = fileConfig.steps.min;
+        }
+        if (fileConfig.steps.max !== undefined) {
+          config.steps.max = fileConfig.steps.max;
+        }
+        if (fileConfig.steps.increment !== undefined) {
+          config.steps.increment = fileConfig.steps.increment;
+        }
+      }
+      
+      // Merge agent configuration
+      if (fileConfig.agent) {
+        if (fileConfig.agent.sizes) {
+          config.agent.sizes = fileConfig.agent.sizes;
+        }
+        if (fileConfig.agent.tokenCacheEnabled !== undefined) {
+          config.agent.tokenCacheEnabled = fileConfig.agent.tokenCacheEnabled;
+        }
+        if (fileConfig.agent.maxParallelAgents !== undefined) {
+          config.agent.maxParallelAgents = fileConfig.agent.maxParallelAgents;
+        }
+        
+        // Handle snake_case properties from TOML
+        const agentObj = fileConfig.agent as any;
+        if (agentObj.token_cache_enabled !== undefined) {
+          config.agent.tokenCacheEnabled = agentObj.token_cache_enabled;
+        }
+        if (agentObj.max_parallel_agents !== undefined) {
+          config.agent.maxParallelAgents = agentObj.max_parallel_agents;
+        }
+      }
+      
+      // Merge metrics configuration
+      if (fileConfig.metrics) {
+        if (fileConfig.metrics.include) {
+          config.metrics.include = fileConfig.metrics.include;
+        }
+      }
+      
+      // Merge security configuration
+      if (fileConfig.security) {
+        if (fileConfig.security.level) {
+          config.security.level = fileConfig.security.level;
+        }
+        if (fileConfig.security.adversarialTests) {
+          config.security.adversarialTests = fileConfig.security.adversarialTests;
+        }
+        
+        // Handle snake_case properties from TOML
+        const securityObj = fileConfig.security as any;
+        if (securityObj.adversarial_tests) {
+          config.security.adversarialTests = securityObj.adversarial_tests;
+        }
+      }
+      
+      // Merge execution configuration
+      if (fileConfig.execution) {
+        config.execution = fileConfig.execution;
+      }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.warn(`Warning: Could not load configuration from file: ${errorMessage}`);
+      console.warn(`Warning: Could not load configuration from file: ${error instanceof Error ? error.message : String(error)}`);
     }
     
     // Load configuration from environment variables
-    const envConfig = this.loadConfigFromEnv();
-    config = mergeConfigs(config, envConfig);
+    this.applyEnvironmentVariables(config);
     
     // Validate the configuration
     this.validateConfig(config);
@@ -181,135 +162,85 @@ export class ConfigParser {
   /**
    * Loads configuration from a TOML file
    * 
-   * @returns Promise<PartialConfig> - The parsed configuration
+   * @returns Promise<Partial<AgenticBenchmarkConfig>> - The parsed configuration
    */
-  private async loadConfigFromFile(): Promise<PartialConfig> {
+  private async loadConfigFromFile(): Promise<Partial<AgenticBenchmarkConfig>> {
     try {
       const content = await Deno.readTextFile(this.configPath);
-      const parsedToml = parseToml(content) as any;
-      
-      // Create a partial config object
-      const fileConfig: PartialConfig = {};
-      
-      // Copy benchmark section
-      if (parsedToml.benchmark) {
-        fileConfig.benchmark = { ...parsedToml.benchmark };
-      }
-      
-      // Copy steps section
-      if (parsedToml.steps) {
-        fileConfig.steps = { ...parsedToml.steps };
-      }
-      
-      // Copy agent section with camelCase conversion
-      if (parsedToml.agent) {
-        fileConfig.agent = {
-          sizes: parsedToml.agent.sizes ? [...parsedToml.agent.sizes] as AgentSize[] : undefined,
-          tokenCacheEnabled: parsedToml.agent.token_cache_enabled,
-          maxParallelAgents: parsedToml.agent.max_parallel_agents
-        };
-      }
-      
-      // Copy metrics section
-      if (parsedToml.metrics) {
-        fileConfig.metrics = { ...parsedToml.metrics };
-      }
-      
-      // Copy security section
-      if (parsedToml.security) {
-        fileConfig.security = { ...parsedToml.security };
-      }
-      
-      // Copy execution section
-      if (parsedToml.execution) {
-        fileConfig.execution = { ...parsedToml.execution };
-        
-        // Handle specific execution properties
-        if (parsedToml.execution.processing) {
-          fileConfig.execution.processing = parsedToml.execution.processing;
-        }
-      }
-      
-      return fileConfig;
+      return parseToml(content) as Partial<AgenticBenchmarkConfig>;
     } catch (error) {
       if (error instanceof Deno.errors.NotFound) {
-        const errorMsg = `Configuration file not found: ${this.configPath}`;
-        throw new Error(errorMsg);
+        throw new Error(`Configuration file not found: ${this.configPath}`);
       }
       throw error;
     }
   }
   
   /**
-   * Loads configuration from environment variables
+   * Applies environment variables to the configuration
    * 
-   * @returns PartialConfig - The parsed configuration
+   * @param config - The configuration to apply environment variables to
    */
-  private loadConfigFromEnv(): PartialConfig {
-    const config: PartialConfig = {
-      benchmark: {}, 
-      steps: {}, 
-      agent: {}, 
-      metrics: {}, 
-      security: {},
-      execution: {}
-    };
-    
+  private applyEnvironmentVariables(config: AgenticBenchmarkConfig): void {
     // Benchmark configuration
     if (Deno.env.get("SPARC2_BENCHMARK_NAME")) {
-      config.benchmark!.name = Deno.env.get("SPARC2_BENCHMARK_NAME")!;
+      config.benchmark.name = Deno.env.get("SPARC2_BENCHMARK_NAME")!;
     }
     
     if (Deno.env.get("SPARC2_BENCHMARK_VERSION")) {
-      config.benchmark!.version = Deno.env.get("SPARC2_BENCHMARK_VERSION")!;
+      config.benchmark.version = Deno.env.get("SPARC2_BENCHMARK_VERSION")!;
     }
     
     // Steps configuration
     if (Deno.env.get("SPARC2_STEPS_MIN")) {
-      config.steps!.min = parseInt(Deno.env.get("SPARC2_STEPS_MIN")!);
+      config.steps.min = parseInt(Deno.env.get("SPARC2_STEPS_MIN")!);
     }
     
     if (Deno.env.get("SPARC2_STEPS_MAX")) {
-      config.steps!.max = parseInt(Deno.env.get("SPARC2_STEPS_MAX")!);
+      config.steps.max = parseInt(Deno.env.get("SPARC2_STEPS_MAX")!);
     }
     
     if (Deno.env.get("SPARC2_STEPS_INCREMENT")) {
-      config.steps!.increment = parseInt(Deno.env.get("SPARC2_STEPS_INCREMENT")!);
+      config.steps.increment = parseInt(Deno.env.get("SPARC2_STEPS_INCREMENT")!);
     }
     
     // Agent configuration
     if (Deno.env.get("SPARC2_AGENT_SIZES")) {
-      config.agent!.sizes = Deno.env.get("SPARC2_AGENT_SIZES")!.split(",") as AgentSize[];
+      config.agent.sizes = Deno.env.get("SPARC2_AGENT_SIZES")!.split(",") as AgentSize[];
     }
     
     if (Deno.env.get("SPARC2_AGENT_TOKEN_CACHE")) {
-      config.agent!.tokenCacheEnabled = Deno.env.get("SPARC2_AGENT_TOKEN_CACHE") === "true";
+      config.agent.tokenCacheEnabled = Deno.env.get("SPARC2_AGENT_TOKEN_CACHE") === "true";
     }
     
     if (Deno.env.get("SPARC2_AGENT_MAX_PARALLEL")) {
-      config.agent!.maxParallelAgents = parseInt(Deno.env.get("SPARC2_AGENT_MAX_PARALLEL")!);
+      config.agent.maxParallelAgents = parseInt(Deno.env.get("SPARC2_AGENT_MAX_PARALLEL")!);
     }
     
     // Metrics configuration
     if (Deno.env.get("SPARC2_METRICS_INCLUDE")) {
-      config.metrics!.include = Deno.env.get("SPARC2_METRICS_INCLUDE")!.split(",");
+      config.metrics.include = Deno.env.get("SPARC2_METRICS_INCLUDE")!.split(",");
     }
     
     // Security configuration
     if (Deno.env.get("SPARC2_SECURITY_LEVEL")) {
-      config.security!.level = Deno.env.get("SPARC2_SECURITY_LEVEL") as SecurityLevel;
+      config.security.level = Deno.env.get("SPARC2_SECURITY_LEVEL") as SecurityLevel;
     }
     
     if (Deno.env.get("SPARC2_SECURITY_TESTS")) {
-      config.security!.adversarialTests = Deno.env.get("SPARC2_SECURITY_TESTS")!.split(",");
-    }
-
-    // Execution configuration
-    if (Deno.env.get("SPARC2_EXECUTION_PROCESSING")) {
-      config.execution!.processing = Deno.env.get("SPARC2_EXECUTION_PROCESSING");
+      config.security.adversarialTests = Deno.env.get("SPARC2_SECURITY_TESTS")!.split(",");
     }
     
-    return config;
+    // Execution configuration
+    if (Deno.env.get("SPARC2_EXECUTION_PROCESSING")) {
+      if (!config.execution) {
+        config.execution = {
+          processing: Deno.env.get("SPARC2_EXECUTION_PROCESSING") as "sequential" | "parallel" | "concurrent" | "swarm"
+        };
+      } else {
+        config.execution.processing = Deno.env.get("SPARC2_EXECUTION_PROCESSING") as "sequential" | "parallel" | "concurrent" | "swarm";
+      }
+    }
   }
   
   /**
@@ -327,6 +258,12 @@ export class ConfigParser {
       }
     }
     
+    // Validate security level
+    const validLevels: SecurityLevel[] = ["strict", "moderate", "permissive"];
+    if (!validLevels.includes(config.security.level)) {
+      throw new Error(`Invalid security level: ${config.security.level}`);
+    }
+    
     // Validate steps
     if (config.steps.min < 1) {
       throw new Error("Steps min must be at least 1");
@@ -338,12 +275,6 @@ export class ConfigParser {
     
     if (config.steps.increment < 1) {
       throw new Error("Steps increment must be at least 1");
-    }
-
-    // Validate security level
-    const validLevels: SecurityLevel[] = ["strict", "moderate", "permissive"];
-    if (!validLevels.includes(config.security.level)) {
-      throw new Error(`Invalid security level: ${config.security.level}`);
     }
     
     // Validate max parallel agents
