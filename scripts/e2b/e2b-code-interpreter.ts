@@ -331,9 +331,9 @@ export async function installPackages(
     let installCommand: string;
     
     if (language === "python") {
-      installCommand = `!pip install ${packages.join(" ")}`;
+      installCommand = `import sys\nimport subprocess\nsubprocess.check_call([sys.executable, "-m", "pip", "install", "${packages.join('", "')}"])`;
     } else if (language === "javascript" || language === "typescript") {
-      installCommand = `!npm install ${packages.join(" ")}`;
+      installCommand = `const { execSync } = require('child_process');\ntry {\n  console.log(execSync('npm install ${packages.join(" ")}', { encoding: 'utf8' }));\n} catch (error) {\n  console.error('Installation failed:', error.message);\n}`;
     } else {
       throw new Error(`Unsupported language: ${language}`);
     }
