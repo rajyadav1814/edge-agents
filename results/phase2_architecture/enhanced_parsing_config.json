@@ -1,0 +1,9 @@
+{
+        "pass_at_1": 0,
+        "prompt_template": "default",
+        "architecture": "enhanced_parsing",
+        "model": "gpt-4o",
+        "temperature": 0.2,
+        "max_tokens": 4096,
+        "execution_settings": "default"
+    }

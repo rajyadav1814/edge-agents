@@ -12,13 +12,12 @@ import {
 import { BenchmarkResult } from "./src/benchmarks/types.ts";
 import { load } from "https://deno.land/std@0.215.0/dotenv/mod.ts";
 import { createOptimizedBenchmarkManager } from "./src/benchmarks/optimized-benchmark-manager.ts";
-import { v4 as uuidv4 } from "https://deno.land/std@0.215.0/uuid/mod.ts";
 
 // Load environment variables
 await load({ export: true, envPath: "../sparc2/.env" });
 
 // Generate a unique run ID
-const runId = uuidv4.generate();
+const runId = crypto.randomUUID();
 const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 
 // Create optimized benchmark manager with custom options
