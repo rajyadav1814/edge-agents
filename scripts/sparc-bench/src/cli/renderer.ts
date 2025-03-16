@@ -51,23 +51,23 @@ function renderTable(results: BenchmarkResult[]): void {
     console.log(
       `${result.taskId.padEnd(8)} | ` +
       `${result.agentSize.padEnd(10)} | ` +
-      `${result.totalSteps.toString().padEnd(5)} | ` +
-      `${(result.stepsCompleted / result.totalSteps * 100).toFixed(0).padEnd(10)}% | ` +
+      `${result.stepCount.toString().padEnd(5)} | ` +
+      `${(result.stepsCompleted / result.stepCount * 100).toFixed(0).padEnd(10)}% | ` +
       `${Math.round(result.tokensUsed).toString().padEnd(6)} | ` +
       `${Math.round(result.executionTime).toString().padEnd(9)} | ` +
-      `${result.safetyScore.toFixed(1).padEnd(6)} | ` +
-      `${result.toolAccuracy.toFixed(2).padEnd(13)} | ` +
-      `${result.tokenEfficiency.toFixed(2).padEnd(15)} | ` +
-      `${result.trajectoryOptimality.toFixed(2)}`
+      `${(result.metrics.safetyScore || 0).toFixed(1).padEnd(6)} | ` +
+      `${result.metrics.toolAccuracy.toFixed(2).padEnd(13)} | ` +
+      `${result.metrics.tokenEfficiency.toFixed(2).padEnd(15)} | ` +
+      `${result.metrics.trajectoryOptimality.toFixed(2)}`
     );
   }
   
   // Print summary
   if (results.length > 0) {
-    const avgSafety = results.reduce((acc, r) => acc + r.safetyScore, 0) / results.length;
-    const avgToolAccuracy = results.reduce((acc, r) => acc + r.toolAccuracy, 0) / results.length;
-    const avgTokenEfficiency = results.reduce((acc, r) => acc + r.tokenEfficiency, 0) / results.length;
-    const avgTrajectory = results.reduce((acc, r) => acc + r.trajectoryOptimality, 0) / results.length;
+    const avgSafety = results.reduce((acc, r) => acc + (r.metrics.safetyScore || 0), 0) / results.length;
+    const avgToolAccuracy = results.reduce((acc, r) => acc + r.metrics.toolAccuracy, 0) / results.length;
+    const avgTokenEfficiency = results.reduce((acc, r) => acc + r.metrics.tokenEfficiency, 0) / results.length;
+    const avgTrajectory = results.reduce((acc, r) => acc + r.metrics.trajectoryOptimality, 0) / results.length;
     
     console.log("--------|------------|-------|------------|--------|-----------|--------|---------------|-----------------|----------");
     console.log(
@@ -97,10 +97,10 @@ function renderJson(results: BenchmarkResult[]): void {
     results,
     summary: {
       totalTasks: results.length,
-      averageSafetyScore: results.reduce((acc, r) => acc + r.safetyScore, 0) / results.length,
-      averageToolAccuracy: results.reduce((acc, r) => acc + r.toolAccuracy, 0) / results.length,
-      averageTokenEfficiency: results.reduce((acc, r) => acc + r.tokenEfficiency, 0) / results.length,
-      averageTrajectoryOptimality: results.reduce((acc, r) => acc + r.trajectoryOptimality, 0) / results.length,
+      averageSafetyScore: results.reduce((acc, r) => acc + (r.metrics.safetyScore || 0), 0) / results.length,
+      averageToolAccuracy: results.reduce((acc, r) => acc + r.metrics.toolAccuracy, 0) / results.length,
+      averageTokenEfficiency: results.reduce((acc, r) => acc + r.metrics.tokenEfficiency, 0) / results.length,
+      averageTrajectoryOptimality: results.reduce((acc, r) => acc + r.metrics.trajectoryOptimality, 0) / results.length,
     },
   };
   
@@ -120,14 +120,14 @@ function renderCsv(results: BenchmarkResult[]): void {
     console.log(
       `${result.taskId},` +
       `${result.agentSize},` +
-      `${result.totalSteps},` +
+      `${result.stepCount},` +
       `${result.stepsCompleted},` +
       `${result.tokensUsed},` +
       `${result.executionTime},` +
-      `${result.safetyScore},` +
-      `${result.toolAccuracy},` +
-      `${result.tokenEfficiency},` +
-      `${result.trajectoryOptimality}`
+      `${result.metrics.safetyScore || 0},` +
+      `${result.metrics.toolAccuracy},` +
+      `${result.metrics.tokenEfficiency},` +
+      `${result.metrics.trajectoryOptimality}`
     );
   }
 }
@@ -139,38 +139,38 @@ function renderCsv(results: BenchmarkResult[]): void {
 function renderGithubAnnotation(results: BenchmarkResult[]): void {
   for (const result of results) {
     // Determine if there are any issues
-    const hasSafetyIssue = result.safetyScore < 90;
-    const hasToolAccuracyIssue = result.toolAccuracy < 0.8;
-    const hasTokenEfficiencyIssue = result.tokenEfficiency > 50;
-    const hasTrajectoryIssue = result.trajectoryOptimality < 0.7;
+    const hasSafetyIssue = (result.metrics.safetyScore || 0) < 90;
+    const hasToolAccuracyIssue = result.metrics.toolAccuracy < 0.8;
+    const hasTokenEfficiencyIssue = result.metrics.tokenEfficiency > 50;
+    const hasTrajectoryIssue = result.metrics.trajectoryOptimality < 0.7;
     
     if (hasSafetyIssue || hasToolAccuracyIssue || hasTokenEfficiencyIssue || hasTrajectoryIssue) {
       console.log(`::warning file=${result.taskId}::Benchmark issues detected:`);
       
       if (hasSafetyIssue) {
-        console.log(`::warning file=${result.taskId}::Safety score is low (${result.safetyScore.toFixed(1)})`);
+        console.log(`::warning file=${result.taskId}::Safety score is low (${(result.metrics.safetyScore || 0).toFixed(1)})`);
       }
       
       if (hasToolAccuracyIssue) {
-        console.log(`::warning file=${result.taskId}::Tool accuracy is low (${result.toolAccuracy.toFixed(2)})`);
+        console.log(`::warning file=${result.taskId}::Tool accuracy is low (${result.metrics.toolAccuracy.toFixed(2)})`);
       }
       
       if (hasTokenEfficiencyIssue) {
-        console.log(`::warning file=${result.taskId}::Token efficiency is low (${result.tokenEfficiency.toFixed(2)})`);
+        console.log(`::warning file=${result.taskId}::Token efficiency is low (${result.metrics.tokenEfficiency.toFixed(2)})`);
       }
       
       if (hasTrajectoryIssue) {
-        console.log(`::warning file=${result.taskId}::Trajectory optimality is low (${result.trajectoryOptimality.toFixed(2)})`);
+        console.log(`::warning file=${result.taskId}::Trajectory optimality is low (${result.metrics.trajectoryOptimality.toFixed(2)})`);
       }
     }
   }
   
   // Print summary
   if (results.length > 0) {
-    const avgSafety = results.reduce((acc, r) => acc + r.safetyScore, 0) / results.length;
-    const avgToolAccuracy = results.reduce((acc, r) => acc + r.toolAccuracy, 0) / results.length;
-    const avgTokenEfficiency = results.reduce((acc, r) => acc + r.tokenEfficiency, 0) / results.length;
-    const avgTrajectory = results.reduce((acc, r) => acc + r.trajectoryOptimality, 0) / results.length;
+    const avgSafety = results.reduce((acc, r) => acc + (r.metrics.safetyScore || 0), 0) / results.length;
+    const avgToolAccuracy = results.reduce((acc, r) => acc + r.metrics.toolAccuracy, 0) / results.length;
+    const avgTokenEfficiency = results.reduce((acc, r) => acc + r.metrics.tokenEfficiency, 0) / results.length;
+    const avgTrajectory = results.reduce((acc, r) => acc + r.metrics.trajectoryOptimality, 0) / results.length;
     
     console.log(`::notice::Benchmark summary: Safety=${avgSafety.toFixed(1)}, ToolAccuracy=${avgToolAccuracy.toFixed(2)}, TokenEfficiency=${avgTokenEfficiency.toFixed(2)}, TrajectoryOptimality=${avgTrajectory.toFixed(2)}`);
   }

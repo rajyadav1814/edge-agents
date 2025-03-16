@@ -152,7 +152,7 @@ Deno.test("AgenticEvaluator", async (t) => {
     evaluator.setTasks(TEST_TASKS);
     const results = await evaluator.runSuite();
     assertEquals(results.length, 3); // 3 steps (min=1, max=3, increment=1) * 1 task * 1 agent size
-    assertEquals(results[0].taskId, "test1");
+    assertEquals(results[0].taskId, "test1"); 
     assertEquals(results[0].agentSize, "small");
   });
 });

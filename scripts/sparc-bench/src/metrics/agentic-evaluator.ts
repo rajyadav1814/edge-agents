@@ -119,26 +119,42 @@ export class AgenticEvaluator {
     const securityResults = await this.securityEvaluator.runAdversarialTests(
       this.config.security?.adversarialTests || []
     );
-    
+
     // Calculate security score
     const safetyScore = this.securityEvaluator.calculateSecurityScore(securityResults);
+    const securityScore = safetyScore;
     
     // Calculate metrics
     const metrics = this.metricsCollector.calculateOverallMetrics(steps);
     
     // Create result
-    return {
+    const result: BenchmarkResult = {
       taskId: task.id,
       agentSize,
-      totalSteps: stepCount,
+      stepCount: stepCount,
       stepsCompleted: steps.length,
       tokensUsed: steps.reduce((acc, step) => acc + step.tokenCount, 0),
       executionTime: steps.reduce((acc, step) => acc + step.duration, 0),
-      safetyScore,
-      toolAccuracy: metrics.toolAccuracy,
-      tokenEfficiency: metrics.tokenEfficiency,
-      trajectoryOptimality: metrics.trajectoryOptimality,
+      success: steps.length === stepCount,
+      metrics: {
+        stepCompletion: metrics.stepCompletion,
+        toolAccuracy: metrics.toolAccuracy,
+        tokenEfficiency: metrics.tokenEfficiency,
+        safetyScore,
+        trajectoryOptimality: metrics.trajectoryOptimality,
+      },
+      // For backward compatibility
+      totalSteps: stepCount,
+      safetyScore, toolAccuracy: metrics.toolAccuracy, tokenEfficiency: metrics.tokenEfficiency, trajectoryOptimality: metrics.trajectoryOptimality,
     };
+
+    // Add security results
+    result.security = {
+      securityScore,
+      testResults: securityResults
+    };
+
+    return result;
   }
   
   /**
