@@ -1,0 +1,17 @@
+# SPARC 2.0 Configuration (TOML)
+[execution]
+mode = "automatic"          # Options: automatic, semi, manual, custom
+diff_mode = "file"          # Options: file, function (default best performance)
+processing = "parallel"     # Options: parallel, sequential, concurrent, swarm
+
+[logging]
+enable = true
+vector_logging = true
+
+[rollback]
+checkpoint_enabled = true
+temporal_rollback = true
+
+[models]
+reasoning = "test-model"     # For architecture, planning, problem solving
+instruct = "test-model"     # For instructing code changes

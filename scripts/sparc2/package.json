@@ -1,0 +1,75 @@
+{
+  "name": "@agentics.org/sparc2",
+  "version": "2.0.1",
+  "description": "SPARC 2.0 - Autonomous Vectorized Coding Bot. SPARC 2.0, vectorized AI code analysis, is an intelligent coding agent framework built to automate and streamline software development. It combines  secure execution environments, and version control into a unified system where specialized agents collaborate to understand, modify, and manage code. These agents analyze patterns, suggest improvements, implement changes, and validate solutions—all while maintaining a detailed history that allows for easy rollbacks when needed.",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "type": "module",
+  "bin": {
+    "sparc2": "build/cli/cli.js"
+  },
+  "scripts": {
+    "build": "deno task check && deno task lint && deno task fmt && deno compile --allow-read --allow-write --allow-env --allow-net --allow-run src/cli/cli.ts -o build/cli/cli.js",
+    "test": "deno test --allow-read --allow-env src/",
+    "check": "deno check src/**/*.ts",
+    "lint": "deno lint src/",
+    "fmt": "deno fmt src/",
+    "prepublishOnly": "deno task fmt && deno compile --allow-read --allow-write --allow-env --allow-net --allow-run --no-check src/cli/cli.ts -o build/cli/cli.js"
+  },
+  "keywords": [
+    "sparc",
+    "ai",
+    "artificial-intelligence",
+    "code-analysis",
+    "code-generation",
+    "code-review",
+    "code-quality",
+    "agents",
+    "bots",
+    "automation",
+    "software-development",
+    "software-engineering",
+    "programming",
+    "coding",
+    "code",
+    "typescript",
+    "code-refactoring",
+    "diff-tracking",
+    "vector-search",
+    "vector-database",
+    "embeddings",
+    "code-interpreter",
+    "git-integration",
+    "typescript",
+    "deno",
+    "developer-tools",
+    "automation",
+    "agentic",
+    "llm",
+    "large-language-model"
+  ],
+  "author": "Agentics Foundation",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agenticsorg/edge-agents.git"
+  },
+  "bugs": {
+    "url": "https://github.com/agentics-org/sparc2/issues"
+  },
+  "homepage": "https://agentics.org",
+  "engines": {
+    "node": ">=16.0.0",
+    "deno": ">=1.30.0"
+  },
+  "files": [
+    "build",
+    "config",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}
