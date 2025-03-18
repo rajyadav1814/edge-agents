@@ -21,6 +21,29 @@ const databaseUrl = Deno.env.get("DATABASE_URL");
 const region = Deno.env.get("REGION") || "us-east-1";
 ```
 
+### Docker Compose Environment Variables
+
+When using Docker Compose, environment variables can be set in the `docker-compose.yml` file. However, it's important to follow these security best practices:
+
+```yaml
+services:
+  app:
+    image: my-app
+    environment:
+      # Good practice - use environment variables without defaults for sensitive data
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      
+      # Good practice - use environment variables with defaults for non-sensitive data
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PORT: ${PORT:-3000}
+      
+      # Bad practice - NEVER hardcode sensitive values
+      # DB_PASSWORD: password123  # NEVER do this
+```
+
+For sensitive information like passwords and secrets, never provide default values in the Docker Compose file. This ensures that the application will fail to start if the required environment variables are not set, rather than using insecure default values.
+
 ### Setting Environment Variables
 
 Environment variables can be set in several ways:
@@ -127,14 +150,26 @@ const serviceAccount = JSON.parse(serviceAccountKey);
 
 ### 1. Never Hardcode Secrets
 
-Never hardcode secrets in your source code. Always use environment variables:
+Never hardcode secrets in your source code or configuration files. Always use environment variables:
 
 ```typescript
 // Good practice
 const apiKey = Deno.env.get("API_KEY");
 
-// Bad practice - NEVER do this
+// Bad practice in code - NEVER do this
 const apiKey = "sk_live_1234567890abcdefghijklmnopqrstuvwxyz";
+```
+
+```yaml
+# Bad practice in Docker Compose - NEVER do this
+environment:
+  DB_PASSWORD: postgres
+  JWT_SECRET: supersecretkey
+
+# Good practice in Docker Compose
+environment:
+  DB_PASSWORD: ${DB_PASSWORD}
+  JWT_SECRET: ${JWT_SECRET}
 ```
 
 ### 2. Validate Environment Variables
@@ -195,7 +230,7 @@ console.log(`Using API key: ${apiKey}`);
 
 ### 7. Use Secret Management Services
 
-For more complex applications, consider using dedicated secret management services:
+For more complex applications, consider using dedicated secret management services like HashiCorp Vault, AWS Secrets Manager, or Google Secret Manager:
 
 ```typescript
 // Example using a hypothetical secret management service
@@ -241,7 +276,33 @@ console.log(`Log level: ${config.logLevel}`);
 
 ## Security Considerations
 
-### 1. Encryption
+### 1. Docker Compose Security
+
+When using Docker Compose, be aware of these security considerations:
+
+1. **Never commit `.env` files to version control**
+2. **Never provide default values for sensitive environment variables in docker-compose.yml**
+3. **Use separate docker-compose files for different environments**
+4. **Consider using Docker secrets for sensitive information in production**
+
+```bash
+# Example of using Docker secrets
+echo "my_secret_password" | docker secret create db_password -
+
+# Reference the secret in docker-compose.yml
+services:
+  app:
+    secrets:
+      - db_password
+    environment:
+      DB_PASSWORD_FILE: /run/secrets/db_password
+
+secrets:
+  db_password:
+    external: true
+```
+
+### 2. Encryption
 
 Sensitive environment variables should be encrypted at rest:
 
@@ -260,7 +321,7 @@ if (!encryptionKey) {
 const apiKey = decrypt(encryptedApiKey, encryptionKey);
 ```
 
-### 2. Least Privilege
+### 3. Least Privilege
 
 Follow the principle of least privilege when setting up service accounts and API keys:
 
@@ -277,7 +338,7 @@ if (!serviceAccount.permissions.includes("storage.objects.read")) {
 }
 ```
 
-### 3. Secret Scanning
+### 4. Secret Scanning
 
 Implement secret scanning in your CI/CD pipeline to prevent accidental secret leaks:
 

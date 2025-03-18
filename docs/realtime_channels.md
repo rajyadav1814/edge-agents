@@ -166,7 +166,7 @@ const supabase = createClient(
 // Sign in
 const { data, error } = await supabase.auth.signInWithPassword({
   email: 'user@example.com',
-  password: 'password',
+  password: process.env.USER_PASSWORD, // Use environment variable instead of hardcoded password
 });
 
 // After authentication, channels will use the JWT token

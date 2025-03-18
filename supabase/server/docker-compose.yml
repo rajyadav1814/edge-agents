@@ -10,7 +10,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./sql:/sql
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
     healthcheck:
@@ -57,7 +57,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${POSTGRES_DB:-postgres}
       DB_USER: ${POSTGRES_USER:-postgres}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${SUPABASE_JWT_SECRET}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -67,7 +67,7 @@ services:
       SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
       # Added missing required configuration
       GOTRUE_DB_DRIVER: postgres
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-postgres}
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postgres}
     depends_on:
       - postgres
 
@@ -75,7 +75,7 @@ services:
     image: postgrest/postgrest:v10.1.2
     restart: always
     environment:
-      PGRST_DB_URI: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-postgres}
+      PGRST_DB_URI: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postgres}
       PGRST_JWT_SECRET: ${SUPABASE_JWT_SECRET}
       PGRST_DB_SCHEMA: public,storage
       PGRST_DB_ANON_ROLE: anon
@@ -90,7 +90,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${POSTGRES_DB:-postgres}
       DB_USER: ${POSTGRES_USER:-postgres}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
       JWT_SECRET: ${SUPABASE_JWT_SECRET}
       REPLICATION_MODE: RLS
       SECURE_CHANNELS: ${REALTIME_ENABLED:-true}
@@ -108,7 +108,7 @@ services:
       SERVICE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       POSTGREST_URL: http://supabase-rest:3000
       PGRST_JWT_SECRET: ${SUPABASE_JWT_SECRET}
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-postgres}
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postgres}
       STORAGE_BACKEND: ${STORAGE_BACKEND:-file}
       FILE_STORAGE_BACKEND_PATH: ${STORAGE_FILE_BACKEND_PATH:-/var/lib/storage}
       # Added missing required configuration
