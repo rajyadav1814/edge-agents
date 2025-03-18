@@ -11,6 +11,7 @@ These variables are required for the core functionality of the edge functions:
 | `SUPABASE_URL` | URL of your Supabase project | All functions |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key for admin access to Supabase | All functions |
 | `SUPABASE_PROJECT_ID` | ID of your Supabase project | edge_deployment |
+| `SUPABASE_JWT_SECRET` | Secret key for JWT token generation and validation | Authentication services |
 | `MCP_SECRET_KEY` | Secret key for MCP server authentication | mcp-server |
 
 ## Agent Functions
@@ -31,6 +32,7 @@ Environment variables used by management functions (agent-manager, edge_deployme
 |----------|-------------|---------|
 | `RECIPIENT` | Recipient for agent-manager messages | agent-manager |
 | `MESSAGE` | Test message for agent-manager | agent-manager/send-message.ts |
+| `POSTGRES_PASSWORD` | Password for PostgreSQL database (no default) | Database services |
 | `SUPABASE_SERVICE_KEY` | Alternative name for service role key | edge_deployment |
 | `SB_URL` | Alternative name for Supabase URL | edge_deployment |
 | `SB_SERVICE_KEY` | Alternative name for service key | edge_deployment |
@@ -74,6 +76,7 @@ Environment variables used by utility functions:
 | `VARIABLE_NAME` | Example variable for testing | test-function |
 | `API_URL` | Alternative name for Supabase URL | Various functions |
 | `SERVICE_KEY` | Alternative name for service key | Various functions |
+| `USER_PASSWORD` | User password for authentication examples | Authentication examples |
 
 ## Client-Side Variables
 
@@ -99,6 +102,8 @@ For local development, create a `.env` file in the root directory with the requi
 SUPABASE_URL=https://your-project-id.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 SUPABASE_PROJECT_ID=your-project-id
+SUPABASE_JWT_SECRET=your-jwt-secret
+POSTGRES_PASSWORD=your-secure-postgres-password
 MCP_SECRET_KEY=your-mcp-secret-key
 
 # Function-specific variables
@@ -157,20 +162,21 @@ deno run --allow-env supabase/functions/env_test.ts OPENROUTER_API_KEY SUPABASE_
 ## Best Practices
 
 1. **Never hardcode secrets** in your source code. Always use environment variables.
-2. **Validate required variables** at the start of your function:
+2. **Never use default values for sensitive environment variables** in Docker Compose files or other configuration files.
+3. **Validate required variables** at the start of your function:
    ```typescript
    const apiKey = Deno.env.get("API_KEY");
    if (!apiKey) {
      throw new Error("API_KEY environment variable is required");
    }
    ```
-3. **Use different secrets** for development, staging, and production environments.
-4. **Mask sensitive values** when logging or displaying them:
+4. **Use different secrets** for development, staging, and production environments.
+5. **Mask sensitive values** when logging or displaying them:
    ```typescript
    const maskedKey = apiKey.substring(0, 4) + "..." + apiKey.substring(apiKey.length - 4);
    console.log(`Using API key: ${maskedKey}`);
    ```
-5. **Restrict access** to functions that expose environment variable information.
+6. **Restrict access** to functions that expose environment variable information.
 
 ## Related Documentation
 
