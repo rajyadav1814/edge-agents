@@ -19,3 +19,6 @@ Alternatively, you can set the NPM_TOKEN environment variable before running the
 ```bash
 export NPM_TOKEN=your_npm_token_here
 ./publish.sh
+```
+
+> **IMPORTANT**: Never hardcode actual npm tokens in documentation or source code. Always use environment variables or secure secret management systems.
