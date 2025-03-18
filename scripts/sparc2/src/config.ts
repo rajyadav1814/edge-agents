@@ -85,7 +85,11 @@ export async function loadConfig(configPath: string): Promise<SPARCConfig> {
   }
 
   // Validate processing mode
-  if (!["parallel", "sequential", "concurrent", "swarm"].includes(rawConfig.execution.processing || "")) {
+  if (
+    !["parallel", "sequential", "concurrent", "swarm"].includes(
+      rawConfig.execution.processing || "",
+    )
+  ) {
     throw new Error("Invalid processing mode");
   }
 
@@ -94,20 +98,24 @@ export async function loadConfig(configPath: string): Promise<SPARCConfig> {
     execution: {
       mode: rawConfig.execution.mode as "automatic" | "semi" | "manual" | "custom",
       diff_mode: rawConfig.execution.diff_mode as "file" | "function",
-      processing: rawConfig.execution.processing as "parallel" | "sequential" | "concurrent" | "swarm"
+      processing: rawConfig.execution.processing as
+        | "parallel"
+        | "sequential"
+        | "concurrent"
+        | "swarm",
     },
     logging: {
       enable: Boolean(rawConfig.logging.enable),
-      vector_logging: Boolean(rawConfig.logging.vector_logging)
+      vector_logging: Boolean(rawConfig.logging.vector_logging),
     },
     rollback: {
       checkpoint_enabled: Boolean(rawConfig.rollback.checkpoint_enabled),
-      temporal_rollback: Boolean(rawConfig.rollback.temporal_rollback)
+      temporal_rollback: Boolean(rawConfig.rollback.temporal_rollback),
     },
     models: {
       reasoning: String(rawConfig.models.reasoning || ""),
-      instruct: String(rawConfig.models.instruct || "")
-    }
+      instruct: String(rawConfig.models.instruct || ""),
+    },
   };
 
   return config;
@@ -128,7 +136,7 @@ export async function loadEnvConfig(): Promise<EnvConfig> {
     "GITHUB_ORG",
     "EDGE_FUNCTION_URL",
     "E2B_API_KEY",
-    "VECTOR_DB_URL"
+    "VECTOR_DB_URL",
   ] as const;
 
   const config = {} as EnvConfig;

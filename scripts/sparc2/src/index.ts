@@ -4,44 +4,43 @@
  */
 
 // Configuration
-export { loadConfig, loadEnvConfig, type SPARCConfig, type EnvConfig } from "./config.ts";
+export { type EnvConfig, loadConfig, loadEnvConfig, type SPARCConfig } from "./config.ts";
 
 // Logging
-export { logMessage, type LogEntry, type LogLevel, logInfo, logError, logDebug, logWarn } from "./logger.ts";
+export {
+  logDebug,
+  type LogEntry,
+  logError,
+  logInfo,
+  type LogLevel,
+  logMessage,
+  logWarn,
+} from "./logger.ts";
 
 // Vector Store
-export { 
-  vectorStoreLog, 
-  indexDiffEntry, 
-  searchDiffEntries,
+export {
   type DiffEntry,
-  type VectorSearchResult
+  indexDiffEntry,
+  searchDiffEntries,
+  type VectorSearchResult,
+  vectorStoreLog,
 } from "./vector/vectorStore.ts";
 
 // Diff Tracking
-export { 
-  computeDiff,
-  type DiffResult
-} from "./diff/diffTracker.ts";
+export { computeDiff, type DiffResult } from "./diff/diffTracker.ts";
 
 // Git Integration
-export { 
-  createCommit,
-  rollbackChanges
-} from "./git/gitIntegration.ts";
+export { createCommit, rollbackChanges } from "./git/gitIntegration.ts";
 
 // Code Interpreter
-export { 
-  createSandbox,
-  executeCode
-} from "./sandbox/codeInterpreter.ts";
+export { createSandbox, executeCode } from "./sandbox/codeInterpreter.ts";
 
 // Agent
-export { 
-  SPARC2Agent,
+export {
   type AgentOptions,
-  type FileToProcess, 
-  type ModificationResult
+  type FileToProcess,
+  type ModificationResult,
+  SPARC2Agent,
 } from "./agent/agent.ts";
 
 // CLI
@@ -51,12 +50,12 @@ export { main as runCli } from "./cli/cli.ts";
 export { handleEdgeRequest } from "./edge/edge.ts";
 
 // CORS
-export { 
-  corsHeaders, 
-  applyCorsHeaders, 
-  createCorsPreflightResponse, 
+export {
+  applyCorsHeaders,
+  corsHeaders,
+  createCorsPreflightResponse,
+  handleCorsPreflightRequest,
   isCorsPreflightRequest,
-  handleCorsPreflightRequest
 } from "./_shared/cors.ts";
 
 /**

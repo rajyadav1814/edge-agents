@@ -5,7 +5,13 @@
 
 import { logMessage } from "../logger.ts";
 import { computeDiff } from "../diff/diffTracker.ts";
-import { createCommit, createCheckpoint, rollbackChanges, isRepoClean, getCurrentBranch } from "../git/gitIntegration.ts";
+import {
+  createCheckpoint,
+  createCommit,
+  getCurrentBranch,
+  isRepoClean,
+  rollbackChanges,
+} from "../git/gitIntegration.ts";
 import { indexDiffEntry } from "../vector/vectorStore.ts";
 import { executeCode } from "../sandbox/codeInterpreter.ts";
 import { parseAgentConfig } from "./config/config-parser.ts";
@@ -72,7 +78,7 @@ export class SPARC2Agent {
   private openai: OpenAI;
   private config: AgentConfig | null = null;
   private executor: AgentExecutor | null = null;
-  
+
   /**
    * Create a new SPARC2 agent
    * @param options Agent options
@@ -83,32 +89,35 @@ export class SPARC2Agent {
       mode: options.mode || "automatic",
       diffMode: options.diffMode || "file",
       processing: options.processing || "sequential",
-      configPath: options.configPath || "config/agent-config.toml"
+      configPath: options.configPath || "config/agent-config.toml",
     };
-    
+
     // Initialize OpenAI client
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
       throw new Error("OPENAI_API_KEY environment variable is required");
     }
-    
+
     this.openai = new OpenAI({ apiKey });
   }
-  
+
   /**
    * Initialize the agent
    */
   async init(): Promise<void> {
     try {
       // Load configuration
-      this.config = await parseAgentConfig(this.options.configPath || "/workspaces/edge-agents/scripts/sparc2/config/agent-config.toml");
-      
+      this.config = await parseAgentConfig(
+        this.options.configPath ||
+          "/workspaces/edge-agents/scripts/sparc2/config/agent-config.toml",
+      );
+
       // Create executor
       this.executor = new AgentExecutor(this.config);
-      
-      await logMessage("info", "SPARC2 Agent initialized", { 
+
+      await logMessage("info", "SPARC2 Agent initialized", {
         model: this.options.model,
-        mode: this.options.mode
+        mode: this.options.mode,
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -116,7 +125,7 @@ export class SPARC2Agent {
       throw error;
     }
   }
-  
+
   /**
    * Analyze and compute diff for a file
    * @param path Path to the file
@@ -128,13 +137,13 @@ export class SPARC2Agent {
     try {
       // Compute diff
       const diff = await computeDiff(oldContent, newContent, this.options.diffMode);
-      
+
       // If there are no changes, return empty string
       if (diff.changedLines === 0) {
         await logMessage("info", `No changes detected for ${path}`);
         return "";
       }
-      
+
       // Index the diff in the vector store
       await indexDiffEntry({
         id: crypto.randomUUID(),
@@ -142,23 +151,25 @@ export class SPARC2Agent {
         diff: diff.diffText,
         metadata: {
           timestamp: new Date().toISOString(),
-          type: "diff"
-        }
+          type: "diff",
+        },
       });
-      
-      await logMessage("info", `Analyzed and computed diff for ${path}`, { 
+
+      await logMessage("info", `Analyzed and computed diff for ${path}`, {
         changedLines: diff.changedLines,
-        diffLength: diff.diffText.length
+        diffLength: diff.diffText.length,
       });
-      
+
       return diff.diffText;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      await logMessage("error", `Failed to analyze and compute diff for ${path}`, { error: errorMessage });
+      await logMessage("error", `Failed to analyze and compute diff for ${path}`, {
+        error: errorMessage,
+      });
       throw error;
     }
   }
-  
+
   /**
    * Apply changes to a file
    * @param path Path to the file
@@ -169,15 +180,15 @@ export class SPARC2Agent {
     try {
       // Get current branch
       const branch = await getCurrentBranch();
-      
+
       // Create commit
       const commitHash = await createCommit(branch, path, message);
-      
-      await logMessage("info", `Applied changes to ${path}`, { 
+
+      await logMessage("info", `Applied changes to ${path}`, {
         branch,
-        commitHash
+        commitHash,
       });
-      
+
       return commitHash;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -185,7 +196,7 @@ export class SPARC2Agent {
       throw error;
     }
   }
-  
+
   /**
    * Create a checkpoint
    * @param message Checkpoint message
@@ -194,12 +205,12 @@ export class SPARC2Agent {
   async createCheckpoint(message: string): Promise<string> {
     try {
       const hash = await createCheckpoint(message);
-      
-      await logMessage("info", "Created checkpoint", { 
+
+      await logMessage("info", "Created checkpoint", {
         message,
-        hash
+        hash,
       });
-      
+
       return hash;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -207,7 +218,7 @@ export class SPARC2Agent {
       throw error;
     }
   }
-  
+
   /**
    * Rollback to a previous state
    * @param target Target to rollback to (commit hash, branch, etc.)
@@ -216,10 +227,10 @@ export class SPARC2Agent {
   async rollback(target: string, type: "checkpoint" | "temporal" = "checkpoint"): Promise<void> {
     try {
       await rollbackChanges(target, type);
-      
-      await logMessage("info", "Rolled back changes", { 
+
+      await logMessage("info", "Rolled back changes", {
         target,
-        type
+        type,
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -227,7 +238,7 @@ export class SPARC2Agent {
       throw error;
     }
   }
-  
+
   /**
    * Check if the repository is clean
    * @returns Whether the repository is clean
@@ -235,7 +246,7 @@ export class SPARC2Agent {
   async isRepoClean(): Promise<boolean> {
     return await isRepoClean();
   }
-  
+
   /**
    * Plan and execute a task
    * @param task Task to execute
@@ -246,74 +257,77 @@ export class SPARC2Agent {
     try {
       // Check if repository is clean
       const clean = await this.isRepoClean();
-      
+
       // If not clean, create a checkpoint
       if (!clean) {
         // Sanitize the message to create a valid git tag (no spaces, special characters)
         const sanitizedMessage = "Automatic_checkpoint_before_agent_execution";
         await this.createCheckpoint(sanitizedMessage);
       }
-      
+
       // Initialize the agent if not already initialized
       if (!this.executor) {
         await this.init();
       }
-      
+
       // Create context for the agent
       const context: AgentContext = {
-        input: `Task: ${task}\n\nFiles:\n${files.map(file => `- ${file.path}`).join('\n')}`,
-        files
+        input: `Task: ${task}\n\nFiles:\n${files.map((file) => `- ${file.path}`).join("\n")}`,
+        files,
       };
-      
+
       // Execute the default flow
       const result = await this.executor!.executeFlow(this.config!.defaultFlow, context);
-      
+
       // Process the results
       const modificationResults: ModificationResult[] = [];
-      
+
       for (const file of files) {
         // Extract code blocks from the output
-        const codeBlockRegex = new RegExp(`\`\`\`(?:typescript|javascript|ts|js)\\s*\\n([\\s\\S]*?)\\n\`\`\``, 'g');
+        const codeBlockRegex = new RegExp(
+          `\`\`\`(?:typescript|javascript|ts|js)\\s*\\n([\\s\\S]*?)\\n\`\`\``,
+          "g",
+        );
         const matches = [...(result.output || "").matchAll(codeBlockRegex)];
-        
+
         if (matches.length === 0) {
           modificationResults.push({
             path: file.path,
             success: false,
             originalContent: file.originalContent,
-            error: "No code blocks found in output"
+            error: "No code blocks found in output",
           });
           continue;
         }
-        
+
         // Use the last code block as the new content
         const newContent = matches[matches.length - 1][1];
-        
+
         // Compute diff
         const diff = await this.analyzeAndDiff(file.path, file.originalContent, newContent);
-        
+
         // Write the new content to the file
         await Deno.writeTextFile(file.path, newContent);
-        
+
         // Commit the changes
         const commitHash = await this.applyChanges(file.path, `Agent: ${task}`);
-        
+
         modificationResults.push({
           path: file.path,
           success: true,
           originalContent: file.originalContent,
           modifiedContent: newContent,
           diff,
-          commitHash
+          commitHash,
         });
       }
-      
-      await logMessage("info", "Completed planning and execution", { 
+
+      await logMessage("info", "Completed planning and execution", {
         task,
         fileCount: files.length,
-        successCount: modificationResults.filter(r => r.success).length
+        successCount: modificationResults.filter((r) => r.success).length,
       });
-      
+
       return modificationResults;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -321,7 +335,7 @@ export class SPARC2Agent {
       throw error;
     }
   }
-  
+
   /**
    * Execute code in a sandbox
    * @param code Code to execute
@@ -331,12 +345,12 @@ export class SPARC2Agent {
   async executeCode(code: string, language: "javascript" | "typescript" | "python" = "javascript") {
     try {
       const result = await executeCode(code, { language, stream: true });
-      
-      await logMessage("info", "Executed code", { 
+
+      await logMessage("info", "Executed code", {
         language,
-        success: !result.error
+        success: !result.error,
       });
-      
+
       return result;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);

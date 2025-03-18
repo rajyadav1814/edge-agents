@@ -1,6 +1,7 @@
 # SPARC
+The SPARC Framework is a comprehensive methodology designed to guide the development of robust and scalable applications. SPARC stands for Specification, Pseudocode, Architecture, Refinement, and Completion. Each step ensures thorough planning, execution, and reflection throughout the project lifecycle.
 
-# SPARC
+# SPARC 2.0 (alpha)
 
 SPARC 2.0, vectorized AI code analysis, is an intelligent coding agent framework built to automate and streamline software development. It combines  secure execution environments, and version control into a unified system where specialized agents collaborate to understand, modify, and manage code. These agents analyze patterns, suggest improvements, implement changes, and validate solutions—all while maintaining a detailed history that allows for easy rollbacks when needed. 
 
@@ -8,7 +9,7 @@ By bridging the gap between human developers and AI assistants, SPARC 2.0 enhanc
 
 A defining feature of SPARC is its ability to track code changes over time, functioning like a perfect memory of your code’s evolution. It uses a unified diff system to capture precisely what changed between versions rather than storing entire files, dramatically reducing storage needs and speeding up operations. By default, the system tracks changes at the file level for optimal performance, yet it can zoom in to function-level tracking when more granular detail is required. This efficient diff tracking ensures smooth performance whether you are working on a small project or a massive enterprise codebase.
 
-Essentially, SPARCacts as an advanced version control enhancer that integrates with Git and GitHub while leveraging artificial intelligence to manage updates automatically. Its understanding of temporal relationships between code modifications allows it to orchestrate complex workflows that support simultaneous contributions from both human developers and AI agents. SPARC adapts its processing pace to match developers’ speed, ensuring seamless, conflict-free collaboration.
+Essentially, SPARC acts as an advanced version control enhancer that integrates with Git and GitHub while leveraging artificial intelligence to manage updates automatically. Its understanding of temporal relationships between code modifications allows it to orchestrate complex workflows that support simultaneous contributions from both human developers and AI agents. SPARC adapts its processing pace to match developers’ speed, ensuring seamless, conflict-free collaboration.
 
 At the heart of SPARC lies its vector store—a specialized database that transforms code and text into abstract patterns. Instead of merely memorizing exact words, it captures the underlying meaning of the code, similar to understanding cooking techniques rather than just listing ingredients. This approach enables the system to locate similar code snippets despite differences in variable names or styles, creating a smart library of your development history.
 
@@ -95,7 +96,7 @@ cd sparc2
 # Install dependencies
 deno cache --reload src/cli/cli.ts
 ```
-
+ 
 # SPARC2 CLI
 
 A comprehensive command-line interface for the SPARC2 project that integrates the E2B code interpreter and agent framework implementations.
@@ -132,7 +133,7 @@ export SPARC2_CONFIG_PATH=/path/to/your/config.toml
 
 ## Environment Variables
 
-Create a `.env` file in your project root or set these environment variables:
+Create a `.env` file in your project root (you can copy from `.env.example`) or set these environment variables:
 
 ```
 # Required
@@ -142,6 +143,7 @@ Create a `.env` file in your project root or set these environment variables:
 # Optional
 - `OPENROUTER_API_KEY`: Your OpenRouter API key (optional)
 - `SPARC2_CONFIG_PATH`: Custom path to your config file
+- `NPM_TOKEN`: Your NPM token (only needed when publishing to npm)
 ```
 
 ## Using as a Library

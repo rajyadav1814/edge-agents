@@ -33,7 +33,7 @@ export interface LogEntry {
 export async function logMessage(
   level: LogLevel,
   message: string,
-  metadata: Record<string, unknown> = {}
+  metadata: Record<string, unknown> = {},
 ): Promise<void> {
   const logEntry: LogEntry = {
     timestamp: new Date().toISOString(),
@@ -44,7 +44,7 @@ export async function logMessage(
 
   // Output to console with appropriate formatting
   const formattedMessage = formatLogMessage(logEntry);
-  
+
   // Use different console methods based on log level
   switch (level) {
     case "error":
@@ -68,9 +68,7 @@ export async function logMessage(
   } catch (error) {
     // Don't let vector store errors affect the application
     // Properly handle the unknown error type
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`Failed to store log in vector store: ${errorMessage}`);
   }
 }
@@ -85,7 +83,7 @@ function formatLogMessage(entry: LogEntry): string {
   const metadataStr = Object.keys(metadata).length > 0
     ? `\n  ${JSON.stringify(metadata, null, 2)}`
     : "";
-  
+
   return `[${timestamp}] [${level.toUpperCase()}] ${message}${metadataStr}`;
 }
 
@@ -94,7 +92,10 @@ function formatLogMessage(entry: LogEntry): string {
  * @param message Log message
  * @param metadata Additional metadata
  */
-export async function logInfo(message: string, metadata: Record<string, unknown> = {}): Promise<void> {
+export async function logInfo(
+  message: string,
+  metadata: Record<string, unknown> = {},
+): Promise<void> {
   return logMessage("info", message, metadata);
 }
 
@@ -103,7 +104,10 @@ export async function logInfo(message: string, metadata: Record<string, unknown>
  * @param message Log message
  * @param metadata Additional metadata
  */
-export async function logError(message: string, metadata: Record<string, unknown> = {}): Promise<void> {
+export async function logError(
+  message: string,
+  metadata: Record<string, unknown> = {},
+): Promise<void> {
   return logMessage("error", message, metadata);
 }
 
@@ -112,7 +116,10 @@ export async function logError(message: string, metadata: Record<string, unknown
  * @param message Log message
  * @param metadata Additional metadata
  */
-export async function logDebug(message: string, metadata: Record<string, unknown> = {}): Promise<void> {
+export async function logDebug(
+  message: string,
+  metadata: Record<string, unknown> = {},
+): Promise<void> {
   return logMessage("debug", message, metadata);
 }
 
@@ -121,6 +128,9 @@ export async function logDebug(message: string, metadata: Record<string, unknown
  * @param message Log message
  * @param metadata Additional metadata
  */
-export async function logWarn(message: string, metadata: Record<string, unknown> = {}): Promise<void> {
+export async function logWarn(
+  message: string,
+  metadata: Record<string, unknown> = {},
+): Promise<void> {
   return logMessage("warn", message, metadata);
 }

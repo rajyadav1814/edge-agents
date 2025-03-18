@@ -5,12 +5,7 @@
 
 import { parse } from "https://deno.land/std@0.203.0/toml/mod.ts";
 import { logMessage } from "../../logger.ts";
-import { 
-  AgentConfig, 
-  AgentFlow, 
-  AgentStep, 
-  RawAgentConfig 
-} from "../types.ts";
+import { AgentConfig, AgentFlow, AgentStep, RawAgentConfig } from "../types.ts";
 import { ProviderFactory } from "../providers/provider-factory.ts";
 
 /**
@@ -22,10 +17,10 @@ export async function parseAgentConfig(configPath: string): Promise<AgentConfig>
   try {
     // Read the TOML file
     const tomlContent = await Deno.readTextFile(configPath);
-    
+
     // Parse the TOML content
     const config = parse(tomlContent) as RawAgentConfig;
-    
+
     // Process the configuration (resolve variables, etc.)
     return processAgentConfig(config);
   } catch (error: unknown) {
@@ -44,75 +39,75 @@ function processAgentConfig(config: RawAgentConfig): AgentConfig {
   // Create provider instances
   const providers: Record<string, any> = {};
   const factory = new ProviderFactory();
-  
+
   for (const [name, providerConfig] of Object.entries(config.providers || {})) {
     switch (providerConfig.type) {
       case "openai":
         providers[name] = ProviderFactory.createOpenAIProvider(name, {
           apiKeyEnv: providerConfig.api_key_env,
-          defaultModel: providerConfig.default_model
+          defaultModel: providerConfig.default_model,
         });
         break;
-      
+
       case "openrouter":
         providers[name] = ProviderFactory.createOpenRouterProvider(name, {
           apiKeyEnv: providerConfig.api_key_env,
-          defaultModel: providerConfig.default_model
+          defaultModel: providerConfig.default_model,
         });
         break;
-      
+
       case "mock":
         providers[name] = ProviderFactory.createMockProvider(name, {
           defaultModel: providerConfig.default_model,
-          mockResponses: providerConfig.mock_responses
+          mockResponses: providerConfig.mock_responses,
         });
         break;
-      
+
       default:
         throw new Error(`Unknown provider type: ${providerConfig.type}`);
     }
   }
-  
+
   // Process flows
   const flows: Record<string, AgentFlow> = {};
-  
+
   for (const [name, flowConfig] of Object.entries(config.flows || {})) {
-    if (typeof flowConfig !== 'object' || flowConfig === null) {
+    if (typeof flowConfig !== "object" || flowConfig === null) {
       throw new Error(`Invalid flow configuration for ${name}`);
     }
-    
+
     const steps: Record<string, AgentStep> = {};
     const flowSteps = (flowConfig as any).steps || {};
 
     for (const [stepName, stepConfig] of Object.entries(flowSteps)) {
-      if (typeof stepConfig !== 'object' || stepConfig === null) {
+      if (typeof stepConfig !== "object" || stepConfig === null) {
         throw new Error(`Invalid step configuration for ${stepName}`);
       }
 
       // Resolve provider reference
       const providerName = (stepConfig as any).provider;
       const provider = providers[providerName];
-      
+
       if (!provider) {
         throw new Error(`Provider not found: ${providerName}`);
       }
-      
+
       // Resolve model reference (if it contains a variable)
       let model = (stepConfig as any).model;
-      if (model && typeof model === 'string' && model.startsWith("${") && model.endsWith("}")) {
+      if (model && typeof model === "string" && model.startsWith("${") && model.endsWith("}")) {
         const path = model.slice(2, -1).split(".");
         let value: any = config;
-        
+
         for (const key of path) {
           value = value[key];
           if (value === undefined) {
             throw new Error(`Variable not found: ${model}`);
           }
         }
-        
+
         model = value;
       }
-      
+
       steps[stepName] = {
         name: stepName,
         provider: provider,
@@ -121,23 +116,23 @@ function processAgentConfig(config: RawAgentConfig): AgentConfig {
         systemPrompt: (stepConfig as any).system_prompt,
         useAssistant: (stepConfig as any).use_assistant || false,
         assistantInstructions: (stepConfig as any).assistant_instructions,
-        tools: (stepConfig as any).tools || []
+        tools: (stepConfig as any).tools || [],
       };
     }
-    
+
     flows[name] = {
       name,
       description: (flowConfig as any).description,
       steps,
-      transitions: (flowConfig as any).transitions || {}
+      transitions: (flowConfig as any).transitions || {},
     };
   }
-  
+
   return {
     name: config.agent.name,
     description: config.agent.description,
     defaultFlow: config.agent.default_flow,
     providers,
-    flows
+    flows,
   };
 }

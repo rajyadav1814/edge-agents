@@ -9,7 +9,7 @@
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With"
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
 };
 
 /**
@@ -19,17 +19,17 @@ export const corsHeaders = {
  */
 export function applyCorsHeaders(response: Response): Response {
   const newHeaders = new Headers(response.headers);
-  
+
   // Add CORS headers
   Object.entries(corsHeaders).forEach(([key, value]) => {
     newHeaders.set(key, value);
   });
-  
+
   // Create a new response with the updated headers
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
-    headers: newHeaders
+    headers: newHeaders,
   });
 }
 
@@ -40,7 +40,7 @@ export function applyCorsHeaders(response: Response): Response {
 export function createCorsPreflightResponse(): Response {
   return new Response("OK", {
     status: 204,
-    headers: corsHeaders
+    headers: corsHeaders,
   });
 }
 
@@ -50,8 +50,8 @@ export function createCorsPreflightResponse(): Response {
  * @returns True if the request is a CORS preflight request
  */
 export function isCorsPreflightRequest(request: Request): boolean {
-  return request.method === "OPTIONS" && 
-         request.headers.has("Access-Control-Request-Method");
+  return request.method === "OPTIONS" &&
+    request.headers.has("Access-Control-Request-Method");
 }
 
 /**
@@ -63,7 +63,7 @@ export function handleCorsPreflightRequest(request: Request): Response {
   if (isCorsPreflightRequest(request)) {
     return createCorsPreflightResponse();
   }
-  
+
   // If it's not a preflight request, return null
   return null as unknown as Response;
 }

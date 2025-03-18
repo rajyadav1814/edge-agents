@@ -10,7 +10,7 @@ export const corsHeaders = {
 // Function to get CORS headers with the appropriate origin
 export function getCorsHeaders(req: Request) {
   const origin = req.headers.get('Origin') || '';
-  const allowedOrigins = ['https://agentics.org', 'http://127.0.0.1:8080'];
+  const allowedOrigins = ['https://agentics.org', 'http://127.0.0.1:8080', 'https://booking.ruv.io'];
   
   // If the request origin is in our allowed list, set it as the allowed origin
   // Otherwise, default to the first allowed origin
@@ -22,4 +22,13 @@ export function getCorsHeaders(req: Request) {
     ...corsHeaders,
     'Access-Control-Allow-Origin': allowedOrigin
   };
+}
+
+// Handle OPTIONS requests for CORS preflight
+export function handleCors(req: Request) {
+  // Return a response with CORS headers for OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: getCorsHeaders(req) });
+  }
+  return null;
 }

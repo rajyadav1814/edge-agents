@@ -1,0 +1,24 @@
+# Environment variables
+.env
+
+# NPM
+node_modules/
+npm-debug.log
+.npmrc
+
+# Build output
+build/
+dist/
+
+# Deno
+.deno_dir/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

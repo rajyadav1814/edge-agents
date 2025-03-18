@@ -23,18 +23,18 @@ export class ProviderFactory {
     switch (type) {
       case "openai":
         return new OpenAIProvider(options as OpenAIProviderOptions);
-      
+
       case "openrouter":
         return new OpenRouterProvider(options as OpenRouterProviderOptions);
-      
+
       case "mock":
         return new MockProvider(options as MockProviderOptions);
-      
+
       default:
         throw new Error(`Unknown provider type: ${type}`);
     }
   }
-  
+
   /**
    * Create an OpenAI provider
    * @param name Provider name
@@ -44,17 +44,20 @@ export class ProviderFactory {
   static createOpenAIProvider(name: string, options: OpenAIProviderOptions): OpenAIProvider {
     return new OpenAIProvider(options);
   }
-  
+
   /**
    * Create an OpenRouter provider
    * @param name Provider name
    * @param options Provider options
    * @returns OpenRouter provider
    */
-  static createOpenRouterProvider(name: string, options: OpenRouterProviderOptions): OpenRouterProvider {
+  static createOpenRouterProvider(
+    name: string,
+    options: OpenRouterProviderOptions,
+  ): OpenRouterProvider {
     return new OpenRouterProvider(options);
   }
-  
+
   /**
    * Create a mock provider
    * @param name Provider name

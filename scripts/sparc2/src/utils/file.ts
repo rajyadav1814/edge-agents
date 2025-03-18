@@ -9,8 +9,8 @@
  */
 export async function readJsonLines(path: string): Promise<any[]> {
   const text = await Deno.readTextFile(path);
-  const lines = text.split('\n').filter(line => line.trim() !== '');
-  return lines.map(line => JSON.parse(line));
+  const lines = text.split("\n").filter((line) => line.trim() !== "");
+  return lines.map((line) => JSON.parse(line));
 }
 
 /**
@@ -19,7 +19,7 @@ export async function readJsonLines(path: string): Promise<any[]> {
  * @param data Array of objects to write
  */
 export async function writeJsonLines(path: string, data: any[]): Promise<void> {
-  const lines = data.map(item => JSON.stringify(item)).join('\n');
+  const lines = data.map((item) => JSON.stringify(item)).join("\n");
   await Deno.writeTextFile(path, lines);
 }
 

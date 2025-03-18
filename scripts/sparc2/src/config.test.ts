@@ -26,10 +26,10 @@ temporal_rollback = true
 reasoning = "test-model"
 instruct = "test-model"
 `;
-  
+
   const originalReadTextFile = Deno.readTextFile;
   Deno.readTextFile = () => Promise.resolve(mockToml);
-  
+
   try {
     const config = await loadConfig("test.toml");
     assertEquals(config.execution.mode, "automatic");
@@ -48,10 +48,10 @@ mode = "automatic"
 diff_mode = "file"
 processing = "parallel"
 `;
-  
+
   const originalReadTextFile = Deno.readTextFile;
   Deno.readTextFile = () => Promise.resolve(mockToml);
-  
+
   try {
     let error: Error | undefined;
     try {
@@ -59,11 +59,11 @@ processing = "parallel"
     } catch (e) {
       error = e as Error;
     }
-    
+
     if (!error) {
       throw new Error("Expected loadConfig to throw an error but it didn't");
     }
-    
+
     assertEquals(error.message, "Missing required configuration sections");
   } finally {
     Deno.readTextFile = originalReadTextFile;
@@ -74,18 +74,18 @@ Deno.test("loadEnvConfig validates required environment variables", async () => 
   // Create mock environment
   const mockEnv: MockEnv = {
     get: (_key: string) => undefined,
-    toObject: () => ({})
+    toObject: () => ({}),
   };
 
   // Save original env
   const originalEnv = globalThis.Deno.env;
   (globalThis.Deno as any).env = mockEnv;
-  
+
   try {
     await assertRejects(
       async () => await loadEnvConfig(),
       Error,
-      "required environment variables"
+      "required environment variables",
     );
   } finally {
     // Restore original env
@@ -96,28 +96,29 @@ Deno.test("loadEnvConfig validates required environment variables", async () => 
 Deno.test("loadEnvConfig returns valid config when all variables present", async () => {
   // Mock environment with all required variables
   const mockEnv: MockEnv = {
-    get: (key: string) => ({
-      OPENAI_API_KEY: "test-key",
-      GITHUB_TOKEN: "test-token",
-      GITHUB_ORG: "test-org",
-      EDGE_FUNCTION_URL: "http://test.com",
-      E2B_API_KEY: "test-key",
-      VECTOR_DB_URL: "test-url"
-    })[key],
+    get: (key: string) =>
+      ({
+        OPENAI_API_KEY: "test-key",
+        GITHUB_TOKEN: "test-token",
+        GITHUB_ORG: "test-org",
+        EDGE_FUNCTION_URL: "http://test.com",
+        E2B_API_KEY: "test-key",
+        VECTOR_DB_URL: "test-url",
+      })[key],
     toObject: () => ({
       OPENAI_API_KEY: "test-key",
       GITHUB_TOKEN: "test-token",
       GITHUB_ORG: "test-org",
       EDGE_FUNCTION_URL: "http://test.com",
       E2B_API_KEY: "test-key",
-      VECTOR_DB_URL: "test-url"
-    })
+      VECTOR_DB_URL: "test-url",
+    }),
   };
-  
+
   // Save original env
   const originalEnv = globalThis.Deno.env;
   (globalThis.Deno as any).env = mockEnv;
-  
+
   try {
     const config = await loadEnvConfig();
     assertEquals(config.OPENAI_API_KEY, "test-key");
