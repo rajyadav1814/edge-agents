@@ -7,4 +7,3 @@ import { handleRequest } from "./edge.ts";
 import * as config from "../config.ts";
 import * as logger from "../logger.ts";
 import { SPARC2Agent } from "../agent/agent.ts";
-

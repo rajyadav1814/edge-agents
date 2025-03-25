@@ -4,9 +4,15 @@
  */
 
 import OpenAI from "npm:openai";
-import { logInfo, logError, logDebug } from "../logger.ts";
-import { computeDiff, applyDiff } from "../diff/diffTracker.ts";
-import { getCurrentBranch, createCommit, createCheckpoint, rollbackChanges, isRepoClean } from "../git/gitIntegration.ts";
+import { logDebug, logError, logInfo } from "../logger.ts";
+import { applyDiff, computeDiff } from "../diff/diffTracker.ts";
+import {
+  createCheckpoint,
+  createCommit,
+  getCurrentBranch,
+  isRepoClean,
+  rollbackChanges,
+} from "../git/gitIntegration.ts";
 import { executeCode } from "../sandbox/codeInterpreter.ts";
 import { indexDiffEntry } from "../vector/vectorStore.ts";
 
@@ -347,7 +353,10 @@ export class SPARC2Agent {
    */
   async executeCode(
     code: string,
-    options?: "python" | "javascript" | "typescript" | { language?: "python" | "javascript" | "typescript"; stream?: boolean },
+    options?: "python" | "javascript" | "typescript" | {
+      language?: "python" | "javascript" | "typescript";
+      stream?: boolean;
+    },
   ) {
     let language: "python" | "javascript" | "typescript" = "javascript";
     let stream = true;

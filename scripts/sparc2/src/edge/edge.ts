@@ -3,7 +3,7 @@
  * Provides HTTP endpoints for interacting with SPARC 2.0 functionality
  */
 
-import { SPARC2Agent, AgentOptions, FileToProcess } from "../agent/agent.ts";
+import { AgentOptions, FileToProcess, SPARC2Agent } from "../agent/agent.ts";
 import { loadConfig } from "../config.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { executeCode } from "../sandbox/codeInterpreter.ts";
@@ -30,12 +30,14 @@ export async function handleRequest(req: Request): Promise<Response> {
     // Create agent options from config
     const agentOptions: AgentOptions = {
       model: tomlConfig.models.reasoning,
-      mode: tomlConfig.execution.mode === "semi" ? "interactive" : 
-            (tomlConfig.execution.mode as "automatic" | "manual" | "custom"),
+      mode: tomlConfig.execution.mode === "semi"
+        ? "interactive"
+        : (tomlConfig.execution.mode as "automatic" | "manual" | "custom"),
       diffMode: tomlConfig.execution.diff_mode,
-      processing: tomlConfig.execution.processing === "concurrent" || 
-                 tomlConfig.execution.processing === "swarm" ? 
-                 "parallel" : tomlConfig.execution.processing as "sequential" | "parallel",
+      processing: tomlConfig.execution.processing === "concurrent" ||
+          tomlConfig.execution.processing === "swarm"
+        ? "parallel"
+        : tomlConfig.execution.processing as "sequential" | "parallel",
     };
 
     // Create agent instance
