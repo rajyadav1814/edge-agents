@@ -51,18 +51,22 @@ function divide(a, b) {
  * @returns {number} The result of base raised to the power of exponent
  */
 function power(base, exponent) {
-  return Math.pow(base, exponent);
+  return base ** exponent; // Using the exponentiation operator
 }
 
 // Test cases
-console.log("Testing add: 5 + 3 =", add(5, 3));
-console.log("Testing subtract: 10 - 4 =", subtract(10, 4));
-console.log("Testing multiply: 6 * 7 =", multiply(6, 7));
-console.log("Testing divide: 20 / 5 =", divide(20, 5));
+function runTests() {
+  console.log("Testing add: 5 + 3 =", add(5, 3));
+  console.log("Testing subtract: 10 - 4 =", subtract(10, 4));
+  console.log("Testing multiply: 6 * 7 =", multiply(6, 7));
+  console.log("Testing divide: 20 / 5 =", divide(20, 5));
 
-// Test error handling
-try {
-  console.log("Testing divide by zero:", divide(10, 0));
-} catch (error) {
-  console.log("Error caught:", error.message);
+  // Test error handling
+  try {
+    console.log("Testing divide by zero:", divide(10, 0));
+  } catch (error) {
+    console.log("Error caught:", error.message);
+  }
 }
+
+runTests();
