@@ -1,77 +1,112 @@
 /**
- * SPARC 2.0 - Autonomous Diff-Based Coding Bot
- * Main entry point for the application
+ * SPARC 2.0 - Structured Prompt Agent for Reasoning and Code
+ * Main entry point and exports
  */
 
-// Configuration
-export { type EnvConfig, loadConfig, loadEnvConfig, type SPARCConfig } from "./config.ts";
-
-// Logging
-export {
-  logDebug,
-  type LogEntry,
-  logError,
-  logInfo,
-  type LogLevel,
-  logMessage,
-  logWarn,
-} from "./logger.ts";
-
-// Vector Store
-export {
-  type DiffEntry,
-  indexDiffEntry,
-  searchDiffEntries,
-  type VectorSearchResult,
-  vectorStoreLog,
-} from "./vector/vectorStore.ts";
-
-// Diff Tracking
-export { computeDiff, type DiffResult } from "./diff/diffTracker.ts";
-
-// Git Integration
-export { createCommit, rollbackChanges } from "./git/gitIntegration.ts";
-
-// Code Interpreter
-export { createSandbox, executeCode } from "./sandbox/codeInterpreter.ts";
-
 // Agent
-export {
-  type AgentOptions,
-  type FileToProcess,
-  type ModificationResult,
-  SPARC2Agent,
+export { SPARC2Agent } from "./agent/agent.ts";
+export type {
+  AgentOptions,
+  FileToProcess,
+  ModificationResult,
 } from "./agent/agent.ts";
+
+// Agent Types
+export type {
+  ChatMessage,
+  CompletionOptions,
+  ChatCompletionOptions,
+  Assistant,
+  AssistantOptions,
+  ToolDefinition,
+  ToolFunction,
+  AgentStep,
+  AgentFlow,
+  AgentConfig,
+  RawAgentConfig,
+  AgentContext,
+  LLMProvider,
+} from "./agent/types.ts";
+
+// Providers
+export {
+  OpenAIProvider,
+} from "./agent/providers/openai-provider.ts";
+export type {
+  OpenAIProviderOptions,
+} from "./agent/providers/openai-provider.ts";
+
+export {
+  OpenRouterProvider,
+} from "./agent/providers/openrouter-provider.ts";
+export type {
+  OpenRouterProviderOptions,
+} from "./agent/providers/openrouter-provider.ts";
+
+export {
+  MockProvider,
+} from "./agent/providers/mock-provider.ts";
+export type {
+  MockProviderOptions,
+} from "./agent/providers/mock-provider.ts";
+
+export { ProviderFactory } from "./agent/providers/provider-factory.ts";
+
+// Config
+export { loadConfig } from "./config.ts";
+export type { SPARCConfig } from "./config.ts";
 
 // CLI
 export { main as runCli } from "./cli/cli.ts";
 
 // Edge Function
-export { handleEdgeRequest } from "./edge/edge.ts";
+export { handleRequest } from "./edge/edge.ts";
 
 // CORS
 export {
   applyCorsHeaders,
   corsHeaders,
-  createCorsPreflightResponse,
-  handleCorsPreflightRequest,
-  isCorsPreflightRequest,
 } from "./_shared/cors.ts";
 
-/**
- * Main function to run the application
- * @param args Command line arguments
- */
-export async function main(args: string[] = Deno.args): Promise<void> {
-  // Import the CLI module and run it
-  const { main: runCliMain } = await import("./cli/cli.ts");
-  await runCliMain();
-}
+// Diff Tracking
+export { computeDiff } from "./diff/diffTracker.ts";
+export type {
+  DiffResult,
+  DiffHunk,
+} from "./diff/diffTracker.ts";
 
-// Run the main function if this file is executed directly
-if (import.meta.main) {
-  main().catch((err) => {
-    console.error("Error running SPARC 2.0:", err);
-    Deno.exit(1);
-  });
-}
+// Git Integration
+export {
+  getCurrentBranch,
+  createCommit,
+  createCheckpoint,
+  rollbackChanges,
+  isRepoClean,
+} from "./git/gitIntegration.ts";
+
+// Vector Store
+export {
+  indexDiffEntry,
+  searchDiffEntries,
+} from "./vector/vectorStore.ts";
+export type {
+  DiffEntry,
+} from "./vector/vectorStore.ts";
+
+// Code Interpreter
+export {
+  executeCode,
+} from "./sandbox/codeInterpreter.ts";
+export type {
+  CodeInterpreterOptions,
+  RunCodeOptions,
+  ExecutionResult,
+  Sandbox,
+} from "./sandbox/codeInterpreter.ts";
+
+// Logger
+export { logMessage } from "./logger.ts";
+export type {
+  LogLevel,
+  LogEntry,
+} from "./logger.ts";

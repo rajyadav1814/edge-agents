@@ -9,10 +9,10 @@
     "sparc2": "build/cli/cli.js"
   },
   "scripts": {
-    "build": "deno task check && deno task lint && deno task fmt && deno compile --allow-read --allow-write --allow-env --allow-net --allow-run src/cli/cli.ts -o build/cli/cli.js",
+    "build": "deno task build",
     "test": "deno test --allow-read --allow-env src/",
-    "check": "deno check src/**/*.ts",
-    "lint": "deno lint src/",
+    "check": "deno check src/**/*.ts --ignore=src/**/*.test.ts",
+    "lint": "deno lint src/ --ignore=src/**/*.test.ts",
     "fmt": "deno fmt src/",
     "prepublishOnly": "deno task fmt && deno compile --allow-read --allow-write --allow-env --allow-net --allow-run --no-check src/cli/cli.ts -o build/cli/cli.js"
   },

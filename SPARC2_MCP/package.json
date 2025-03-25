@@ -1,0 +1,25 @@
+{
+  "name": "sparc2-mcp",
+  "version": "1.0.0",
+  "description": "SPARC2 integration with Master Control Program (MCP) architecture",
+  "type": "module",
+  "main": "sparc2_mcp.js",
+  "scripts": {
+    "start": "node sparc2_mcp.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "sparc2",
+    "mcp",
+    "ai",
+    "code-analysis",
+    "code-modification",
+    "autonomous-agents"
+  ],
+  "author": "Agentics Foundation",
+  "license": "MIT",
+  "dependencies": {
+    "path": "^0.12.7",
+    "toml": "^3.0.0"
+  }
+}
