@@ -54,6 +54,20 @@ function power(base, exponent) {
   return base ** exponent; // Using the exponentiation operator
 }
 
+/**
+ * Calculates the remainder of the division of two numbers.
+ * @param {number} a - The dividend
+ * @param {number} b - The divisor
+ * @returns {number} The remainder of a divided by b
+ * @throws {Error} If b is zero
+ */
+function modulo(a, b) {
+  if (b === 0) {
+    throw new Error("Cannot divide by zero.");
+  }
+  return a % b;
+}
+
 // Test cases
 function runTests() {
   // Test addition
@@ -74,6 +88,16 @@ function runTests() {
   // Test division
   console.log("Testing divide: 20 / 5 =", divide(20, 5));
   console.log("Testing divide with negatives: -20 / 5 =", divide(-20, 5));
+
+  // Test modulo
+  console.log("Testing modulo: 20 % 3 =", modulo(20, 3));
+  console.log("Testing modulo with negatives: -20 % 3 =", modulo(-20, 3));
+  console.log("Testing modulo with zero divisor (should catch error):");
+  try {
+    console.log("Testing modulo by zero:", modulo(10, 0));
+  } catch (error) {
+    console.log("Error caught:", error.message);
+  }
 
   // Test error handling for division by zero
   try {
