@@ -39,7 +39,7 @@ function multiply(a, b) {
  */
 function divide(a, b) {
   if (b === 0) {
-    throw new Error("Division by zero is not allowed. Please provide a non-zero denominator.");
+    throw new Error("Cannot divide by zero.");
   }
   return a / b;
 }
@@ -56,12 +56,26 @@ function power(base, exponent) {
 
 // Test cases
 function runTests() {
+  // Test addition
   console.log("Testing add: 5 + 3 =", add(5, 3));
-  console.log("Testing subtract: 10 - 4 =", subtract(10, 4));
-  console.log("Testing multiply: 6 * 7 =", multiply(6, 7));
-  console.log("Testing divide: 20 / 5 =", divide(20, 5));
+  console.log("Testing add with zero: 5 + 0 =", add(5, 0));
+  console.log("Testing add with negatives: -5 + 3 =", add(-5, 3));
 
-  // Test error handling
+  // Test subtraction
+  console.log("Testing subtract: 10 - 4 =", subtract(10, 4));
+  console.log("Testing subtract with zero: 10 - 0 =", subtract(10, 0));
+  console.log("Testing subtract with negatives: -10 - 4 =", subtract(-10, 4));
+
+  // Test multiplication
+  console.log("Testing multiply: 6 * 7 =", multiply(6, 7));
+  console.log("Testing multiply with zero: 6 * 0 =", multiply(6, 0));
+  console.log("Testing multiply with negatives: -6 * 7 =", multiply(-6, 7));
+
+  // Test division
+  console.log("Testing divide: 20 / 5 =", divide(20, 5));
+  console.log("Testing divide with negatives: -20 / 5 =", divide(-20, 5));
+
+  // Test error handling for division by zero
   try {
     console.log("Testing divide by zero:", divide(10, 0));
   } catch (error) {
