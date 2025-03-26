@@ -13,6 +13,8 @@ import { spawn } from 'child_process';
 import path from 'path';
 import http from 'http';
 import { fileURLToPath } from 'url';
+import { existsSync } from 'fs';
+import { execSync } from 'child_process';
 
 // Get the directory of this script
 const __filename = fileURLToPath(import.meta.url);
@@ -21,14 +23,61 @@ const __dirname = path.dirname(__filename);
 // Start the SPARC2 HTTP server
 let httpServerProcess = null;
 
+/**
+ * Find the Deno executable by checking multiple common installation locations
+ * Falls back to the original path if no Deno installation is found
+ * @returns {string} Path to the Deno executable
+ */
+function findDenoExecutable() {
+  const possiblePaths = [
+    // Common paths for Deno installation
+    '/home/codespace/.deno/bin/deno',  // GitHub Codespaces (original path)
+    '/usr/local/bin/deno',             // Standard Linux/macOS location
+    '/usr/bin/deno',                   // Alternative Linux location
+    process.env.HOME ? path.join(process.env.HOME, '.deno/bin/deno') : null, // User home directory
+    process.env.DENO_INSTALL_ROOT ? path.join(process.env.DENO_INSTALL_ROOT, 'bin/deno') : null,
+    // Windows paths (with .exe extension)
+    process.env.USERPROFILE ? path.join(process.env.USERPROFILE, '.deno', 'bin', 'deno.exe') : null,
+    'C:\\Program Files\\deno\\deno.exe',
+    // Try the command directly (relies on PATH)
+    'deno'
+  ].filter(Boolean); // Remove null entries
+
+  // First check if specific paths exist
+  for (const denoPath of possiblePaths.slice(0, -1)) { // All except the last one
+    try {
+      if (existsSync(denoPath)) {
+        console.error(`[MCP Wrapper] Found Deno at: ${denoPath}`);
+        return denoPath;
+      }
+    } catch (error) {
+      // Ignore errors checking file existence
+    }
+  }
+
+  // Finally, try 'deno' command directly (which relies on PATH)
+  try {
+    execSync('deno --version', { stdio: 'ignore' });
+    console.error('[MCP Wrapper] Using Deno from PATH');
+    return 'deno';
+  } catch (error) {
+    // If we can't find deno anywhere else, fall back to the original path
+    console.error('[MCP Wrapper] Falling back to default Deno path');
+    return '/home/codespace/.deno/bin/deno';
+  }
+}
+
 // Function to start the HTTP server
 async function startHttpServer() {
   return new Promise((resolve, reject) => {
     // Get the directory of this script
     const scriptDir = path.resolve(__dirname, '../..');
     
+    // Find the Deno executable
+    const denoPath = findDenoExecutable();
+    
     // Start the HTTP server using the sparc mcp command
-    httpServerProcess = spawn('/home/codespace/.deno/bin/deno', [
+    httpServerProcess = spawn(denoPath, [
       'run',
       '--allow-read',
       '--allow-write',
