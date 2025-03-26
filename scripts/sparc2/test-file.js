@@ -39,7 +39,7 @@ function multiply(a, b) {
  */
 function divide(a, b) {
   if (b === 0) {
-    throw new Error("Error: Division by zero is undefined.");
+    throw new Error("Division by zero is undefined.");
   }
   return a / b;
 }
@@ -63,7 +63,7 @@ function power(base, exponent) {
  */
 function modulo(a, b) {
   if (b === 0) {
-    throw new Error("Error: Modulo by zero is undefined.");
+    throw new Error("Modulo by zero is undefined.");
   }
   return a % b;
 }
@@ -83,6 +83,7 @@ function testAddition() {
   console.log(`Testing add with zero: 5 + 0 = ${add(5, 0)}`);
   console.log(`Testing add with negatives: -5 + 3 = ${add(-5, 3)}`);
   console.log(`Testing add with large numbers: 1e10 + 1e10 = ${add(1e10, 1e10)}`);
+  console.log(`Testing add with non-integers: 0.1 + 0.2 = ${add(0.1, 0.2)}`);
 }
 
 function testSubtraction() {
@@ -104,11 +105,7 @@ function testDivision() {
   console.log(`Testing divide with negatives: -20 / 5 = ${divide(-20, 5)}`);
   console.log(`Testing divide with small numbers: 0.1 / 0.2 = ${divide(0.1, 0.2)}`);
   console.log("Testing divide by zero (should catch error):");
-  try {
-    console.log(`Testing divide by zero: ${divide(10, 0)}`);
-  } catch (error) {
-    console.log("Error caught:", error.message);
-  }
+  testErrorHandling(() => divide(10, 0));
 }
 
 function testPower() {
@@ -122,8 +119,12 @@ function testModulo() {
   console.log(`Testing modulo: 20 % 3 = ${modulo(20, 3)}`);
   console.log(`Testing modulo with negatives: -20 % 3 = ${modulo(-20, 3)}`);
   console.log("Testing modulo with zero divisor (should catch error):");
+  testErrorHandling(() => modulo(10, 0));
+}
+
+function testErrorHandling(testFunction) {
   try {
-    console.log(`Testing modulo by zero: ${modulo(10, 0)}`);
+    testFunction();
   } catch (error) {
     console.log("Error caught:", error.message);
   }
