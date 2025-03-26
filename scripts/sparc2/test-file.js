@@ -39,7 +39,7 @@ function multiply(a, b) {
  */
 function divide(a, b) {
   if (b === 0) {
-    throw new Error("Cannot divide by zero.");
+    throw new Error("Division by zero is undefined.");
   }
   return a / b;
 }
@@ -63,7 +63,7 @@ function power(base, exponent) {
  */
 function modulo(a, b) {
   if (b === 0) {
-    throw new Error("Cannot divide by zero.");
+    throw new Error("Modulo by zero is undefined.");
   }
   return a % b;
 }
