@@ -1,7 +1,10 @@
-// Simple JavaScript function with a bug
+// Function to multiply two numbers with input validation
 function multiply(a, b) {
-  return a * b; // Fixed: changed from a + b to a * b
+  if (typeof a !== 'number' || typeof b !== 'number') {
+    throw new Error('Both arguments must be numbers');
+  }
+  return a * b; // Returns the product of a and b
 }
 
-// Test the function
-console.log(multiply(5, 3)); // Expected: 15, Actual: 15
+// Test the function with an assertion
+console.assert(multiply(5, 3) === 15, 'Test failed: multiply(5, 3) should return 15');
