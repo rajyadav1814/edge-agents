@@ -89,6 +89,11 @@ function runTests() {
   console.log("Testing divide: 20 / 5 =", divide(20, 5));
   console.log("Testing divide with negatives: -20 / 5 =", divide(-20, 5));
 
+  // Test power
+  console.log("Testing power: 2 ** 3 =", power(2, 3));
+  console.log("Testing power with zero exponent: 2 ** 0 =", power(2, 0));
+  console.log("Testing power with negative exponent: 2 ** -2 =", power(2, -2));
+
   // Test modulo
   console.log("Testing modulo: 20 % 3 =", modulo(20, 3));
   console.log("Testing modulo with negatives: -20 % 3 =", modulo(-20, 3));
