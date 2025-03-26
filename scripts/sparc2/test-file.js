@@ -67,15 +67,10 @@ function runTests() {
   } catch (error) {
     console.log("Error caught:", error.message);
   }
+
+  // Additional test cases
+  console.log("Testing power: 2 ** 3 =", power(2, 3));
+  console.log("Testing power with Math.pow: 2 ** 3 =", Math.pow(2, 3));
 }
 
 runTests();
-/**
- * Calculates the power of a number
- * @param {number} base - The base number
- * @param {number} exponent - The exponent
- * @returns {number} The result of base raised to the power of exponent
- */
-function power(base, exponent) {
-  return Math.pow(base, exponent);
-}
