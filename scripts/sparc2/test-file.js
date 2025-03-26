@@ -74,25 +74,30 @@ function runTests() {
   console.log("Testing add: 5 + 3 =", add(5, 3));
   console.log("Testing add with zero: 5 + 0 =", add(5, 0));
   console.log("Testing add with negatives: -5 + 3 =", add(-5, 3));
+  console.log("Testing add with large numbers: 1e10 + 1e10 =", add(1e10, 1e10));
 
   // Test subtraction
   console.log("Testing subtract: 10 - 4 =", subtract(10, 4));
   console.log("Testing subtract with zero: 10 - 0 =", subtract(10, 0));
   console.log("Testing subtract with negatives: -10 - 4 =", subtract(-10, 4));
+  console.log("Testing subtract with small numbers: 0.1 - 0.2 =", subtract(0.1, 0.2));
 
   // Test multiplication
   console.log("Testing multiply: 6 * 7 =", multiply(6, 7));
   console.log("Testing multiply with zero: 6 * 0 =", multiply(6, 0));
   console.log("Testing multiply with negatives: -6 * 7 =", multiply(-6, 7));
+  console.log("Testing multiply with large numbers: 1e5 * 1e5 =", multiply(1e5, 1e5));
 
   // Test division
   console.log("Testing divide: 20 / 5 =", divide(20, 5));
   console.log("Testing divide with negatives: -20 / 5 =", divide(-20, 5));
+  console.log("Testing divide with small numbers: 0.1 / 0.2 =", divide(0.1, 0.2));
 
   // Test power
   console.log("Testing power: 2 ** 3 =", power(2, 3));
   console.log("Testing power with zero exponent: 2 ** 0 =", power(2, 0));
   console.log("Testing power with negative exponent: 2 ** -2 =", power(2, -2));
+  console.log("Testing power with large exponent: 2 ** 10 =", power(2, 10));
 
   // Test modulo
   console.log("Testing modulo: 20 % 3 =", modulo(20, 3));
@@ -105,6 +110,7 @@ function runTests() {
   }
 
   // Test error handling for division by zero
+  console.log("Testing divide by zero (should catch error):");
   try {
     console.log("Testing divide by zero:", divide(10, 0));
   } catch (error) {
