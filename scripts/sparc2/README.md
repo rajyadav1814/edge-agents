@@ -1,19 +1,22 @@
-# SPARC
+# SPARC Code Agent + MCP Server
 The SPARC Framework is a comprehensive methodology designed to guide the development of robust and scalable applications. SPARC stands for Specification, Pseudocode, Architecture, Refinement, and Completion. Each step ensures thorough planning, execution, and reflection throughout the project lifecycle.
+
+### Install globally
+``` npm install -g @agentics.org/sparc2 ```
 
 # SPARC 2.0 (alpha)
 
-SPARC 2.0, vectorized AI code analysis, is an intelligent coding agent framework built to automate and streamline software development. It combines  secure execution environments, and version control into a unified system where specialized agents collaborate to understand, modify, and manage code. These agents analyze patterns, suggest improvements, implement changes, and validate solutions—all while maintaining a detailed history that allows for easy rollbacks when needed. 
+SPARC 2.0, vectorized AI code analysis, is an intelligent coding agent framework built to automate and streamline software development. It combines secure execution environments, version control, and Model Context Protocol (MCP) capabilities into a unified system where specialized agents collaborate to understand, modify, and manage code. These agents analyze patterns, suggest improvements, implement changes, and validate solutions—all while maintaining a detailed history that allows for easy rollbacks when needed.
 
 By bridging the gap between human developers and AI assistants, SPARC 2.0 enhances productivity across the entire development lifecycle, from initial code review to final deployment.
 
-A defining feature of SPARC is its ability to track code changes over time, functioning like a perfect memory of your code’s evolution. It uses a unified diff system to capture precisely what changed between versions rather than storing entire files, dramatically reducing storage needs and speeding up operations. By default, the system tracks changes at the file level for optimal performance, yet it can zoom in to function-level tracking when more granular detail is required. This efficient diff tracking ensures smooth performance whether you are working on a small project or a massive enterprise codebase.
+A defining feature of SPARC is its ability to track code changes over time, functioning like a perfect memory of your code's evolution. It uses a unified diff system to capture precisely what changed between versions rather than storing entire files, dramatically reducing storage needs and speeding up operations. By default, the system tracks changes at the file level for optimal performance, yet it can zoom in to function-level tracking when more granular detail is required. This efficient diff tracking ensures smooth performance whether you are working on a small project or a massive enterprise codebase.
 
-Essentially, SPARC acts as an advanced version control enhancer that integrates with Git and GitHub while leveraging artificial intelligence to manage updates automatically. Its understanding of temporal relationships between code modifications allows it to orchestrate complex workflows that support simultaneous contributions from both human developers and AI agents. SPARC adapts its processing pace to match developers’ speed, ensuring seamless, conflict-free collaboration.
+Essentially, SPARC acts as an advanced version control enhancer that integrates with Git and GitHub while leveraging artificial intelligence to manage updates automatically. Its understanding of temporal relationships between code modifications allows it to orchestrate complex workflows that support simultaneous contributions from both human developers and AI agents. SPARC adapts its processing pace to match developers' speed, ensuring seamless, conflict-free collaboration.
 
-At the heart of SPARC lies its vector store—a specialized database that transforms code and text into abstract patterns. Instead of merely memorizing exact words, it captures the underlying meaning of the code, similar to understanding cooking techniques rather than just listing ingredients. This approach enables the system to locate similar code snippets despite differences in variable names or styles, creating a smart library of your development history.
+At the heart of SPARC lies its vector store, a specialized database that transforms code and text into abstract patterns. Instead of merely memorizing exact words, it captures the underlying meaning of the code, similar to understanding cooking techniques rather than just listing ingredients. This approach enables the system to locate similar code snippets despite differences in variable names or styles, creating a smart library of your development history.
 
-Another key element is its integrated code interpreter built using E2B—a language-agnostic execution environment that builds, runs, and modifies code without relying on a traditional IDE. It creates secure, isolated sandboxes for execution across languages such as Python, JavaScript, TypeScript, Go, Rust, and more. Moreover, SPARC 2.0 employs a ReACT (Reason + Act) strategy to semantically understand code. It first reasons about what the code means and then takes appropriate actions. This combination of efficient diff tracking and intelligent reasoning enables rapid processing of large codebases without sacrificing deep comprehension of the code’s purpose and structure.
+Another key element is its integrated code interpreter built using E2B—a language-agnostic execution environment that builds, runs, and modifies code without relying on a traditional IDE. It creates secure, isolated sandboxes for execution across languages such as Python, JavaScript, TypeScript, Go, Rust, and more. Moreover, SPARC 2.0 employs a ReACT (Reason + Act) strategy to semantically understand code. It first reasons about what the code means and then takes appropriate actions. This combination of efficient diff tracking and intelligent reasoning enables rapid processing of large codebases without sacrificing deep comprehension of the code's purpose and structure.
 
 
 ## Key Benefits
@@ -27,6 +30,7 @@ Another key element is its integrated code interpreter built using E2B—a langu
 - **Multiple Execution Modes**: Works in automatic, semi-automatic, or manual modes to fit your workflow
 - **Configurable**: Extensive configuration options via TOML files and environment variables
 - **Cross-Platform**: Works on any platform that supports Deno
+- **MCP Integration**: Provides Model Context Protocol (MCP) server for AI agent integration
 
 ## How It Works
 
@@ -64,6 +68,7 @@ SPARC 2.0 is ideal for:
 - **Learning**: Understand how to improve your code with detailed explanations
 - **Technical Debt Reduction**: Systematically identify and address technical debt
 - **Codebase Exploration**: Use vector search to find similar patterns across your codebase
+- **AI Agent Integration**: Use the MCP server to connect AI assistants with your codebase
 
 ## Technology Stack
 
@@ -73,6 +78,7 @@ SPARC 2.0 is ideal for:
 - **E2B Code Interpreter SDK**: Provides secure code execution in a sandboxed environment
 - **Vector Database**: Stores and indexes code changes for similarity search
 - **Git Integration**: Works with your existing Git repositories
+- **MCP Server**: Implements the Model Context Protocol for AI agent integration
 
 ## Installation
 
@@ -108,6 +114,9 @@ If you installed via npm:
 ```bash
 # The CLI is available as the 'sparc2' command
 sparc2 --help
+
+# You can also use the 'sparc' command for direct execution
+sparc --help
 ```
 
 If you cloned the repository:
@@ -116,7 +125,22 @@ If you cloned the repository:
 # Create an alias for easier use
 alias sparc2="deno run --allow-read --allow-write --allow-env --allow-net --allow-run /path/to/sparc2/src/cli/cli.ts"
 
+# Or use the provided script
+./sparc --help
 ```
+
+## Available Commands
+
+SPARC2 CLI provides the following commands:
+
+- **analyze**: Analyze code files for issues and improvements
+- **modify**: Apply suggested modifications to code files
+- **execute**: Execute code in a sandbox
+- **search**: Search for similar code changes
+- **checkpoint**: Create a git checkpoint
+- **rollback**: Rollback to a previous checkpoint
+- **config**: Manage configuration
+- **mcp**: Start a Model Context Protocol (MCP) server
 
 ## Configuration
 
@@ -144,7 +168,154 @@ Create a `.env` file in your project root (you can copy from `.env.example`) or 
 - `OPENROUTER_API_KEY`: Your OpenRouter API key (optional)
 - `SPARC2_CONFIG_PATH`: Custom path to your config file
 - `NPM_TOKEN`: Your NPM token (only needed when publishing to npm)
+- `MCP_SECRET_KEY`: Secret key for MCP server authentication
 ```
+
+## MCP Server
+
+SPARC2 includes a Model Context Protocol (MCP) server that allows AI agents to interact with your codebase. The MCP server provides a standardized interface for tools and resources discovery, enabling seamless integration with AI assistants.
+
+### Starting the MCP Server
+
+```bash
+# Using the sparc command (recommended when using the repository directly)
+./sparc mcp
+
+# Or with npm installation
+sparc2 mcp
+
+# With custom port
+./sparc mcp --port 3001
+```
+
+> **Note**: When using the globally installed version, it's recommended to use the `./sparc mcp` command directly from the repository directory for the most reliable operation.
+
+### MCP Endpoints
+
+The MCP server exposes the following endpoints:
+
+- **GET /discover**: Returns a list of available tools and resources
+- **GET /capabilities**: Alias for /discover, returns the same information
+- **GET /list_tools**: Legacy endpoint that returns only the tools list
+- **POST /analyze**: Analyzes code files for issues and improvements
+- **POST /modify**: Applies suggested modifications to code files
+- **POST /execute**: Executes code in a secure sandbox
+- **POST /search**: Searches for similar code changes
+- **POST /checkpoint**: Creates a git checkpoint
+- **POST /rollback**: Rolls back to a previous checkpoint
+- **POST /config**: Manages configuration settings
+
+### MCP Tools
+
+The SPARC2 MCP server provides the following tools:
+
+#### 1. analyze_code
+Analyzes code files for issues and improvements.
+
+**Parameters**:
+- `files`: Array of file paths to analyze (required)
+- `task`: Description of the analysis task
+
+**Returns**: Analysis results with suggestions for improvements
+
+#### 2. modify_code
+Applies suggested modifications to code files.
+
+**Parameters**:
+- `files`: Array of file paths to modify (required)
+- `task`: Description of the modification task
+
+**Returns**: Results of the modifications applied
+
+#### 3. execute_code
+Executes code in a secure sandbox.
+
+**Parameters**:
+- `code`: Code to execute (required)
+- `language`: Programming language (python, javascript, typescript) (required)
+
+**Returns**: Execution results including stdout, stderr, and any errors
+
+#### 4. search_code
+Searches for similar code changes.
+
+**Parameters**:
+- `query`: Search query (required)
+- `limit`: Maximum number of results to return
+
+**Returns**: Array of search results with relevance scores
+
+#### 5. create_checkpoint
+Creates a version control checkpoint.
+
+**Parameters**:
+- `message`: Checkpoint message (required)
+
+**Returns**: Checkpoint information including commit hash
+
+#### 6. rollback
+Rolls back to a previous checkpoint.
+
+**Parameters**:
+- `commit`: Commit hash to roll back to (required)
+
+**Returns**: Result of the rollback operation
+
+#### 7. config
+Manages configuration.
+
+**Parameters**:
+- `action`: Action to perform (get, set, list) (required)
+- `key`: Configuration key (required for get/set)
+- `value`: Configuration value (required for set)
+
+**Returns**: Configuration operation result
+
+### MCP Resources
+
+The SPARC2 MCP server provides the following resources:
+
+#### 1. git_repository
+Git repository for version control and checkpointing.
+
+**Properties**:
+- `path`: Path to the git repository
+- `branch`: Current branch name
+
+**Methods**:
+- **create_checkpoint**: Creates a checkpoint in the git repository
+  - Parameters: `name` (Name of the checkpoint)
+  - Returns: Checkpoint information including commit hash
+- **rollback**: Rolls back to a previous checkpoint
+  - Parameters: `commit` (Commit hash to roll back to)
+  - Returns: Result of the rollback operation
+
+#### 2. vector_store
+Vector database for storing and searching code changes and logs.
+
+**Properties**:
+- `id`: ID of the vector store
+- `size`: Number of entries in the vector store
+
+**Methods**:
+- **search**: Searches for similar entries in the vector store
+  - Parameters: `query` (Search query), `limit` (Maximum number of results)
+  - Returns: Array of search results with relevance scores
+- **index**: Indexes a new entry in the vector store
+  - Parameters: `content` (Content to index), `metadata` (Metadata for the entry)
+  - Returns: Result of the indexing operation
+
+#### 3. sandbox
+Secure sandbox for executing code.
+
+**Properties**:
+- `languages`: Supported programming languages
+- `timeout`: Maximum execution time in seconds
+
+**Methods**:
+- **execute**: Executes code in the sandbox
+  - Parameters: `code` (Code to execute), `language` (Programming language)
+  - Returns: Execution results including stdout, stderr, and any errors
 
 ## Using as a Library
 
@@ -340,6 +511,12 @@ sparc2 config --action get --key "models.reasoning"
 
 ```bash
 sparc2 config --action set --key "models.reasoning" --value "gpt-4o"
+```
+
+#### Start the MCP Server
+
+```bash
+./sparc mcp --port 3001
 ```
 
 ### Advanced Usage Examples

@@ -46,15 +46,27 @@ You can also run individual examples:
    - Shows a complete refactoring workflow across multiple files
    - Demonstrates advanced features like swarm processing and function-level diff tracking
 
+8. **MCP Server** (08-mcp-server.sh)
+   - Demonstrates how to run SPARC2 as a Model Context Protocol (MCP) server
+   - Shows how to expose SPARC2 capabilities via a RESTful API
+   - Enables integration with other tools and services
+
+9. **MCP Client Test** (09-mcp-client-test.sh)
+   - Tests the MCP server with various API calls
+   - Demonstrates how to interact with the MCP server using curl
+   - Includes examples for analyzing code, modifying code, executing code, and creating checkpoints
+
 ## Prerequisites
 
 To run these examples, you need:
 - Deno runtime installed
 - OpenAI API key configured in your .env file
 - E2B API key configured in your .env file (for code execution examples)
+- jq installed (for the MCP client test example)
 
 ## Notes
 
 - These examples are designed to run in sequence, as some examples build on the changes made in previous examples.
 - For demonstration purposes, some examples include code with intentional issues to be fixed.
 - The examples are self-contained and will clean up any temporary files they create.
+- For the MCP server examples (08 and 09), you'll need to run the server in one terminal and the client test in another.

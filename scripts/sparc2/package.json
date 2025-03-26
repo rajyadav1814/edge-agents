@@ -1,12 +1,13 @@
 {
   "name": "@agentics.org/sparc2",
-  "version": "2.0.1",
-  "description": "SPARC 2.0 - Autonomous Vectorized Coding Bot. SPARC 2.0, vectorized AI code analysis, is an intelligent coding agent framework built to automate and streamline software development. It combines  secure execution environments, and version control into a unified system where specialized agents collaborate to understand, modify, and manage code. These agents analyze patterns, suggest improvements, implement changes, and validate solutions—all while maintaining a detailed history that allows for easy rollbacks when needed.",
+  "version": "2.0.7",
+  "description": "SPARC 2.0 - Autonomous Vector Coding Agent + MCP. SPARC 2.0, vectorized AI code analysis, is an intelligent coding agent framework built to automate and streamline software development. It combines  secure execution environments, and version control into a unified system where specialized agents collaborate to understand, modify, and manage code. These agents analyze patterns, suggest improvements, implement changes, and validate solutions—all while maintaining a detailed history that allows for easy rollbacks when needed.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "type": "module",
   "bin": {
-    "sparc2": "build/cli/cli.js"
+    "sparc2": "build/cli/cli.js",
+    "sparc": "build/cli/cli.js"
   },
   "scripts": {
     "build": "deno task build",
@@ -14,7 +15,7 @@
     "check": "deno check src/**/*.ts --ignore=src/**/*.test.ts",
     "lint": "deno lint src/ --ignore=src/**/*.test.ts",
     "fmt": "deno fmt src/",
-    "prepublishOnly": "deno task fmt && deno compile --allow-read --allow-write --allow-env --allow-net --allow-run --no-check src/cli/cli.ts -o build/cli/cli.js"
+    "prepublishOnly": "deno task fmt && deno compile --allow-read --allow-write --allow-env --allow-net --allow-run --no-check src/cli/cli.ts -o cli"
   },
   "keywords": [
     "sparc",

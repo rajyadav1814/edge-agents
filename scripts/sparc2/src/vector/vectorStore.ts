@@ -361,3 +361,23 @@ export async function clearVectorStore(): Promise<void> {
     vectorStoreId = null;
   }
 }
+export async function searchVectorStore(
+  query: string,
+  maxResults: number = 10,
+): Promise<VectorSearchResult[]> {
+  // Split the max results between logs and diffs
+  const halfResults = Math.ceil(maxResults / 2);
+
+  // Search both logs and diffs
+  const [logResults, diffResults] = await Promise.all([
+    searchLogEntries(query, halfResults),
+    searchDiffEntries(query, halfResults),
+  ]);
+
+  // Combine and sort results by score
+  const combinedResults = [...logResults, ...diffResults]
+    .sort((a, b) => b.score - a.score)
+    .slice(0, maxResults);
+
+  return combinedResults;
+}

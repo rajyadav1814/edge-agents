@@ -13,5 +13,5 @@ checkpoint_enabled = true
 temporal_rollback = true
 
 [models]
-reasoning = "test-model"     # For architecture, planning, problem solving
-instruct = "test-model"     # For instructing code changes
+reasoning = "gpt-4o"     # For architecture, planning, problem solving
+instruct = "openai/o3-mini-high"     # For instructing code changes
