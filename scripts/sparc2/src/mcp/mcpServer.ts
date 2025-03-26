@@ -85,6 +85,9 @@ export async function startMCPServer(options: {
     configPath: "./config/agent-config.toml",
   });
 
+  // Initialize the agent
+  await agent.init();
+
   await logInfo("Starting SPARC2 MCP server on port " + port);
 
   // Define available tools

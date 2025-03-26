@@ -197,11 +197,11 @@ The MCP server exposes the following endpoints:
 - **GET /discover**: Returns a list of available tools and resources
 - **GET /capabilities**: Alias for /discover, returns the same information
 - **GET /list_tools**: Legacy endpoint that returns only the tools list
-- **POST /analyze**: Analyzes code files for issues and improvements
-- **POST /modify**: Applies suggested modifications to code files
-- **POST /execute**: Executes code in a secure sandbox
-- **POST /search**: Searches for similar code changes
-- **POST /checkpoint**: Creates a git checkpoint
+- **POST /analyze_code**: Analyzes code files for issues and improvements
+- **POST /modify_code**: Applies suggested modifications to code files
+- **POST /execute_code**: Executes code in a secure sandbox
+- **POST /search_code**: Searches for similar code changes
+- **POST /create_checkpoint**: Creates a git checkpoint
 - **POST /rollback**: Rolls back to a previous checkpoint
 - **POST /config**: Manages configuration settings
 
@@ -249,7 +249,7 @@ Searches for similar code changes.
 Creates a version control checkpoint.
 
 **Parameters**:
-- `message`: Checkpoint message (required)
+- `name`: Checkpoint name (required)
 
 **Returns**: Checkpoint information including commit hash
 
@@ -316,6 +316,131 @@ Secure sandbox for executing code.
 - **execute**: Executes code in the sandbox
   - Parameters: `code` (Code to execute), `language` (Programming language)
   - Returns: Execution results including stdout, stderr, and any errors
+
+### Testing MCP Endpoints with curl
+
+You can test the MCP server endpoints using curl commands. First, start the MCP server:
+
+```bash
+./sparc mcp --port 3001
+```
+
+#### 1. Discover Available Tools and Resources
+
+```bash
+curl -X GET http://localhost:3001/discover
+```
+
+This will return a JSON object containing all available tools and resources.
+
+#### 2. Execute Code
+
+```bash
+curl -X POST http://localhost:3001/execute_code \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "console.log(\"Hello, SPARC2!\"); const sum = (a, b) => a + b; console.log(sum(5, 3));",
+    "language": "javascript"
+  }'
+```
+
+Response:
+```json
+{
+  "result": "Hello, SPARC2!\n8",
+  "details": {
+    "logs": {
+      "stdout": ["Hello, SPARC2!", "8"],
+      "stderr": []
+    }
+  }
+}
+```
+
+#### 3. Analyze Code Files
+
+```bash
+curl -X POST http://localhost:3001/analyze_code \
+  -H "Content-Type: application/json" \
+  -d '{
+    "files": ["path/to/file.js"],
+    "task": "Check for performance issues and suggest improvements"
+  }'
+```
+
+#### 4. Modify Code Files
+
+```bash
+curl -X POST http://localhost:3001/modify_code \
+  -H "Content-Type: application/json" \
+  -d '{
+    "files": ["path/to/file.js"],
+    "task": "Optimize the rendering function"
+  }'
+```
+
+#### 5. Search for Code Patterns
+
+```bash
+curl -X POST http://localhost:3001/search_code \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Fix performance issue in rendering",
+    "limit": 5
+  }'
+```
+
+#### 6. Create a Checkpoint
+
+```bash
+curl -X POST http://localhost:3001/create_checkpoint \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Optimized rendering function"
+  }'
+```
+
+#### 7. Roll Back to a Previous Checkpoint
+
+```bash
+curl -X POST http://localhost:3001/rollback \
+  -H "Content-Type: application/json" \
+  -d '{
+    "commit": "abc123def456"
+  }'
+```
+
+#### 8. Manage Configuration
+
+List configuration:
+```bash
+curl -X POST http://localhost:3001/config \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "list"
+  }'
+```
+
+Get a specific configuration value:
+```bash
+curl -X POST http://localhost:3001/config \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "get",
+    "key": "DIFF_MODE"
+  }'
+```
+
+Set a configuration value:
+```bash
+curl -X POST http://localhost:3001/config \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "set",
+    "key": "DIFF_MODE",
+    "value": "function"
+  }'
+```
 
 ## Using as a Library
 

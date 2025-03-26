@@ -1,72 +1,82 @@
 # SPARC2 Examples
 
-This directory contains example scripts that demonstrate various features of SPARC2, the Autonomous Vectorized Coding Bot.
+This directory contains example scripts demonstrating how to use SPARC2.
+
+## Basic Examples
+
+- `01-basic-analysis.sh` - Basic code analysis example
+- `02-code-modification.sh` - Code modification example
+- `03-code-execution.sh` - Code execution example
+- `04-search.sh` - Vector search example
+- `05-checkpoint.sh` - Git checkpoint example
+- `06-rollback.sh` - Rollback to previous checkpoint example
+- `07-config.sh` - Configuration management example
+- `08-mcp-server.sh` - Start the MCP server
+- `09-mcp-client-test.sh` - Test the MCP client
+
+## Advanced Examples
+
+- `test-mcp-endpoints.sh` - Comprehensive test script for all MCP server endpoints
 
 ## Running the Examples
 
-To run all examples in sequence:
+Most examples can be run directly:
 
 ```bash
-./run-all-examples.sh
+./examples/01-basic-analysis.sh
 ```
 
-You can also run individual examples:
+## MCP Server Testing
+
+The `test-mcp-endpoints.sh` script tests all MCP server endpoints using curl. It demonstrates how to interact with the MCP server programmatically.
+
+### Prerequisites
+
+1. Make sure the MCP server is running:
+   ```bash
+   ./scripts/sparc2/sparc mcp
+   ```
+   or
+   ```bash
+   ./scripts/sparc2/examples/08-mcp-server.sh
+   ```
+
+2. Install `jq` for JSON formatting (optional but recommended):
+   ```bash
+   sudo apt-get install jq  # Debian/Ubuntu
+   ```
+
+### Usage
 
 ```bash
-./01-basic-analysis.sh
+# Run with default settings (port 3001)
+./scripts/sparc2/examples/test-mcp-endpoints.sh
+
+# Specify a different port
+./scripts/sparc2/examples/test-mcp-endpoints.sh --port 3002
+
+# Clean up Git tags before running (recommended if you get tag conflicts)
+./scripts/sparc2/examples/test-mcp-endpoints.sh --clean
 ```
 
-## Examples Overview
+### What the Test Script Does
 
-1. **Basic Analysis** (01-basic-analysis.sh)
-   - Demonstrates how to analyze a JavaScript file for issues and improvements
-   - Shows SPARC2's code analysis capabilities
+The script tests the following MCP endpoints:
 
-2. **Code Modification** (02-code-modification.sh)
-   - Shows how to apply suggested modifications to code files
-   - Demonstrates SPARC2's ability to fix issues automatically
+1. `/discover` - Lists all available tools and resources
+2. `/execute` - Tests code execution with both JavaScript and Python
+3. `/config` - Tests configuration management
+4. `/search` - Tests vector search capabilities
+5. `/analyze` - Tests code analysis on a temporary file
+6. `/modify` - Tests code modification on a temporary file
+7. `/checkpoint` - Tests creating Git checkpoints
 
-3. **Checkpointing** (03-checkpointing.sh)
-   - Shows how to create Git checkpoints to track code changes
-   - Demonstrates version control integration
+### Troubleshooting
 
-4. **Rollback** (04-rollback.sh)
-   - Demonstrates how to rollback to previous versions of code
-   - Shows temporal code management capabilities
+If you encounter errors with the analyze or modify endpoints related to Git tags, run the script with the `--clean` option to remove existing tags:
 
-5. **Code Execution** (05-code-execution.sh)
-   - Shows how to execute code in a secure sandbox
-   - Demonstrates multi-language support (JavaScript and Python)
+```bash
+./scripts/sparc2/examples/test-mcp-endpoints.sh --clean
+```
 
-6. **Vector Search and Configuration** (06-vector-search-config.sh)
-   - Demonstrates vector search capabilities across a codebase
-   - Shows how to manage and customize SPARC2 configuration
-
-7. **Advanced Workflow** (07-advanced-workflow.sh)
-   - Shows a complete refactoring workflow across multiple files
-   - Demonstrates advanced features like swarm processing and function-level diff tracking
-
-8. **MCP Server** (08-mcp-server.sh)
-   - Demonstrates how to run SPARC2 as a Model Context Protocol (MCP) server
-   - Shows how to expose SPARC2 capabilities via a RESTful API
-   - Enables integration with other tools and services
-
-9. **MCP Client Test** (09-mcp-client-test.sh)
-   - Tests the MCP server with various API calls
-   - Demonstrates how to interact with the MCP server using curl
-   - Includes examples for analyzing code, modifying code, executing code, and creating checkpoints
-
-## Prerequisites
-
-To run these examples, you need:
-- Deno runtime installed
-- OpenAI API key configured in your .env file
-- E2B API key configured in your .env file (for code execution examples)
-- jq installed (for the MCP client test example)
-
-## Notes
-
-- These examples are designed to run in sequence, as some examples build on the changes made in previous examples.
-- For demonstration purposes, some examples include code with intentional issues to be fixed.
-- The examples are self-contained and will clean up any temporary files they create.
-- For the MCP server examples (08 and 09), you'll need to run the server in one terminal and the client test in another.
+This is particularly useful in development environments where you might run the tests multiple times.

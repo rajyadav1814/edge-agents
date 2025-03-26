@@ -1,6 +1,6 @@
 {
   "name": "@agentics.org/sparc2",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "SPARC 2.0 - Autonomous Vector Coding Agent + MCP. SPARC 2.0, vectorized AI code analysis, is an intelligent coding agent framework built to automate and streamline software development. It combines  secure execution environments, and version control into a unified system where specialized agents collaborate to understand, modify, and manage code. These agents analyze patterns, suggest improvements, implement changes, and validate solutions—all while maintaining a detailed history that allows for easy rollbacks when needed.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
