@@ -39,7 +39,7 @@ function multiply(a, b) {
  */
 function divide(a, b) {
   if (b === 0) {
-    throw new Error("Division by zero is not allowed");
+    throw new Error("Division by zero is not allowed. Please provide a non-zero denominator.");
   }
   return a / b;
 }
@@ -67,10 +67,6 @@ function runTests() {
   } catch (error) {
     console.log("Error caught:", error.message);
   }
-
-  // Additional test cases
-  console.log("Testing power: 2 ** 3 =", power(2, 3));
-  console.log("Testing power with Math.pow: 2 ** 3 =", Math.pow(2, 3));
 }
 
 runTests();
