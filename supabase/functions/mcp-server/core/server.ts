@@ -1,14 +1,27 @@
 /**
  * MCP Server Implementation
  * 
- * This file implements the core functionality of the MCP server.
- * It handles authentication and request processing.
+ * This file implements the core functionality of the MCP server following JSON-RPC 2.0 specification.
  */
+
+import {
+  JsonRpcRequest,
+  JsonRpcResponse,
+  JsonRpcSuccessResponse,
+  JsonRpcErrorResponse,
+  ToolUseRequest,
+  ToolUseResponse,
+  ResourceAccessRequest,
+  ResourceAccessResponse,
+  PromptUseRequest,
+  PromptUseResponse,
+  ErrorCode
+} from './types.ts';
 
 /**
  * McpServer class
  * 
- * This class implements the MCP server functionality.
+ * This class implements the MCP server functionality with JSON-RPC 2.0 support.
  */
 export class McpServer {
   private secretKey: string;
@@ -22,6 +35,32 @@ export class McpServer {
   }
 
   /**
+   * Create a JSON-RPC 2.0 success response
+   */
+  private createSuccessResponse(id: string, result: any): JsonRpcSuccessResponse {
+    return {
+      jsonrpc: "2.0",
+      id,
+      result
+    };
+  }
+
+  /**
+   * Create a JSON-RPC 2.0 error response
+   */
+  private createErrorResponse(id: string | null, code: ErrorCode, message: string, data?: any): JsonRpcErrorResponse {
+    return {
+      jsonrpc: "2.0",
+      id,
+      error: {
+        code,
+        message,
+        data
+      }
+    };
+  }
+
+  /**
    * Handle an HTTP request
    * @param req The HTTP request
    * @returns The HTTP response
@@ -30,224 +69,255 @@ export class McpServer {
     // Check for authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return new Response("Unauthorized", { status: 401 });
+      return new Response(
+        JSON.stringify(this.createErrorResponse(null, ErrorCode.InvalidRequest, "Unauthorized")),
+        { 
+          status: 401,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
     }
     
     // Verify the token
     const token = authHeader.substring(7);
     if (token !== this.secretKey) {
-      return new Response("Invalid token", { status: 403 });
+      return new Response(
+        JSON.stringify(this.createErrorResponse(null, ErrorCode.InvalidRequest, "Invalid token")),
+        { 
+          status: 403,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
     }
 
-    // Parse the request URL
-    const url = new URL(req.url);
-    const path = url.pathname.split("/").pop() || "";
-
-    // Handle different request types
-    if (req.method === "GET") {
-      return this.handleGetRequest(path, url);
-    } else if (req.method === "POST") {
-      return this.handlePostRequest(path, req);
-    } else {
-      return new Response("Method not allowed", { status: 405 });
+    // Check for Server-Sent Events request
+    const accept = req.headers.get("Accept");
+    if (accept === "text/event-stream") {
+      return this.handleSSE(req);
     }
-  }
 
-  /**
-   * Handle a GET request
-   * @param path The request path
-   * @param url The request URL
-   * @returns The HTTP response
-   */
-  private async handleGetRequest(path: string, url: URL): Promise<Response> {
-    // Handle different GET endpoints
-    if (path === "status") {
-      return this.getStatus();
-    } else if (path === "capabilities") {
-      return this.getCapabilities();
-    } else {
-      return new Response("Not found", { status: 404 });
-    }
-  }
-
-  /**
-   * Handle a POST request
-   * @param path The request path
-   * @param req The HTTP request
-   * @returns The HTTP response
-   */
-  private async handlePostRequest(path: string, req: Request): Promise<Response> {
     try {
-      // Parse the request body
-      const body = await req.json();
+      // Parse request as JSON-RPC
+      const rpcRequest = await req.json() as JsonRpcRequest;
+      
+      if (!rpcRequest.jsonrpc || rpcRequest.jsonrpc !== "2.0") {
+        return new Response(
+          JSON.stringify(this.createErrorResponse(null, ErrorCode.InvalidRequest, "Invalid JSON-RPC version")),
+          { 
+            status: 400,
+            headers: {
+              "Content-Type": "application/json"
+          }
+        });
+      }
 
-      // Handle different POST endpoints
-      if (path === "execute") {
-        return this.executeCommand(body);
-      } else if (path === "query") {
-        return this.executeQuery(body);
-      } else {
-        return new Response("Not found", { status: 404 });
+      const { id, method, params } = rpcRequest;
+
+      // Handle different methods
+      switch (method) {
+        case "tool_use":
+          return this.handleToolUse(id, params as ToolUseRequest);
+        case "resource_access": 
+          return this.handleResourceAccess(id, params as ResourceAccessRequest);
+        case "prompt_use":
+          return this.handlePromptUse(id, params as PromptUseRequest);
+        default:
+          return new Response(
+            JSON.stringify(this.createErrorResponse(id, ErrorCode.MethodNotFound, "Method not found")),
+            { 
+              status: 404,
+              headers: {
+                "Content-Type": "application/json"
+              }
+            }
+          );
       }
     } catch (error: any) {
-      return new Response(`Error processing request: ${error.message}`, { status: 400 });
+      return new Response(
+        JSON.stringify(this.createErrorResponse(null, ErrorCode.ParseError, "Invalid JSON: " + error.message)),
+        { 
+          status: 400,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
     }
   }
 
   /**
-   * Get the server status
-   * @returns The HTTP response
+   * Handle Server-Sent Events
    */
-  private getStatus(): Response {
-    const status = {
-      status: "ok",
-      version: "1.0.0",
-      timestamp: new Date().toISOString(),
-    };
+  private async handleSSE(req: Request): Promise<Response> {
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
+    
+    // Send initial connection established event
+    const encoder = new TextEncoder();
+    await writer.write(encoder.encode("event: connected\ndata: {}\n\n"));
+    
+    // Keep connection alive with periodic heartbeats
+    const heartbeat = setInterval(async () => {
+      await writer.write(encoder.encode("event: heartbeat\ndata: {}\n\n"));
+    }, 30000);
 
-    return new Response(JSON.stringify(status), {
-      status: 200,
+    // Clean up on close
+    req.signal.addEventListener("abort", () => {
+      clearInterval(heartbeat);
+      writer.close();
+    });
+
+    return new Response(stream.readable, {
       headers: {
-        "Content-Type": "application/json",
-      },
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive"
+      }
     });
   }
 
   /**
-   * Get the server capabilities
-   * @returns The HTTP response
+   * Handle tool use requests
    */
-  private getCapabilities(): Response {
-    const capabilities = {
-      version: "1.0.0",
-      capabilities: {
-        commands: ["echo", "ping"],
-        queries: ["time", "random"],
-      },
-    };
+  private async handleToolUse(id: string, params: ToolUseRequest): Promise<Response> {
+    try {
+      // Validate params
+      if (!params.command) {
+        return new Response(
+          JSON.stringify(this.createErrorResponse(id, ErrorCode.InvalidParams, "Missing command parameter")),
+          { 
+            status: 400,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        );
+      }
 
-    return new Response(JSON.stringify(capabilities), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
+      // Execute tool
+      const result: ToolUseResponse = {
+        type: "tool_use",
+        command: params.command,
+        result: {
+          output: `Executed command: ${params.command}`
+        }
+      };
 
-  /**
-   * Execute a command
-   * @param body The request body
-   * @returns The HTTP response
-   */
-  private executeCommand(body: any): Response {
-    // Check if the command is valid
-    if (!body.command || typeof body.command !== "string") {
-      return new Response("Invalid command", { status: 400 });
-    }
-
-    // Handle different commands
-    if (body.command === "echo") {
-      return this.executeEchoCommand(body);
-    } else if (body.command === "ping") {
-      return this.executePingCommand();
-    } else {
-      return new Response("Unknown command", { status: 400 });
-    }
-  }
-
-  /**
-   * Execute a query
-   * @param body The request body
-   * @returns The HTTP response
-   */
-  private executeQuery(body: any): Response {
-    // Check if the query is valid
-    if (!body.query || typeof body.query !== "string") {
-      return new Response("Invalid query", { status: 400 });
-    }
-
-    // Handle different queries
-    if (body.query === "time") {
-      return this.executeTimeQuery();
-    } else if (body.query === "random") {
-      return this.executeRandomQuery();
-    } else {
-      return new Response("Unknown query", { status: 400 });
+      return new Response(
+        JSON.stringify(this.createSuccessResponse(id, result)),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    } catch (error: any) {
+      return new Response(
+        JSON.stringify(this.createErrorResponse(id, ErrorCode.InternalError, error.message)),
+        { 
+          status: 500,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
     }
   }
 
   /**
-   * Execute the echo command
-   * @param body The request body
-   * @returns The HTTP response
+   * Handle resource access requests
    */
-  private executeEchoCommand(body: any): Response {
-    // Check if the message is valid
-    if (!body.message) {
-      return new Response("Missing message", { status: 400 });
+  private async handleResourceAccess(id: string, params: ResourceAccessRequest): Promise<Response> {
+    try {
+      // Validate params
+      if (!params.resourceId) {
+        return new Response(
+          JSON.stringify(this.createErrorResponse(id, ErrorCode.InvalidParams, "Missing resourceId parameter")),
+          { 
+            status: 400,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        );
+      }
+
+      // Access resource
+      const result: ResourceAccessResponse = {
+        type: "resource_access",
+        resourceId: params.resourceId,
+        contentType: "application/json",
+        data: {
+          key1: "value1",
+          key2: "value2"
+        }
+      };
+
+      return new Response(
+        JSON.stringify(this.createSuccessResponse(id, result)),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    } catch (error: any) {
+      return new Response(
+        JSON.stringify(this.createErrorResponse(id, ErrorCode.InternalError, error.message)),
+        { 
+          status: 500,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
     }
-
-    // Echo the message
-    const result = {
-      result: body.message,
-    };
-
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
   }
 
   /**
-   * Execute the ping command
-   * @returns The HTTP response
+   * Handle prompt use requests
    */
-  private executePingCommand(): Response {
-    const result = {
-      result: "pong",
-    };
+  private async handlePromptUse(id: string, params: PromptUseRequest): Promise<Response> {
+    try {
+      const result: PromptUseResponse = {
+        type: "prompt_use",
+        messages: [
+          { 
+            role: "system", 
+            content: "You are an assistant." 
+          },
+          { 
+            role: "user", 
+            content: params.prompt || "Default prompt" 
+          }
+        ]
+      };
 
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
-
-  /**
-   * Execute the time query
-   * @returns The HTTP response
-   */
-  private executeTimeQuery(): Response {
-    const result = {
-      result: new Date().toISOString(),
-    };
-
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
-
-  /**
-   * Execute the random query
-   * @returns The HTTP response
-   */
-  private executeRandomQuery(): Response {
-    const result = {
-      result: Math.random(),
-    };
-
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+      return new Response(
+        JSON.stringify(this.createSuccessResponse(id, result)),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    } catch (error: any) {
+      return new Response(
+        JSON.stringify(this.createErrorResponse(id, ErrorCode.InternalError, error.message)),
+        { 
+          status: 500,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
   }
 }
