@@ -323,9 +323,13 @@ export async function revertChanges(
  * @returns The commit hash of the checkpoint
  */
 export async function createCheckpoint(name: string): Promise<string> {
+  // Add a timestamp to make the tag name unique
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const uniqueName = `${name}-${timestamp}`;
+
   // Create a tag for the checkpoint
   const tagCmd = new Deno.Command("git", {
-    args: ["tag", name],
+    args: ["tag", uniqueName],
     stdout: "piped",
     stderr: "piped",
   });
@@ -333,13 +337,15 @@ export async function createCheckpoint(name: string): Promise<string> {
   const tagOutput = await tagCmd.output();
   if (!tagOutput.success) {
     const errorOutput = new TextDecoder().decode(tagOutput.stderr);
-    await logMessage("error", `Creating checkpoint tag failed: ${errorOutput}`, { name });
+    await logMessage("error", `Creating checkpoint tag failed: ${errorOutput}`, {
+      name: uniqueName,
+    });
     throw new Error(`Creating checkpoint tag failed: ${errorOutput}`);
   }
 
   // Get the commit hash for the tag
   const revParseCmd = new Deno.Command("git", {
-    args: ["rev-parse", name],
+    args: ["rev-parse", uniqueName],
     stdout: "piped",
     stderr: "piped",
   });
@@ -347,13 +353,15 @@ export async function createCheckpoint(name: string): Promise<string> {
   const revParseOutput = await revParseCmd.output();
   if (!revParseOutput.success) {
     const errorOutput = new TextDecoder().decode(revParseOutput.stderr);
-    await logMessage("error", `Getting checkpoint commit hash failed: ${errorOutput}`, { name });
+    await logMessage("error", `Getting checkpoint commit hash failed: ${errorOutput}`, {
+      name: uniqueName,
+    });
     throw new Error(`Getting checkpoint commit hash failed: ${errorOutput}`);
   }
 
   const commitHash = new TextDecoder().decode(revParseOutput.stdout).trim();
 
-  await logMessage("info", `Created checkpoint ${name} at commit ${commitHash}`);
+  await logMessage("info", `Created checkpoint ${uniqueName} at commit ${commitHash}`);
 
   return commitHash;
 }

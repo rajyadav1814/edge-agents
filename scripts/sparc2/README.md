@@ -1,12 +1,11 @@
 # SPARC Code Agent + MCP Server
-The SPARC Framework is a comprehensive methodology designed to guide the development of robust and scalable applications. SPARC stands for Specification, Pseudocode, Architecture, Refinement, and Completion. Each step ensures thorough planning, execution, and reflection throughout the project lifecycle.
+SPARC 2.0: agentic code analysis and generation. It's an intelligent coding agent framework built to automate and streamline software development. It combines secure execution environments, vector similarity (Code and Unified Diffs), version control, secure sandbox/code interpreter, OpenAi agents API and Model Context Protocol (MCP) capabilities into a unified system where specialized agents collaborate to understand, modify, and manage code. 
 
+These agents analyze patterns, suggest improvements, implement changes, and validate solutions, all while maintaining a detailed history that allows for easy rollbacks when needed.
 ### Install globally
 ``` npm install -g @agentics.org/sparc2 ```
 
 # SPARC 2.0 (alpha)
-
-SPARC 2.0, vectorized AI code analysis, is an intelligent coding agent framework built to automate and streamline software development. It combines secure execution environments, version control, and Model Context Protocol (MCP) capabilities into a unified system where specialized agents collaborate to understand, modify, and manage code. These agents analyze patterns, suggest improvements, implement changes, and validate solutions—all while maintaining a detailed history that allows for easy rollbacks when needed.
 
 By bridging the gap between human developers and AI assistants, SPARC 2.0 enhances productivity across the entire development lifecycle, from initial code review to final deployment.
 
@@ -16,7 +15,9 @@ Essentially, SPARC acts as an advanced version control enhancer that integrates 
 
 At the heart of SPARC lies its vector store, a specialized database that transforms code and text into abstract patterns. Instead of merely memorizing exact words, it captures the underlying meaning of the code, similar to understanding cooking techniques rather than just listing ingredients. This approach enables the system to locate similar code snippets despite differences in variable names or styles, creating a smart library of your development history.
 
-Another key element is its integrated code interpreter built using E2B—a language-agnostic execution environment that builds, runs, and modifies code without relying on a traditional IDE. It creates secure, isolated sandboxes for execution across languages such as Python, JavaScript, TypeScript, Go, Rust, and more. Moreover, SPARC 2.0 employs a ReACT (Reason + Act) strategy to semantically understand code. It first reasons about what the code means and then takes appropriate actions. This combination of efficient diff tracking and intelligent reasoning enables rapid processing of large codebases without sacrificing deep comprehension of the code's purpose and structure.
+Another key element is its integrated code interpreter built using E2B—a language-agnostic execution environment that builds, runs, and modifies code without relying on a traditional IDE. It creates secure, isolated sandboxes for execution across languages such as Python, JavaScript, TypeScript, Go, Rust, and more. 
+
+SPARC 2.0 employs a ReACT (Reason + Act) strategy to semantically understand code. It first reasons about what the code means and then takes appropriate actions. This combination of efficient diff tracking and intelligent reasoning enables rapid processing of large codebases without sacrificing deep comprehension of the code's purpose and structure.
 
 
 ## Key Benefits
@@ -31,6 +32,7 @@ Another key element is its integrated code interpreter built using E2B—a langu
 - **Configurable**: Extensive configuration options via TOML files and environment variables
 - **Cross-Platform**: Works on any platform that supports Deno
 - **MCP Integration**: Provides Model Context Protocol (MCP) server for AI agent integration
+- **Real-time Updates**: Supports Server-Sent Events (SSE) for streaming real-time progress and results
 
 ## How It Works
 
@@ -69,6 +71,7 @@ SPARC 2.0 is ideal for:
 - **Technical Debt Reduction**: Systematically identify and address technical debt
 - **Codebase Exploration**: Use vector search to find similar patterns across your codebase
 - **AI Agent Integration**: Use the MCP server to connect AI assistants with your codebase
+- **Real-time Monitoring**: Stream progress and results in real-time using SSE
 
 ## Technology Stack
 
@@ -79,6 +82,7 @@ SPARC 2.0 is ideal for:
 - **Vector Database**: Stores and indexes code changes for similarity search
 - **Git Integration**: Works with your existing Git repositories
 - **MCP Server**: Implements the Model Context Protocol for AI agent integration
+- **Server-Sent Events**: Provides real-time streaming updates for long-running operations
 
 ## Installation
 
@@ -140,7 +144,8 @@ SPARC2 CLI provides the following commands:
 - **checkpoint**: Create a git checkpoint
 - **rollback**: Rollback to a previous checkpoint
 - **config**: Manage configuration
-- **mcp**: Start a Model Context Protocol (MCP) server
+- **api**: Start a Model Context Protocol (MCP) HTTP API server
+- **mcp**: Start a Model Context Protocol (MCP) server using stdio transport
 
 ## Configuration
 
@@ -175,20 +180,91 @@ Create a `.env` file in your project root (you can copy from `.env.example`) or 
 
 SPARC2 includes a Model Context Protocol (MCP) server that allows AI agents to interact with your codebase. The MCP server provides a standardized interface for tools and resources discovery, enabling seamless integration with AI assistants.
 
-### Starting the MCP Server
+### MCP Server Options
+
+SPARC2 provides two different ways to use the Model Context Protocol (MCP):
+
+#### 1. HTTP API Server
+
+The `api` command starts an HTTP server that implements the MCP protocol over HTTP:
 
 ```bash
-# Using the sparc command (recommended when using the repository directly)
+# Using the sparc command
+./sparc api --port 3001
+
+# Or with npm installation
+sparc2 api --port 3001
+```
+
+Options:
+- `--port, -p`: Port to run the API server on (default: 3001)
+- `--model`: Model to use for the agent
+- `--mode`: Execution mode (automatic, semi, manual, custom, interactive)
+- `--diff-mode`: Diff mode (file, function)
+- `--processing`: Processing mode (sequential, parallel, concurrent, swarm)
+- `--config, -c`: Path to the agent configuration file
+
+This is useful for integrations that communicate with SPARC2 over HTTP.
+
+#### 2. MCP Stdio Server
+
+The `mcp` command starts a server that implements the MCP protocol over standard input/output (stdio):
+
+```bash
+# Using the sparc command
 ./sparc mcp
 
 # Or with npm installation
 sparc2 mcp
-
-# With custom port
-./sparc mcp --port 3001
 ```
 
-> **Note**: When using the globally installed version, it's recommended to use the `./sparc mcp` command directly from the repository directory for the most reliable operation.
+Options:
+- `--model`: Model to use for the agent
+- `--mode`: Execution mode (automatic, semi, manual, custom, interactive)
+- `--diff-mode`: Diff mode (file, function)
+- `--processing`: Processing mode (sequential, parallel, concurrent, swarm)
+- `--config, -c`: Path to the agent configuration file
+
+This is useful for integrations with tools like VS Code extensions that communicate with SPARC2 over stdio.
+
+### MCP Settings for VS Code Extensions
+
+To use SPARC2 with VS Code extensions that support the Model Context Protocol (MCP), you'll need to configure the extension's settings. Here's an example configuration for the Claude extension:
+
+```json
+{
+  "mcpServers": {
+    "sparc2-mcp": {
+      "command": "node",
+      "args": [
+        "/path/to/sparc2/src/mcp/mcpServerWrapper.js"
+      ],
+      "workingDirectory": "/path/to/sparc2",
+      "disabled": false,
+      "autoApprove": [
+        "analyze_code",
+        "modify_code",
+        "search_code",
+        "create_checkpoint",
+        "rollback",
+        "config"
+      ],
+      "env": {
+        "OPENAI_API_KEY": "your-openai-api-key",
+        "OPENROUTER_API_KEY": "your-openrouter-api-key",
+        "E2B_API_KEY": "your-e2b-api-key",
+        "MCP_SECRET_KEY": "your-mcp-secret-key",
+        "SPARC2_CONFIG_PATH": "/path/to/sparc2/config.toml",
+        "SPARC2_AGENT_CONFIG_PATH": "/path/to/sparc2/agent-config.toml",
+        "OPENAI_MODEL": "gpt-4o"
+      },
+      "timeout": 300
+    }
+  }
+}
+```
+
+The MCP server wrapper automatically detects the Deno executable in various common installation locations, making it portable across different systems.
 
 ### MCP Endpoints
 
@@ -322,7 +398,7 @@ Secure sandbox for executing code.
 You can test the MCP server endpoints using curl commands. First, start the MCP server:
 
 ```bash
-./sparc mcp --port 3001
+./sparc api --port 3001
 ```
 
 #### 1. Discover Available Tools and Resources
@@ -638,10 +714,16 @@ sparc2 config --action get --key "models.reasoning"
 sparc2 config --action set --key "models.reasoning" --value "gpt-4o"
 ```
 
-#### Start the MCP Server
+#### Start the MCP HTTP API Server
 
 ```bash
-./sparc mcp --port 3001
+./sparc api --port 3001
+```
+
+#### Start the MCP Stdio Server
+
+```bash
+./sparc mcp
 ```
 
 ### Advanced Usage Examples

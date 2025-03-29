@@ -206,6 +206,7 @@ export class SPARC2Agent {
       await logInfo("Repository is not clean, creating checkpoint");
       // Sanitize the task name for Git tag (max 50 chars, alphanumeric and hyphens only)
       const sanitizedTask = task.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase().substring(0, 50);
+      // Note: A timestamp will be automatically added by the createCheckpoint function to ensure uniqueness
       await this.createCheckpoint(`pre-${sanitizedTask}`);
     }
 

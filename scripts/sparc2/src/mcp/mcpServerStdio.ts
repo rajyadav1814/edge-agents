@@ -3,14 +3,14 @@
  * Implements a Model Context Protocol server for SPARC2 using the MCP SDK
  */
 
-import { Server } from 'npm:@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from 'npm:@modelcontextprotocol/sdk/server/stdio.js';
+import { Server } from "npm:@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "npm:@modelcontextprotocol/sdk/server/stdio.js";
 import {
-  ListToolsRequestSchema,
   CallToolRequestSchema,
   ErrorCode,
+  ListToolsRequestSchema,
   McpError,
-} from 'npm:@modelcontextprotocol/sdk/types.js';
+} from "npm:@modelcontextprotocol/sdk/types.js";
 import { FileToProcess, SPARC2Agent } from "../agent/agent.ts";
 import { logDebug, logError, logInfo } from "../logger.ts";
 import { executeCode } from "../sandbox/codeInterpreter.ts";
@@ -45,145 +45,145 @@ export async function startMCPServerStdio(options: {
   // Create the MCP server
   const server = new Server(
     {
-      name: 'sparc2-mcp',
-      version: '2.0.5',
+      name: "sparc2-mcp",
+      version: "2.0.5",
     },
     {
       capabilities: {
         tools: {},
       },
-    }
+    },
   );
 
   // Set up the ListTools request handler
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
       {
-        name: 'analyze_code',
-        description: 'Analyze code files for issues and improvements',
+        name: "analyze_code",
+        description: "Analyze code files for issues and improvements",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
             files: {
-              type: 'array',
-              description: 'Array of file paths to analyze',
+              type: "array",
+              description: "Array of file paths to analyze",
               items: {
-                type: 'string',
+                type: "string",
               },
             },
             task: {
-              type: 'string',
-              description: 'Description of the analysis task',
+              type: "string",
+              description: "Description of the analysis task",
             },
           },
-          required: ['files'],
+          required: ["files"],
         },
       },
       {
-        name: 'modify_code',
-        description: 'Apply suggested modifications to code files',
+        name: "modify_code",
+        description: "Apply suggested modifications to code files",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
             files: {
-              type: 'array',
-              description: 'Array of file paths to modify',
+              type: "array",
+              description: "Array of file paths to modify",
               items: {
-                type: 'string',
+                type: "string",
               },
             },
             task: {
-              type: 'string',
-              description: 'Description of the modification task',
+              type: "string",
+              description: "Description of the modification task",
             },
           },
-          required: ['files'],
+          required: ["files"],
         },
       },
       {
-        name: 'execute_code',
-        description: 'Execute code in a secure sandbox',
+        name: "execute_code",
+        description: "Execute code in a secure sandbox",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
             code: {
-              type: 'string',
-              description: 'Code to execute',
+              type: "string",
+              description: "Code to execute",
             },
             language: {
-              type: 'string',
-              description: 'Programming language (python, javascript, typescript)',
+              type: "string",
+              description: "Programming language (python, javascript, typescript)",
             },
           },
-          required: ['code', 'language'],
+          required: ["code", "language"],
         },
       },
       {
-        name: 'search_code',
-        description: 'Search for similar code changes',
+        name: "search_code",
+        description: "Search for similar code changes",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
             query: {
-              type: 'string',
-              description: 'Search query',
+              type: "string",
+              description: "Search query",
             },
             limit: {
-              type: 'number',
-              description: 'Maximum number of results to return',
+              type: "number",
+              description: "Maximum number of results to return",
             },
           },
-          required: ['query'],
+          required: ["query"],
         },
       },
       {
-        name: 'create_checkpoint',
-        description: 'Create a version control checkpoint',
+        name: "create_checkpoint",
+        description: "Create a version control checkpoint",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
             message: {
-              type: 'string',
-              description: 'Checkpoint message',
+              type: "string",
+              description: "Checkpoint message",
             },
           },
-          required: ['message'],
+          required: ["message"],
         },
       },
       {
-        name: 'rollback',
-        description: 'Roll back to a previous checkpoint',
+        name: "rollback",
+        description: "Roll back to a previous checkpoint",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
             commit: {
-              type: 'string',
-              description: 'Commit hash to roll back to',
+              type: "string",
+              description: "Commit hash to roll back to",
             },
           },
-          required: ['commit'],
+          required: ["commit"],
         },
       },
       {
-        name: 'config',
-        description: 'Manage configuration',
+        name: "config",
+        description: "Manage configuration",
         inputSchema: {
-          type: 'object',
+          type: "object",
           properties: {
             action: {
-              type: 'string',
-              description: 'Action to perform (get, set, list)',
+              type: "string",
+              description: "Action to perform (get, set, list)",
             },
             key: {
-              type: 'string',
-              description: 'Configuration key',
+              type: "string",
+              description: "Configuration key",
             },
             value: {
-              type: 'string',
-              description: 'Configuration value (for set action)',
+              type: "string",
+              description: "Configuration value (for set action)",
             },
           },
-          required: ['action'],
+          required: ["action"],
         },
       },
     ],
@@ -196,9 +196,9 @@ export async function startMCPServerStdio(options: {
       const args = request.params.arguments;
 
       // Handle analyze_code tool
-      if (toolName === 'analyze_code') {
+      if (toolName === "analyze_code") {
         if (!args.files || !Array.isArray(args.files) || args.files.length === 0) {
-          throw new McpError(ErrorCode.InvalidParams, 'Files array is required');
+          throw new McpError(ErrorCode.InvalidParams, "Files array is required");
         }
 
         // Convert file paths to FileToProcess objects
@@ -220,7 +220,7 @@ export async function startMCPServerStdio(options: {
 
         // Use planAndExecute to analyze the files
         const results = await agent.planAndExecute(
-          `Analyze the following files: ${args.task || ''}`,
+          `Analyze the following files: ${args.task || ""}`,
           filesToProcess,
         );
 
@@ -236,16 +236,15 @@ export async function startMCPServerStdio(options: {
         return {
           content: [
             {
-              type: 'text',
+              type: "text",
               text: JSON.stringify(formattedResults, null, 2),
             },
           ],
         };
-      }
-      // Handle modify_code tool
-      else if (toolName === 'modify_code') {
+      } // Handle modify_code tool
+      else if (toolName === "modify_code") {
         if (!args.files || !Array.isArray(args.files) || args.files.length === 0) {
-          throw new McpError(ErrorCode.InvalidParams, 'Files array is required');
+          throw new McpError(ErrorCode.InvalidParams, "Files array is required");
         }
 
         // Convert file paths to FileToProcess objects
@@ -267,7 +266,7 @@ export async function startMCPServerStdio(options: {
 
         // Use planAndExecute to modify the files
         const results = await agent.planAndExecute(
-          `Modify the following files: ${args.task || ''}`,
+          `Modify the following files: ${args.task || ""}`,
           filesToProcess,
         );
 
@@ -290,20 +289,19 @@ export async function startMCPServerStdio(options: {
         return {
           content: [
             {
-              type: 'text',
+              type: "text",
               text: JSON.stringify(processedResults, null, 2),
             },
           ],
         };
-      }
-      // Handle execute_code tool
-      else if (toolName === 'execute_code') {
+      } // Handle execute_code tool
+      else if (toolName === "execute_code") {
         if (!args.code) {
-          throw new McpError(ErrorCode.InvalidParams, 'Code is required');
+          throw new McpError(ErrorCode.InvalidParams, "Code is required");
         }
 
         // Execute the code directly using the code interpreter
-        const result = await executeCode(args.code, { language: args.language || 'javascript' });
+        const result = await executeCode(args.code, { language: args.language || "javascript" });
 
         // Format the output
         let output = "";
@@ -320,16 +318,15 @@ export async function startMCPServerStdio(options: {
         return {
           content: [
             {
-              type: 'text',
+              type: "text",
               text: output || "Execution completed successfully",
             },
           ],
         };
-      }
-      // Handle search_code tool
-      else if (toolName === 'search_code') {
+      } // Handle search_code tool
+      else if (toolName === "search_code") {
         if (!args.query) {
-          throw new McpError(ErrorCode.InvalidParams, 'Search query is required');
+          throw new McpError(ErrorCode.InvalidParams, "Search query is required");
         }
 
         // Import the vector search function
@@ -341,20 +338,22 @@ export async function startMCPServerStdio(options: {
         return {
           content: [
             {
-              type: 'text',
+              type: "text",
               text: JSON.stringify(results, null, 2),
             },
           ],
         };
-      }
-      // Handle create_checkpoint tool
-      else if (toolName === 'create_checkpoint') {
+      } // Handle create_checkpoint tool
+      else if (toolName === "create_checkpoint") {
         if (!args.message) {
-          throw new McpError(ErrorCode.InvalidParams, 'Checkpoint message is required');
+          throw new McpError(ErrorCode.InvalidParams, "Checkpoint message is required");
         }
 
         // Sanitize the name for Git tag
-        const sanitizedName = args.message.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase().substring(0, 50);
+        const sanitizedName = args.message.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase().substring(
+          0,
+          50,
+        );
 
         // Create a checkpoint
         const hash = await createCheckpoint(sanitizedName);
@@ -362,19 +361,22 @@ export async function startMCPServerStdio(options: {
         return {
           content: [
             {
-              type: 'text',
-              text: JSON.stringify({
-                name: sanitizedName,
-                hash: hash,
-              }, null, 2),
+              type: "text",
+              text: JSON.stringify(
+                {
+                  name: sanitizedName,
+                  hash: hash,
+                },
+                null,
+                2,
+              ),
             },
           ],
         };
-      }
-      // Handle rollback tool
-      else if (toolName === 'rollback') {
+      } // Handle rollback tool
+      else if (toolName === "rollback") {
         if (!args.commit) {
-          throw new McpError(ErrorCode.InvalidParams, 'Commit hash is required');
+          throw new McpError(ErrorCode.InvalidParams, "Commit hash is required");
         }
 
         // Import the rollback function
@@ -387,34 +389,37 @@ export async function startMCPServerStdio(options: {
         return {
           content: [
             {
-              type: 'text',
-              text: JSON.stringify({
-                commit: args.commit,
-                success: true,
-                result,
-              }, null, 2),
+              type: "text",
+              text: JSON.stringify(
+                {
+                  commit: args.commit,
+                  success: true,
+                  result,
+                },
+                null,
+                2,
+              ),
             },
           ],
         };
-      }
-      // Handle config tool
-      else if (toolName === 'config') {
+      } // Handle config tool
+      else if (toolName === "config") {
         if (!args.action) {
-          throw new McpError(ErrorCode.InvalidParams, 'Action is required');
+          throw new McpError(ErrorCode.InvalidParams, "Action is required");
         }
 
         // Handle different config actions
         if (args.action === "get") {
           // Get a specific config value
           if (!args.key) {
-            throw new McpError(ErrorCode.InvalidParams, 'Key is required for get action');
+            throw new McpError(ErrorCode.InvalidParams, "Key is required for get action");
           }
 
           const configValue = Deno.env.get(args.key) || null;
           return {
             content: [
               {
-                type: 'text',
+                type: "text",
                 text: JSON.stringify({ key: args.key, value: configValue }, null, 2),
               },
             ],
@@ -422,11 +427,11 @@ export async function startMCPServerStdio(options: {
         } else if (args.action === "set") {
           // Set a specific config value
           if (!args.key) {
-            throw new McpError(ErrorCode.InvalidParams, 'Key is required for set action');
+            throw new McpError(ErrorCode.InvalidParams, "Key is required for set action");
           }
 
           if (args.value === undefined) {
-            throw new McpError(ErrorCode.InvalidParams, 'Value is required for set action');
+            throw new McpError(ErrorCode.InvalidParams, "Value is required for set action");
           }
 
           // Set the environment variable
@@ -435,7 +440,7 @@ export async function startMCPServerStdio(options: {
           return {
             content: [
               {
-                type: 'text',
+                type: "text",
                 text: JSON.stringify({ key: args.key, value: args.value, success: true }, null, 2),
               },
             ],
@@ -459,7 +464,7 @@ export async function startMCPServerStdio(options: {
           return {
             content: [
               {
-                type: 'text',
+                type: "text",
                 text: JSON.stringify(config, null, 2),
               },
             ],
@@ -467,8 +472,7 @@ export async function startMCPServerStdio(options: {
         } else {
           throw new McpError(ErrorCode.InvalidParams, `Unknown action: ${args.action}`);
         }
-      }
-      // Handle unknown tool
+      } // Handle unknown tool
       else {
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${toolName}`);
       }
@@ -491,5 +495,5 @@ export async function startMCPServerStdio(options: {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-  await logInfo('SPARC2 MCP server running on stdio');
+  await logInfo("SPARC2 MCP server running on stdio");
 }

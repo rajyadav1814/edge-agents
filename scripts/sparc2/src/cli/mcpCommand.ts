@@ -20,7 +20,7 @@ export async function mcpCommand(
     // Get the path to the mcpServerWrapper.js file
     const denoDir = Deno.cwd();
     const wrapperPath = path.join(denoDir, "src", "mcp", "mcpServerWrapper.js");
-    
+
     // Check if the wrapper exists
     if (!await exists(wrapperPath)) {
       throw new Error(`MCP server wrapper not found at ${wrapperPath}`);
@@ -28,7 +28,7 @@ export async function mcpCommand(
 
     // Log startup
     await logInfo("Starting SPARC2 MCP server using stdio transport");
-    
+
     // Create environment variables object
     const env = {
       ...Deno.env.toObject(),
@@ -39,7 +39,7 @@ export async function mcpCommand(
       SPARC2_PROCESSING: options.processing || "",
       SPARC2_CONFIG_PATH: options.config || "",
     };
-    
+
     // Start the Node.js process with the wrapper using the Command API
     const command = new Deno.Command("node", {
       args: [wrapperPath],
@@ -48,17 +48,17 @@ export async function mcpCommand(
       stdin: "inherit",
       env: env,
     });
-    
+
     // Start the process
     const process = command.spawn();
-    
+
     // Keep the process running
     await new Promise(() => {
       // This promise never resolves, keeping the process alive
       console.log(`SPARC2 MCP server running on stdio transport`);
       console.log("Press Ctrl+C to stop the server");
     });
-    
+
     // This code will never be reached due to the never-resolving promise above,
     // but it's good practice to include it for cleanup if needed
     const status = await process.status;

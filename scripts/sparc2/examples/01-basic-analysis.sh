@@ -17,6 +17,9 @@ echo ""
 # First, let's make sure we have a file to analyze
 EXAMPLE_FILE="test-file.js"
 
+# Delete the existing tag if it exists to prevent errors on re-runs
+git tag -d pre-analyze-code-without-making-changes 2>/dev/null || true
+
 echo "Analyzing $EXAMPLE_FILE..."
 echo ""
 
