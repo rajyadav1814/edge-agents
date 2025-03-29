@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "sparc2-mcp": {
+      "name": "SPARC2-MCP",
+      "description": "SPARC2 with Model Context Protocol integration",
+      "command": "mcp serve",
+      "workingDirectory": "/workspaces/edge-agents",
+      "enabled": true,
+      "type": "stdio"
+    }
+  }
+}

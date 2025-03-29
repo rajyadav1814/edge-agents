@@ -1,8 +1,8 @@
-# SPARC 2.0 Configuration (TOML)
+
 [execution]
-mode = "automatic"          # Options: automatic, semi, manual, custom
-diff_mode = "file"          # Options: file, function (default best performance)
-processing = "parallel"     # Options: parallel, sequential, concurrent, swarm
+mode = "automatic"
+diff_mode = "file"
+processing = "parallel"
 
 [logging]
 enable = true
@@ -13,5 +13,5 @@ checkpoint_enabled = true
 temporal_rollback = true
 
 [models]
-reasoning = "test-model"     # For architecture, planning, problem solving
-instruct = "test-model"     # For instructing code changes
+reasoning = "gpt-4o"
+instruct = "openai/o3-mini-high"

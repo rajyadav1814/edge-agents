@@ -1,0 +1,21 @@
+{
+  "name": "gemini-tumbler-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for Gemini Tumbler anonymization",
+  "main": "cloudflare-worker.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler publish",
+    "test": "jest"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "@types/jest": "^29.5.5",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2",
+    "wrangler": "^3.15.0"
+  }
+}

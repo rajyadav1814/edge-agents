@@ -9,9 +9,11 @@ import { AgentOptions, FileToProcess, SPARC2Agent } from "../agent/agent.ts";
 import { LogEntry, logMessage } from "../logger.ts";
 import { executeCode } from "../sandbox/codeInterpreter.ts";
 import { DiffEntry, searchDiffEntries } from "../vector/vectorStore.ts";
+import { mcpCommand } from "./mcpCommand.ts";
+import { apiCommand } from "./apiCommand.ts";
 
-// Version number for the CLI
-const VERSION = "0.2.0";
+// Use a hardcoded version
+const VERSION = "2.0.5";
 
 /**
  * CLI command structure
@@ -690,6 +692,79 @@ const commands: Command[] = [
       },
     ],
     action: configCommand,
+  },
+  {
+    name: "api",
+    description: "Start a Model Context Protocol (MCP) HTTP API server",
+    options: [
+      {
+        name: "port",
+        shortName: "p",
+        description: "Port to run the API server on",
+        type: "number",
+        default: 3001,
+      },
+      {
+        name: "model",
+        description: "Model to use for the agent",
+        type: "string",
+      },
+      {
+        name: "mode",
+        description: "Execution mode (automatic, semi, manual, custom, interactive)",
+        type: "string",
+      },
+      {
+        name: "diff-mode",
+        description: "Diff mode (file, function)",
+        type: "string",
+      },
+      {
+        name: "processing",
+        description: "Processing mode (sequential, parallel, concurrent, swarm)",
+        type: "string",
+      },
+      {
+        name: "config",
+        shortName: "c",
+        description: "Path to the agent configuration file",
+        type: "string",
+      },
+    ],
+    action: apiCommand,
+  },
+  {
+    name: "mcp",
+    description: "Start a Model Context Protocol (MCP) server using stdio transport",
+    options: [
+      {
+        name: "model",
+        description: "Model to use for the agent",
+        type: "string",
+      },
+      {
+        name: "mode",
+        description: "Execution mode (automatic, semi, manual, custom, interactive)",
+        type: "string",
+      },
+      {
+        name: "diff-mode",
+        description: "Diff mode (file, function)",
+        type: "string",
+      },
+      {
+        name: "processing",
+        description: "Processing mode (sequential, parallel, concurrent, swarm)",
+        type: "string",
+      },
+      {
+        name: "config",
+        shortName: "c",
+        description: "Path to the agent configuration file",
+        type: "string",
+      },
+    ],
+    action: mcpCommand,
   },
 ];
 

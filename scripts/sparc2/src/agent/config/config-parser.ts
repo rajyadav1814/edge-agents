@@ -19,7 +19,19 @@ export async function parseAgentConfig(configPath: string): Promise<AgentConfig>
     const tomlContent = await Deno.readTextFile(configPath);
 
     // Parse the TOML content
-    const config = parse(tomlContent) as RawAgentConfig;
+    const parsedConfig = parse(tomlContent) as Record<string, unknown>;
+
+    // Validate the parsed config has the required structure
+    if (!parsedConfig.agent || typeof parsedConfig.agent !== "object") {
+      throw new Error("Missing or invalid 'agent' section in configuration");
+    }
+
+    // Convert to RawAgentConfig with proper type checking
+    const config: RawAgentConfig = {
+      agent: parsedConfig.agent as RawAgentConfig["agent"],
+      providers: (parsedConfig.providers as Record<string, any>) || {},
+      flows: (parsedConfig.flows as Record<string, any>) || {},
+    };
 
     // Process the configuration (resolve variables, etc.)
     return processAgentConfig(config);

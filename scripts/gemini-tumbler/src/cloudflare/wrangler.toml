@@ -1,0 +1,12 @@
+name = "gemini-tumbler-worker"
+main = "cloudflare-worker.ts"
+compatibility_date = "2023-12-01"
+
+[vars]
+ANONYMIZER_ENABLED = "true"
+ANONYMIZER_FIELDS = "{\"userId\":true,\"ipAddress\":true,\"geolocation\":true,\"userAgent\":true}"
+# NEXT_SERVICE_URL will be set in the Cloudflare dashboard or via environment variables
+
+# Add secrets via wrangler:
+# wrangler secret put ANONYMIZER_SALT
+# wrangler secret put AUTH_SECRET
