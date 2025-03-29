@@ -68,7 +68,11 @@ export class ContributionManager {
     const contribution = this.contributions.get(id)!;
     
     // Add feedback
-    contribution.feedback = feedback;
+    if (!contribution.feedback) {
+      contribution.feedback = [feedback];
+    } else {
+      contribution.feedback.push(feedback);
+    }
     
     // Update in memory
     this.contributions.set(id, contribution);

@@ -6,6 +6,7 @@
 import { GoogleGenerativeAI, GenerativeModel, GenerationConfig } from "@google/generative-ai";
 import { GeminiConfig, TokenUsage } from "../types/index.ts";
 import { GoogleAIClient, UsageLimits } from "../types/googleAIClient.ts";
+import { interceptRequest, selectBestApiKey } from "../utils/responseInterceptor.ts";
 
 export class GoogleGeminiClient implements GoogleAIClient {
   private apiKeys: string[];
@@ -88,7 +89,13 @@ export class GoogleGeminiClient implements GoogleAIClient {
       throw new Error("No valid API keys available");
     }
     
-    // Rotate to the next key
+    // Try to select the best key using the rate limit manager
+    const bestKey = selectBestApiKey('google', validKeys);
+    if (bestKey && validKeys.includes(bestKey)) {
+      return bestKey;
+    }
+    
+    // Fall back to round-robin if no best key was found or rate limiting is not initialized
     this.currentKeyIndex = (this.currentKeyIndex + 1) % validKeys.length;
     return validKeys[this.currentKeyIndex];
   }
@@ -121,50 +128,75 @@ export class GoogleGeminiClient implements GoogleAIClient {
     // Try all available keys until one works
     const initialKeyIndex = this.currentKeyIndex;
     let lastError: Error | null = null;
+    let keysAttempted = 0; // Count keys attempted to avoid infinite loops
     
     // Try each key in rotation until one works or we've tried them all
-    for (let attempt = 0; attempt < this.models.size; attempt++) {
+    while (keysAttempted < this.models.size) {
       try {
+        // Get the next API key to try
         const apiKey = this.getNextApiKey();
-        const model = this.models.get(apiKey);
-        
-        if (!model) {
-          continue; // Skip if model isn't available for this key
-        }
-        
-        // Prepare the chat session
-        const chat = model.startChat();
-        
-        // Add system prompt if provided
-        if (systemPrompt) {
-          await chat.sendMessage(systemPrompt);
-        }
-        
-        // Send the user prompt and get response
-        const result = await chat.sendMessage(prompt);
-        const text = result.response.text();
-        
-        // Estimate token usage (the SDK doesn't provide token counts directly)
-        const promptTokens = this.estimateTokenCount(prompt);
-        const systemTokens = systemPrompt ? this.estimateTokenCount(systemPrompt) : 0;
-        const responseTokens = this.estimateTokenCount(text);
-        
-        const tokenUsage: TokenUsage = {
-          promptTokens: promptTokens + systemTokens,
-          completionTokens: responseTokens,
-          totalTokens: promptTokens + systemTokens + responseTokens
-        };
-        
-        console.log(`Successfully generated response using API key index ${this.currentKeyIndex}`);
-        
-        return { text, tokenUsage };
+        keysAttempted++;
+
+        // Use the interceptRequest function to wrap the API call
+        return await interceptRequest(
+          async () => {
+            const model = this.models.get(apiKey);
+            
+            if (!model) {
+              throw new Error(`Model not available for API key`);
+            }
+            
+            // Prepare the chat session
+            const chat = model.startChat();
+            
+            // Add system prompt if provided
+            if (systemPrompt) {
+              await chat.sendMessage(systemPrompt);
+            }
+            
+            // Send the user prompt and get response
+            const result = await chat.sendMessage(prompt);
+            const text = result.response.text();
+            
+            // Estimate token usage (the SDK doesn't provide token counts directly)
+            const promptTokens = this.estimateTokenCount(prompt);
+            const systemTokens = systemPrompt ? this.estimateTokenCount(systemPrompt) : 0;
+            const responseTokens = this.estimateTokenCount(text);
+            
+            const tokenUsage: TokenUsage = {
+              promptTokens: promptTokens + systemTokens,
+              completionTokens: responseTokens,
+              totalTokens: promptTokens + systemTokens + responseTokens
+            };
+            
+            console.log(`Successfully generated response using API key index ${this.currentKeyIndex}`);
+            
+            return { text, tokenUsage };
+          },
+          {
+            provider: 'google',
+            apiKey,
+            metadata: {
+              model: this.modelName,
+              promptLength: prompt.length,
+              systemPromptLength: systemPrompt?.length || 0
+            }
+          }
+        );
       } catch (error) {
-        console.error(`Error with API key at index ${this.currentKeyIndex}:`, error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`Error with API key at index ${this.currentKeyIndex}: ${errorMessage}`);
         lastError = error as Error;
         
-        // If we've tried all keys and come back to the initial one, break the loop
-        if (this.currentKeyIndex === initialKeyIndex && attempt > 0) {
-          break;
+        // Check if this is a rate limit error
+        const isRateLimitError = errorMessage.includes('rate limit') || 
+                                errorMessage.includes('quota exceeded') ||
+                                errorMessage.includes('429');
+
+        // If it's a rate limit error, try another key
+        // Otherwise, if we've tried all keys and come back to the initial one, break the loop
+        if (!isRateLimitError && this.currentKeyIndex === initialKeyIndex && keysAttempted > 1) {
+          throw error; // Rethrow non-rate-limit errors after trying all keys
         }
       }
     }

@@ -24,6 +24,18 @@ export interface TokenUsage {
 }
 
 /**
+ * Model configuration
+ */
+export interface ModelConfig {
+  name: string;
+  provider: string;
+  apiKeyEnvVar?: string;
+  maxOutputTokens?: number;
+  contextWindow?: number;
+  capabilities?: string[];
+}
+
+/**
  * Configuration for the Tumbler service
  */
 export interface TumblerConfig {
@@ -31,6 +43,21 @@ export interface TumblerConfig {
   defaultModel: string;
   anonymousContribution: boolean;
   contributionEndpoint?: string;
+  models: ModelConfig[];
+  additionalModels?: AdditionalModel[];
+}
+
+/**
+ * Anonymous contribution data
+ */
+export interface AnonymousContribution {
+  id?: string;
+  prompt: string;
+  response: string;
+  model: string;
+  timestamp: number;
+  metadata?: Record<string, any>;
+  feedback?: ContributionFeedback[];
   additionalModels?: AdditionalModel[];
 }
 
@@ -42,6 +69,30 @@ export interface AdditionalModel {
   provider: string;
   apiKeyEnvVar: string;
   apiEndpoint?: string;
+}
+
+/**
+ * Tumbler request parameters
+ */
+export interface TumblerRequest {
+  prompt: string;
+  systemPrompt?: string;
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+  contributionConsent?: boolean;
+}
+
+/**
+ * Tumbler response
+ */
+export interface TumblerResponse {
+  content: string;
+  model: string;
+  tokenUsage: TokenUsage;
+  processingTime: number;
+  id: string;
+  timestamp: number;
 }
 
 /**
