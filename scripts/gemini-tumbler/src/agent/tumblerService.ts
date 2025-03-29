@@ -4,6 +4,7 @@
 
 import { GeminiClient } from "./geminiClient.ts";
 import { GoogleGeminiClient } from "./googleGeminiClient.ts";
+import { DirectGeminiClient } from "./directGeminiClient.ts";
 import { 
   TumblerConfig, 
   ModelConfig, 
@@ -15,7 +16,7 @@ import { ContributionManager } from "../utils/contributionManager.ts";
 
 export class TumblerService {
   private config: TumblerConfig;
-  private clients: Map<string, GeminiClient | GoogleGeminiClient> = new Map();
+  private clients: Map<string, GeminiClient | GoogleGeminiClient | DirectGeminiClient> = new Map();
   private currentModelIndex = 0;
   private contributionManager: ContributionManager;
 
@@ -152,10 +153,23 @@ export class TumblerService {
         continue;
       }
       
-      // Create client based on provider
+      // Create client based on provider and model
       if (modelConfig.provider === 'google') {
-        if (validApiKeys.length > 1) {
-          // Use the new GoogleGeminiClient with multiple keys
+        // Check if this is an experimental model
+        const isExperimentalModel = modelConfig.name.includes("exp");
+        
+        if (isExperimentalModel) {
+          // Use DirectGeminiClient for experimental models
+          console.log(`Initializing DirectGeminiClient for experimental model ${modelConfig.name}`);
+          const client = new DirectGeminiClient({
+            apiKeys: validApiKeys,
+            modelName: modelConfig.name,
+            maxOutputTokens: modelConfig.maxOutputTokens
+          });
+          
+          this.clients.set(modelConfig.name, client);
+        } else if (validApiKeys.length > 1) {
+          // Use the GoogleGeminiClient with multiple keys for non-experimental models
           console.log(`Initializing GoogleGeminiClient with ${validApiKeys.length} API keys for model ${modelConfig.name}`);
           const client = new GoogleGeminiClient({
             apiKeys: validApiKeys,
@@ -165,7 +179,7 @@ export class TumblerService {
           
           this.clients.set(modelConfig.name, client);
         } else {
-          // Use the original GeminiClient with a single key
+          // Use the original GeminiClient with a single key for non-experimental models
           console.log(`Initializing GeminiClient with single API key for model ${modelConfig.name}`);
           const client = new GeminiClient({
             apiKey: validApiKeys[0],
@@ -194,7 +208,7 @@ export class TumblerService {
    * @param modelName The name of the model
    * @returns The client for the model, or undefined if not found
    */
-  private getClientForModel(modelName: string): GeminiClient | GoogleGeminiClient | undefined {
+  private getClientForModel(modelName: string): GeminiClient | GoogleGeminiClient | DirectGeminiClient | undefined {
     return this.clients.get(modelName);
   }
 

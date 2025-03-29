@@ -1,14 +1,13 @@
 /**
- * Enhanced Gemini client using the official Google Generative AI SDK
- * with support for multiple API keys and key rotation
+ * Direct Gemini client implementation that uses fetch API to directly call the v1beta endpoint
+ * for experimental models like gemini-2.5-pro-exp-03-25
  */
 
-import { GoogleGenerativeAI, GenerativeModel, GenerationConfig } from "@google/generative-ai";
 import { GeminiConfig, TokenUsage } from "../types/index.ts";
 import { GoogleAIClient, UsageLimits } from "../types/googleAIClient.ts";
 import { interceptRequest, selectBestApiKey } from "../utils/responseInterceptor.ts";
 
-export class GoogleGeminiClient implements GoogleAIClient {
+export class DirectGeminiClient implements GoogleAIClient {
   private apiKeys: string[];
   private currentKeyIndex = 0;
   private modelName: string;
@@ -16,7 +15,6 @@ export class GoogleGeminiClient implements GoogleAIClient {
   private topP: number;
   private topK: number;
   private maxOutputTokens: number;
-  private models: Map<string, GenerativeModel> = new Map();
 
   constructor(config: GeminiConfig & { apiKeys?: string[] }) {
     // Handle single API key or multiple keys
@@ -25,7 +23,7 @@ export class GoogleGeminiClient implements GoogleAIClient {
     } else if (config.apiKey) {
       this.apiKeys = [config.apiKey];
     } else {
-      throw new Error("At least one API key is required for GoogleGeminiClient");
+      throw new Error("At least one API key is required for DirectGeminiClient");
     }
     
     this.modelName = config.modelName;
@@ -33,58 +31,6 @@ export class GoogleGeminiClient implements GoogleAIClient {
     this.topP = config.topP ?? 0.95;
     this.topK = config.topK ?? 40;
     this.maxOutputTokens = config.maxOutputTokens ?? 2048;
-    
-    // Initialize models for each API key
-    this.initializeModels();
-  }
-
-  /**
-   * Initialize Gemini models for each API key
-   */
-  private initializeModels(): void {
-    for (const apiKey of this.apiKeys) {
-      if (!apiKey) {
-        console.warn(`Empty API key provided, skipping initialization for this key`);
-        continue;
-      }
-      
-      try {
-        // Check if we're using an experimental model
-        const isExperimentalModel = this.modelName.includes("exp");
-        if (isExperimentalModel) {
-          console.log(`Using experimental model: ${this.modelName}`);
-          // For experimental models, we need to use a different approach
-          // The SDK doesn't support apiVersion parameter directly
-        }
-        
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-          model: this.modelName,
-          generationConfig: this.getGenerationConfig(),
-        });
-        
-        // Store the model instance with its API key as identifier
-        this.models.set(apiKey, model);
-      } catch (error) {
-        console.error(`Failed to initialize model with API key: ${error}`);
-      }
-    }
-    
-    if (this.models.size === 0) {
-      throw new Error("Failed to initialize any models. Check your API keys.");
-    }
-  }
-
-  /**
-   * Get the generation configuration for the model
-   */
-  private getGenerationConfig(): GenerationConfig {
-    return {
-      temperature: this.temperature,
-      topP: this.topP,
-      topK: this.topK,
-      maxOutputTokens: this.maxOutputTokens,
-    };
   }
 
   /**
@@ -92,20 +38,19 @@ export class GoogleGeminiClient implements GoogleAIClient {
    * @returns The next API key
    */
   private getNextApiKey(): string {
-    const validKeys = Array.from(this.models.keys());
-    if (validKeys.length === 0) {
+    if (this.apiKeys.length === 0) {
       throw new Error("No valid API keys available");
     }
     
     // Try to select the best key using the rate limit manager
-    const bestKey = selectBestApiKey('google', validKeys);
-    if (bestKey && validKeys.includes(bestKey)) {
+    const bestKey = selectBestApiKey('google', this.apiKeys);
+    if (bestKey && this.apiKeys.includes(bestKey)) {
       return bestKey;
     }
     
     // Fall back to round-robin if no best key was found or rate limiting is not initialized
-    this.currentKeyIndex = (this.currentKeyIndex + 1) % validKeys.length;
-    return validKeys[this.currentKeyIndex];
+    this.currentKeyIndex = (this.currentKeyIndex + 1) % this.apiKeys.length;
+    return this.apiKeys[this.currentKeyIndex];
   }
 
   /**
@@ -124,7 +69,7 @@ export class GoogleGeminiClient implements GoogleAIClient {
   }
 
   /**
-   * Generate a response from the Gemini model
+   * Generate a response from the Gemini model using direct API call
    * @param prompt The prompt to send to the model
    * @param systemPrompt Optional system prompt
    * @returns The generated text and token usage
@@ -139,7 +84,7 @@ export class GoogleGeminiClient implements GoogleAIClient {
     let keysAttempted = 0; // Count keys attempted to avoid infinite loops
     
     // Try each key in rotation until one works or we've tried them all
-    while (keysAttempted < this.models.size) {
+    while (keysAttempted < this.apiKeys.length) {
       try {
         // Get the next API key to try
         const apiKey = this.getNextApiKey();
@@ -148,34 +93,109 @@ export class GoogleGeminiClient implements GoogleAIClient {
         // Use the interceptRequest function to wrap the API call
         return await interceptRequest(
           async () => {
-            const model = this.models.get(apiKey);
+            // Determine API version based on model name
+            const apiVersion = this.modelName.includes("exp") ? "v1beta" : "v1";
+            console.log(`Using API version ${apiVersion} for model ${this.modelName}`);
             
-            if (!model) {
-              throw new Error(`Model not available for API key`);
-            }
+            // Construct the API URL
+            const apiUrl = `https://generativelanguage.googleapis.com/${apiVersion}/models/${this.modelName}:generateContent?key=${apiKey}`;
             
-            // Prepare the chat session
-            const chat = model.startChat();
+            // Prepare the request body
+            let requestBody: any;
             
-            // Add system prompt if provided
-            if (systemPrompt) {
-              await chat.sendMessage(systemPrompt);
-            }
+            // Combine system prompt and user prompt if needed
+            const fullPrompt = systemPrompt 
+              ? `${systemPrompt}\n\n${prompt}` 
+              : prompt;
             
-            // Send the user prompt and get response
-            const result = await chat.sendMessage(prompt);
-            const text = result.response.text();
-            
-            // Estimate token usage (the SDK doesn't provide token counts directly)
-            const promptTokens = this.estimateTokenCount(prompt);
-            const systemTokens = systemPrompt ? this.estimateTokenCount(systemPrompt) : 0;
-            const responseTokens = this.estimateTokenCount(text);
-            
-            const tokenUsage: TokenUsage = {
-              promptTokens: promptTokens + systemTokens,
-              completionTokens: responseTokens,
-              totalTokens: promptTokens + systemTokens + responseTokens
+            // Use a simplified format that works for both v1 and v1beta
+            requestBody = {
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    { text: fullPrompt }
+                  ]
+                }
+              ],
+              generationConfig: {
+                temperature: this.temperature,
+                topP: this.topP,
+                topK: this.topK,
+                maxOutputTokens: this.maxOutputTokens,
+              }
             };
+            
+            // Log the request for debugging
+            console.log(`Making direct API call to ${apiUrl}`);
+            const response = await fetch(apiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestBody),
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`API request failed with status ${response.status}: ${errorText}`);
+            }
+            
+            const responseData = await response.json();
+            
+            // Log the response for debugging
+            console.log(`API response: ${JSON.stringify(responseData, null, 2)}`);
+            
+            // Extract the generated text
+            let text = "";
+            if (responseData.candidates && responseData.candidates.length > 0 && 
+                responseData.candidates[0].content && responseData.candidates[0].content.parts) {
+              if (Array.isArray(responseData.candidates[0].content.parts)) {
+                text = responseData.candidates[0].content.parts
+                  .map((part: any) => part.text || "")
+                  .join("");
+              } else if (typeof responseData.candidates[0].content.parts === 'object') {
+                text = responseData.candidates[0].content.parts.text || "";
+              }
+            }
+            
+            // If no text was extracted, try to extract it from the first part
+            if (!text && responseData.candidates && responseData.candidates.length > 0 && 
+                responseData.candidates[0].content && responseData.candidates[0].content.parts && 
+                Array.isArray(responseData.candidates[0].content.parts) && 
+                responseData.candidates[0].content.parts.length > 0) {
+              const firstPart = responseData.candidates[0].content.parts[0];
+              if (firstPart && typeof firstPart === 'object' && firstPart.text) {
+                text = firstPart.text;
+              }
+            }
+            
+            // If still no text, log a warning but don't throw an error
+            if (!text) {
+              console.warn("Warning: No text extracted from response", responseData);
+              text = "I apologize, but I couldn't generate a response. Please try again.";
+            }
+            
+            // Get token usage from response if available
+            let tokenUsage: TokenUsage;
+            if (responseData.usageMetadata) {
+              tokenUsage = {
+                promptTokens: responseData.usageMetadata.promptTokenCount || 0,
+                completionTokens: responseData.usageMetadata.candidatesTokenCount || 0,
+                totalTokens: responseData.usageMetadata.totalTokenCount || 0
+              };
+            } else {
+              // Estimate token usage if not provided
+              const promptTokens = this.estimateTokenCount(prompt);
+              const systemTokens = systemPrompt ? this.estimateTokenCount(systemPrompt) : 0;
+              const responseTokens = this.estimateTokenCount(text);
+              
+              tokenUsage = {
+                promptTokens: promptTokens + systemTokens,
+                completionTokens: responseTokens,
+                totalTokens: promptTokens + systemTokens + responseTokens
+              };
+            }
             
             console.log(`Successfully generated response using API key index ${this.currentKeyIndex}`);
             
@@ -233,9 +253,6 @@ export class GoogleGeminiClient implements GoogleAIClient {
     if (params.topP !== undefined) this.topP = params.topP;
     if (params.topK !== undefined) this.topK = params.topK;
     if (params.maxOutputTokens !== undefined) this.maxOutputTokens = params.maxOutputTokens;
-    
-    // Reinitialize models with new parameters
-    this.initializeModels();
   }
 
   /**
@@ -250,7 +267,7 @@ export class GoogleGeminiClient implements GoogleAIClient {
    * Get the number of available API keys
    */
   getKeyCount(): number {
-    return this.models.size;
+    return this.apiKeys.length;
   }
   
   /**
@@ -263,20 +280,8 @@ export class GoogleGeminiClient implements GoogleAIClient {
       return false;
     }
     
-    try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({
-        model: this.modelName,
-        generationConfig: this.getGenerationConfig(),
-      });
-      
-      this.apiKeys.push(apiKey);
-      this.models.set(apiKey, model);
-      return true;
-    } catch (error) {
-      console.error(`Failed to add API key: ${error}`);
-      return false;
-    }
+    this.apiKeys.push(apiKey);
+    return true;
   }
 
   /**

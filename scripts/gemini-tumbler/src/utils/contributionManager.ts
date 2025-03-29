@@ -153,20 +153,24 @@ export class ContributionManager {
         response: await hashData(contribution.response)
       };
       
-      // Send to endpoint
-      const response = await fetch(this.contributionEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(hashedContribution)
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to send contribution: ${response.statusText}`);
+      try {
+        // Send to endpoint
+        const response = await fetch(this.contributionEndpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(hashedContribution)
+        });
+        
+        if (!response.ok) {
+          console.log(`Note: Contribution endpoint returned ${response.status} - continuing without contribution`);
+        }
+      } catch (fetchError) {
+        console.log(`Note: Contribution endpoint not available - continuing without contribution`);
       }
     } catch (error) {
-      console.error("Failed to send contribution to endpoint:", error);
+      console.log(`Note: Unable to process contribution - continuing normally`);
     }
   }
 
@@ -179,23 +183,27 @@ export class ContributionManager {
     if (!this.contributionEndpoint) return;
     
     try {
-      // Send to endpoint
-      const response = await fetch(`${this.contributionEndpoint}/feedback`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          id,
-          feedback
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to send feedback: ${response.statusText}`);
+      try {
+        // Send to endpoint
+        const response = await fetch(`${this.contributionEndpoint}/feedback`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            id,
+            feedback
+          })
+        });
+        
+        if (!response.ok) {
+          console.log(`Note: Feedback endpoint returned ${response.status} - continuing without feedback`);
+        }
+      } catch (fetchError) {
+        console.log(`Note: Feedback endpoint not available - continuing without feedback`);
       }
     } catch (error) {
-      console.error("Failed to send feedback to endpoint:", error);
+      console.log(`Note: Unable to process feedback - continuing normally`);
     }
   }
 }

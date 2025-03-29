@@ -2,11 +2,15 @@
   "version": "4",
   "specifiers": {
     "npm:@google/generative-ai@0.2.1": "0.2.1",
+    "npm:@google/generative-ai@0.3.0": "0.3.0",
     "npm:@types/node@*": "22.12.0"
   },
   "npm": {
     "@google/generative-ai@0.2.1": {
       "integrity": "sha512-gNmMFadfwi7qf/6M9gImgyGJXY1jKQ/de8vGOqgJ0PPYgQ7WwzZDavbKrIuXS2zdqZZaYtxW3EFN6aG9x5wtFw=="
+    },
+    "@google/generative-ai@0.3.0": {
+      "integrity": "sha512-6xbaA/JPpwCoe+lfxE2RavVB8JI8F3P6mCse1Sbm586HhJkyuSevK7Opt4l2dbQZFej+M8ALhMMpfBiRW05Fag=="
     },
     "@types/node@22.12.0": {
       "integrity": "sha512-Fll2FZ1riMjNmlmJOdAyY5pUbkftXslB5DgEzlIuNaiWhXd00FhWxVC/r4yV/4wBb9JfImTu+jiSvXTkJ7F/gA==",
@@ -311,7 +315,7 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:@google/generative-ai@0.2.1"
+      "npm:@google/generative-ai@0.3.0"
     ]
   }
 }

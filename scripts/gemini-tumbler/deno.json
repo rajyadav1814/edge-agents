@@ -11,7 +11,7 @@
     "dotenv": "https://deno.land/std@0.204.0/dotenv/mod.ts",
     "uuid": "https://deno.land/std@0.204.0/uuid/mod.ts",
     "std/": "https://deno.land/std@0.204.0/",
-    "@google/generative-ai": "npm:@google/generative-ai@0.2.1"
+    "@google/generative-ai": "npm:@google/generative-ai@0.3.0"
   },
   "fmt": {
     "include": ["src/"],
