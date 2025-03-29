@@ -48,10 +48,11 @@ This approach provides strong privacy guarantees while still allowing useful pro
 
 ### User Anonymization
 
-- **Multi-Stage Privacy**: Implements a three-function daisy chain for enhanced privacy
+- **Multi-Stage Privacy**: Implements a daisy chain with Supabase Edge Functions and Cloudflare Workers for enhanced privacy
 - **Configurable Anonymization**: Control which user data gets anonymized (ID, IP, geolocation, user agent)
 - **One-Way Hashing**: Uses SHA-256 with salt for secure, non-reversible anonymization
 - **Data Isolation**: Each function in the chain has limited access to sensitive data
+- **Cross-Platform Separation**: Distributes processing across Supabase and Cloudflare for enhanced security
 - **Audit Trail**: Each step in the chain can be independently logged and audited
 
 ## Benefits
@@ -108,11 +109,12 @@ By leveraging free tiers across multiple services and API keys, Gemini Tumbler a
 ### Technical Benefits
 
 - **Lightweight Implementation**: Built on Deno for fast, secure execution
-- **Easy Deployment**: Simple deployment to Supabase Edge Functions
+- **Multi-Platform Deployment**: Supports deployment to both Supabase Edge Functions and Cloudflare Workers
 - **Comprehensive Testing**: Includes tests for all components
 - **Extensible Architecture**: Easy to add new models or anonymization techniques
 - **Minimal Dependencies**: Uses standard libraries to minimize security risks
 - **Self-Optimizing**: Automatically adapts to changing API provider policies and limits
+- **Global Edge Network**: Leverages Cloudflare's worldwide edge network for low-latency processing
 
 
 ## Capabilities
@@ -181,6 +183,7 @@ Medical researchers can benefit from Gemini Tumbler by:
 
 Check our [plans directory](./plans/) for upcoming features, including:
 
+- **Cloudflare Integration**: Enhanced privacy through Cloudflare Workers (now available in [plans/cloudflare-integration.md](./plans/cloudflare-integration.md))
 - **Enhanced Rate Limit Prediction**: Machine learning-based prediction of rate limits before they occur
 - **Enhanced Anonymization Techniques**: Additional privacy-preserving methods
 - **Cross-Model Fallback Chains**: Automatically route requests to alternative models when primary ones are unavailable
