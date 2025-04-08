@@ -1,0 +1,87 @@
+{
+  "mcpServers": {
+    "vscodeproject": {
+      "command": "node",
+      "args": [
+        "/workspaces/edge-agents/scripts/vscode-remote-mcp/build/index.js"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "connection",
+        "disconnect",
+        "session_create",
+        "session_join",
+        "token_refresh"
+      ],
+      "communication": {
+        "protocol": "stdio",
+        "messageFormat": "json",
+        "compressionEnabled": false
+      },
+      "alwaysAllow": [],
+      "timeout": 15
+    },
+    "githubProjects-local": {
+      "command": "node",
+      "args": [
+        "/workspaces/edge-agents/supabase/functions/github-projects/dist/mcp-stdio-wrapper.js"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "connection",
+        "disconnect",
+        "tools/list",
+        "tools/call",
+        "discovery"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "your_github_token_here",
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_github_token_here",
+        "OPENAI_API_KEY": "your_openai_api_key_here",
+        "OPENROUTER_MODEL": "openai/o3-mini-high",
+        "OPENROUTER_API_KEY": "your_openrouter_api_key_here",
+        "E2B_API_KEY": "your_e2b_api_key_here",
+        "MCP_SECRET_KEY": "your_mcp_secret_key_here",
+        "SPARC2_CONFIG_PATH": "/workspaces/edge-agents/scripts/sparc2/config.toml",
+        "SPARC2_AGENT_CONFIG_PATH": "/workspaces/edge-agents/scripts/sparc2/agent-config.toml",
+        "ENABLE_TRACING": "true",
+        "TRACING_LEVEL": "debug",
+        "OPENAI_MODEL": "gpt-4o",
+        "NULL_VALUE": "false"
+      },
+      "communication": {
+        "protocol": "stdio",
+        "messageFormat": "json",
+        "compressionEnabled": false
+      },
+      "alwaysAllow": [
+        "github-api-proxy",
+        "projects-management",
+        "repository-access"
+      ],
+      "timeout": 15
+    },
+    "githubProjectsHttp": {
+      "url": "http://127.0.0.1:8002",
+      "disabled": false,
+      "headers": {
+        "Authorization": "Bearer your-token"
+      },
+      "autoApprove": [
+        "connection",
+        "disconnect"
+      ],
+      "communication": {
+        "protocol": "http",
+        "messageFormat": "json",
+        "compressionEnabled": false
+      },
+      "alwaysAllow": [
+        "github-api-proxy",
+        "projects-management",
+        "repository-access"
+      ],
+      "timeout": 15
+    }
+  }
+}
