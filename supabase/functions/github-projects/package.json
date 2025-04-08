@@ -1,0 +1,40 @@
+{
+  "name": "agentic-github-project-management",
+  "version": "1.0.0",
+  "description": "Agentic GitHub Project Management API with MCP and SSE integration for AI assistants",
+  "main": "index.js",
+  "scripts": {
+    "build": "node scripts/build/build.js",
+    "start": "cd dist && ./run-mcp-servers.sh",
+    "start:http": "cd dist && ./run-simple-mcp.sh",
+    "start:stdio": "cd dist && ./run-stdio-mcp.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "github",
+    "projects",
+    "api",
+    "mcp",
+    "sse",
+    "agentic",
+    "ai-assistant"
+  ],
+  "author": "Agentics.org",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.7",
+    "node-fetch": "^3.3.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agenticsorg/edge-agents"
+  },
+  "homepage": "https://agentics.org",
+  "bugs": {
+    "url": "https://github.com/agenticsorg/edge-agents/issues"
+  }
+}

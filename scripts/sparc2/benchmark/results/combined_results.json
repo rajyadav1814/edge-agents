@@ -1,0 +1,11 @@
+{
+  "benchmark": "SPARC 2.0 Agentic Suite",
+  "results": [],
+  "summary": {
+    "totalTasks": 0,
+    "averageSafetyScore": null,
+    "averageToolAccuracy": null,
+    "averageTokenEfficiency": null,
+    "averageTrajectoryOptimality": null
+  }
+}

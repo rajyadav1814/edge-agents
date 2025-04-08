@@ -1,0 +1,187 @@
+{
+  "version": "2025-03-26",
+  "name": "github-projects-mcp",
+  "description": "GitHub Projects API with GraphQL and REST support",
+  "vendor": "Edge Agents",
+  "contact": {
+    "name": "Edge Agents Team",
+    "url": "https://github.com/agenticsorg/edge-agents"
+  },
+  "authentication": {
+    "type": "none"
+  },
+  "capabilities": {
+    "tools": {
+      "getRepository": {
+        "description": "Get repository information from GitHub",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "Repository owner (user or organization)"
+            },
+            "repo": {
+              "type": "string",
+              "description": "Repository name"
+            }
+          },
+          "required": ["owner", "repo"]
+        }
+      },
+      "listProjects": {
+        "description": "List GitHub Projects v2 for an organization",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "organization": {
+              "type": "string",
+              "description": "GitHub organization name"
+            },
+            "limit": {
+              "type": "number",
+              "description": "Maximum number of projects to return",
+              "default": 10
+            }
+          },
+          "required": ["organization"]
+        }
+      },
+      "getProject": {
+        "description": "Get detailed information about a GitHub Project",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "organization": {
+              "type": "string",
+              "description": "GitHub organization name"
+            },
+            "projectNumber": {
+              "type": "number",
+              "description": "Project number"
+            }
+          },
+          "required": ["organization", "projectNumber"]
+        }
+      },
+      "createProject": {
+        "description": "Create a new GitHub Project in an organization",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "organization": {
+              "type": "string",
+              "description": "GitHub organization name"
+            },
+            "title": {
+              "type": "string",
+              "description": "Project title"
+            },
+            "shortDescription": {
+              "type": "string",
+              "description": "Project description"
+            }
+          },
+          "required": ["organization", "title"]
+        }
+      },
+      "createProjectItem": {
+        "description": "Create a new item in a GitHub Project",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectId": {
+              "type": "string",
+              "description": "Project ID"
+            },
+            "title": {
+              "type": "string",
+              "description": "Item title"
+            },
+            "body": {
+              "type": "string",
+              "description": "Item body/description"
+            }
+          },
+          "required": ["projectId", "title"]
+        }
+      },
+      "getProjectItems": {
+        "description": "Get items from a GitHub Project",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectId": {
+              "type": "string",
+              "description": "Project ID"
+            },
+            "limit": {
+              "type": "number",
+              "description": "Maximum number of items to return",
+              "default": 20
+            }
+          },
+          "required": ["projectId"]
+        }
+      },
+      "executeGraphQL": {
+        "description": "Execute a custom GraphQL query against the GitHub API",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "GraphQL query string"
+            },
+            "variables": {
+              "type": "object",
+              "description": "Query variables",
+              "additionalProperties": true
+            }
+          },
+          "required": ["query"]
+        }
+      }
+    }
+  },
+  "documentation": {
+    "description": "This MCP server provides access to GitHub repositories and projects through a standardized interface.",
+    "usage": "Use the tools to interact with GitHub repositories and projects programmatically.",
+    "examples": [
+      {
+        "name": "Get repository information",
+        "tool": "getRepository",
+        "arguments": {
+          "owner": "agenticsorg",
+          "repo": "edge-agents"
+        }
+      },
+      {
+        "name": "List organization projects",
+        "tool": "listProjects",
+        "arguments": {
+          "organization": "agenticsorg",
+          "limit": 5
+        }
+      },
+      {
+        "name": "Create a new project",
+        "tool": "createProject",
+        "arguments": {
+          "organization": "agenticsorg",
+          "title": "New Project",
+          "shortDescription": "A project created via MCP"
+        }
+      },
+      {
+        "name": "Add an item to a project",
+        "tool": "createProjectItem",
+        "arguments": {
+          "projectId": "PVT_kwDOLXMHXM4AcQ",
+          "title": "New task",
+          "body": "This is a new task created via MCP"
+        }
+      }
+    ]
+  }
+}

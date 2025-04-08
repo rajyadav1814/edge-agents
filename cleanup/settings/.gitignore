@@ -1,0 +1,10 @@
+# Ignore any local settings files that might contain credentials
+*_local.json
+*_dev.json
+*_prod.json
+*_secret.json
+*_credentials.json
+
+# Ignore environment files
+.env
+.env.*

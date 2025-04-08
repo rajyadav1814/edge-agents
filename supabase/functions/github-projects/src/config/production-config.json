@@ -1,0 +1,46 @@
+{
+  "function": "github-api",
+  "version": "1.0.0",
+  "description": "GitHub API Integration with Projects support",
+  "production": {
+    "memory": 128,
+    "timeout": 60,
+    "maxConcurrency": 50,
+    "rateLimit": {
+      "requests": 100,
+      "period": 60
+    },
+    "cors": {
+      "allowedOrigins": ["https://*.yourdomain.com"],
+      "allowedMethods": ["GET", "POST", "OPTIONS"],
+      "allowedHeaders": ["Content-Type", "Authorization"],
+      "maxAge": 86400
+    },
+    "caching": {
+      "enabled": true,
+      "ttl": 300,
+      "varyBy": ["Authorization"]
+    },
+    "logging": {
+      "level": "info",
+      "includeRequestBody": false,
+      "includeResponseBody": false
+    }
+  },
+  "environment": {
+    "required": [
+      "GITHUB_TOKEN",
+      "GITHUB_ORG"
+    ],
+    "optional": [
+      "GITHUB_API_VERSION",
+      "GITHUB_WEBHOOK_SECRET",
+      "CACHE_TTL"
+    ]
+  },
+  "deployment": {
+    "regions": ["all"],
+    "verifyJwt": false,
+    "httpMethod": ["GET", "POST", "OPTIONS"]
+  }
+}

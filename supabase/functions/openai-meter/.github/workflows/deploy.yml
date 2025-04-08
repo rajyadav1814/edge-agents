@@ -1,0 +1,133 @@
+name: Deploy OpenAI Proxy
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'supabase/functions/openai-meter/**'
+  workflow_run:
+    workflows: ["OpenAI Proxy Tests"]
+    branches: [main]
+    types: 
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
+
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: ">=1.30.0"
+
+      - name: Install Supabase CLI
+        run: |
+          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar -xz
+          sudo mv supabase /usr/local/bin/supabase
+          supabase --version
+
+      - name: Cache Dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/deno
+            ~/.deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('**/deno.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deno-
+
+      - name: Build Function
+        run: |
+          cd supabase/functions/openai-meter
+          deno cache --reload **/*.ts
+
+      - name: Run Pre-deployment Checks
+        run: |
+          cd supabase/functions/openai-meter
+          deno fmt --check
+          deno lint
+          deno check **/*.ts
+
+      - name: Generate Deployment Report
+        run: |
+          cd supabase/functions/openai-meter
+          echo "## Deployment Summary" > deployment.md
+          echo "Function: OpenAI Proxy" >> deployment.md
+          echo "Version: ${{ github.sha }}" >> deployment.md
+          echo "Timestamp: $(date -u)" >> deployment.md
+          echo "Environment: Production" >> deployment.md
+
+      - name: Deploy to Staging
+        if: github.ref != 'refs/heads/main'
+        run: |
+          cd supabase/functions/openai-meter
+          supabase functions deploy openai-meter \
+            --project-ref $PROJECT_ID \
+            --env-file .env.staging
+
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd supabase/functions/openai-meter
+          supabase functions deploy openai-meter \
+            --project-ref $PROJECT_ID \
+            --env-file .env.production
+
+      - name: Run Post-deployment Tests
+        run: |
+          cd supabase/functions/openai-meter
+          ENDPOINT_URL="https://$PROJECT_ID.supabase.co/functions/v1/openai-meter"
+          
+          # Basic health check
+          curl -i "$ENDPOINT_URL/health" \
+            -H "Authorization: Bearer ${{ secrets.TEST_API_KEY }}"
+          
+          # Verify CORS headers
+          curl -i -X OPTIONS "$ENDPOINT_URL" \
+            -H "Origin: https://example.com" \
+            -H "Access-Control-Request-Method: POST"
+
+      - name: Update Status Badge
+        run: |
+          echo "[![Deploy Status](https://github.com/${{ github.repository }}/workflows/Deploy%20OpenAI%20Proxy/badge.svg)](https://github.com/${{ github.repository }}/actions)" > status.md
+
+      - name: Create Deployment Summary
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const fs = require('fs');
+            const deploymentReport = fs.readFileSync('supabase/functions/openai-meter/deployment.md', 'utf8');
+            const statusBadge = fs.readFileSync('status.md', 'utf8');
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `${statusBadge}\n\n${deploymentReport}`
+            });
+
+      - name: Notify on Success
+        if: success()
+        run: |
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{
+              "text": "✅ Successfully deployed OpenAI Proxy\nEnvironment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Staging' }}\nCommit: ${{ github.sha }}"
+            }'
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{
+              "text": "❌ Failed to deploy OpenAI Proxy\nEnvironment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Staging' }}\nCommit: ${{ github.sha }}"
+            }'

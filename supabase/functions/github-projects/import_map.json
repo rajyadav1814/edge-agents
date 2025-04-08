@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "std/": "https://deno.land/std@0.177.0/",
+    "http/": "https://deno.land/std@0.177.0/http/",
+    "testing/": "https://deno.land/std@0.177.0/testing/",
+    "cors": "../_shared/cors.ts",
+    "utils/": "./utils/",
+    "services/": "./services/"
+  }
+}

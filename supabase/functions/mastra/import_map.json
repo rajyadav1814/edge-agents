@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "std/": "https://deno.land/std@0.177.0/",
+    "zod": "https://deno.land/x/zod@v3.21.4/mod.ts",
+    "@mastra/core/": "https://esm.sh/@mastra/core@latest/",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.21.0"
+  }
+}

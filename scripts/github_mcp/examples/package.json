@@ -1,0 +1,24 @@
+{
+  "name": "github-mcp-examples",
+  "version": "1.0.0",
+  "description": "Examples for using the GitHub MCP Server",
+  "main": "mcp-client-example.js",
+  "scripts": {
+    "start": "node mcp-client-example.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "github",
+    "mcp",
+    "api",
+    "examples"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

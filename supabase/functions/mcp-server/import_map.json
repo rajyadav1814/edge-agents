@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "@modelcontextprotocol/sdk/server/index.js": "https://esm.sh/@modelcontextprotocol/sdk/server/index.js",
+    "@modelcontextprotocol/sdk/server/stdio.js": "https://esm.sh/@modelcontextprotocol/sdk/server/stdio.js",
+    "@modelcontextprotocol/sdk/types": "https://esm.sh/@modelcontextprotocol/sdk/types",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js"
+  }
+}
