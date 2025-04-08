@@ -1,0 +1,29 @@
+# TypeScript config
+tsconfig.json
+
+# Tests
+**/*.test.ts
+**/*.spec.ts
+jest.config.js
+
+# Development files
+.vscode/
+.idea/
+.git/
+.gitignore
+.env
+.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build artifacts
+coverage/
+
+# Documentation that shouldn't be published
+docs/plans/
+
+# Temporary files
+.DS_Store
+Thumbs.db

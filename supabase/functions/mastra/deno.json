@@ -1,0 +1,25 @@
+{
+  "tasks": {
+    "start": "deno run --allow-net --allow-env --allow-read index.ts",
+    "test": "deno test --allow-net --allow-env --allow-read tests/",
+    "deploy": "supabase functions deploy mastra"
+  },
+  "importMap": "./import_map.json",
+  "fmt": {
+    "options": {
+      "indentWidth": 2,
+      "lineWidth": 100,
+      "singleQuote": false,
+      "useTabs": false
+    }
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "compilerOptions": {
+    "lib": ["deno.ns", "dom", "dom.iterable", "dom.asynciterable"],
+    "strict": true
+  }
+}

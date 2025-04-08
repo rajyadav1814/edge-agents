@@ -1,0 +1,28 @@
+# SPARC 2.0 Agentic Benchmarking Suite Configuration
+
+[benchmark]
+name = "SPARC 2.0 Agentic Suite"
+version = "2.3.1"
+
+[steps]
+min = 1
+max = 10
+increment = 2
+
+[agent]
+sizes = ["small", "medium", "large"]
+token_cache_enabled = true
+max_parallel_agents = 5
+
+[metrics]
+include = [
+  "step_completion",
+  "tool_accuracy",
+  "token_efficiency",
+  "safety_score",
+  "trajectory_optimality"
+]
+
+[security]
+level = "strict"
+adversarial_tests = ["code_injection", "prompt_leakage"]

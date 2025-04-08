@@ -1,0 +1,17 @@
+
+[execution]
+mode = "automatic"
+diff_mode = "file"
+processing = "parallel"
+
+[logging]
+enable = true
+vector_logging = true
+
+[rollback]
+checkpoint_enabled = true
+temporal_rollback = true
+
+[models]
+reasoning = "gpt-4o"
+instruct = "openai/o3-mini-high"

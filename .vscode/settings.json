@@ -1,0 +1,53 @@
+{
+  // GitHub MCP Server Integration Settings
+  "github-mcp.server.url": "http://localhost:3000",
+  "github-mcp.server.validateCertificates": true,
+  "github-mcp.auth.enabled": true,
+  "github-mcp.auth.tokenFromEnv": true,
+  "github-mcp.auth.tokenEnvVariable": "API_TOKEN",
+  "github-mcp.github.tokenFromEnv": true,
+  "github-mcp.github.tokenEnvVariable": "GITHUB_TOKEN",
+  
+  // Copilot Chat Integration
+  "github.copilot.advanced": {
+    "mcp.enabled": true,
+    "mcp.serverUrl": "http://localhost:3000"
+  },
+  
+  // Terminal Settings for MCP Server
+  "terminal.integrated.env.linux": {
+    "MCP_SERVER_URL": "http://localhost:3000"
+  },
+  "terminal.integrated.env.osx": {
+    "MCP_SERVER_URL": "http://localhost:3000"
+  },
+  "terminal.integrated.env.windows": {
+    "MCP_SERVER_URL": "http://localhost:3000"
+  },
+  
+  // Editor Settings for MCP Integration
+  "editor.suggest.showStatusBar": true,
+  "editor.inlineSuggest.enabled": true,
+  
+  // Security Settings
+  "security.workspace.trust.enabled": true,
+  "security.workspace.trust.untrustedFiles": "prompt",
+  
+  // File Associations for MCP Configuration
+  "files.associations": {
+    "mcp.json": "jsonc",
+    ".env.mcp": "dotenv"
+  },
+  
+  // Task Explorer Settings
+  "taskExplorer.enableMcp": true,
+  
+  // Exclude MCP cache and logs from search
+  "search.exclude": {
+    "**/.mcp-cache": true,
+    "**/mcp-logs": true
+  },
+  
+  // Recommended Extensions for MCP
+  "extensions.ignoreRecommendations": false
+}

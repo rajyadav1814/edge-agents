@@ -1,0 +1,1 @@
+/workspaces/edge-agents/supabase/functions/github-projects/src/mcp-discovery/mcp-discovery-server.ts

@@ -1,0 +1,95 @@
+name: OpenAI Proxy Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'supabase/functions/openai-meter/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'supabase/functions/openai-meter/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      OPENAI_API_KEY: ${{ secrets.TEST_OPENAI_API_KEY }}
+      STRIPE_SECRET_KEY: ${{ secrets.TEST_STRIPE_SECRET_KEY }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.TEST_STRIPE_WEBHOOK_SECRET }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: ">=1.30.0"
+
+      - name: Cache Dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/deno
+            ~/.deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('**/deno.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deno-
+
+      - name: Format Check
+        run: |
+          cd supabase/functions/openai-meter
+          deno fmt --check --config=deno.test.json
+
+      - name: Lint
+        run: |
+          cd supabase/functions/openai-meter
+          deno lint --config=deno.test.json
+
+      - name: Type Check
+        run: |
+          cd supabase/functions/openai-meter
+          deno check **/*.ts
+
+      - name: Run Tests
+        run: |
+          cd supabase/functions/openai-meter
+          deno test --allow-env --allow-net --allow-read --allow-write \
+            --coverage=coverage --config=deno.test.json
+
+      - name: Generate Coverage Report
+        run: |
+          cd supabase/functions/openai-meter
+          deno coverage coverage --lcov > coverage.lcov
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v2
+        with:
+          file: supabase/functions/openai-meter/coverage.lcov
+          flags: openai-proxy
+          name: OpenAI Proxy Coverage
+          fail_ci_if_error: true
+
+      - name: Check Coverage Threshold
+        run: |
+          cd supabase/functions/openai-meter
+          COVERAGE=$(deno coverage coverage | grep "cover" | awk '{print $2}' | tr -d '%')
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "Coverage $COVERAGE% is below minimum threshold of 80%"
+            exit 1
+          fi
+
+      - name: Performance Check
+        run: |
+          cd supabase/functions/openai-meter
+          deno test benchmark.test.ts --allow-env --allow-net
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-results
+          path: |
+            supabase/functions/openai-meter/coverage
+            supabase/functions/openai-meter/coverage.lcov

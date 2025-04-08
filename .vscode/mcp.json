@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "description": "GitHub MCP Server configuration for VS Code",
+  "server": {
+    "url": "${env:MCP_SERVER_URL}",
+    "defaultUrl": "http://localhost:3000",
+    "apiBasePath": "/api",
+    "healthEndpoint": "/health",
+    "versionEndpoint": "/version"
+  },
+  "authentication": {
+    "enabled": true,
+    "tokenVariable": "API_TOKEN",
+    "headerName": "X-API-Token"
+  },
+  "github": {
+    "tokenVariable": "GITHUB_TOKEN",
+    "repositories": []
+  },
+  "endpoints": {
+    "search": "/api/search",
+    "content": "/api/content",
+    "modify": "/api/modify",
+    "pull": "/api/pull"
+  },
+  "features": {
+    "codeSearch": true,
+    "fileAccess": true,
+    "codeModification": true,
+    "pullRequests": true
+  },
+  "logging": {
+    "level": "info",
+    "format": "text"
+  },
+  "performance": {
+    "requestTimeout": 30000,
+    "cacheEnabled": true,
+    "cacheTTL": 300
+  }
+}
