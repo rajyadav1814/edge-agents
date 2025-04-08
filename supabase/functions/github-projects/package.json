@@ -1,0 +1,29 @@
+{
+  "name": "github-projects",
+  "version": "1.0.0",
+  "description": "GitHub Projects API with MCP integration",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.js",
+    "start": "cd dist && ./run-mcp-servers.sh",
+    "start:http": "cd dist && ./run-simple-mcp.sh",
+    "start:stdio": "cd dist && ./run-stdio-mcp.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "github",
+    "projects",
+    "api",
+    "mcp"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.9.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.7",
+    "node-fetch": "^3.3.2"
+  }
+}

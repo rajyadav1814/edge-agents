@@ -1,0 +1,57 @@
+{
+  "test": {
+    "files": {
+      "include": ["**/*test.ts"],
+      "exclude": ["**/node_modules/**"]
+    },
+    "coverage": {
+      "enabled": true,
+      "include": ["**/*.ts"],
+      "exclude": [
+        "**/*test.ts",
+        "**/node_modules/**",
+        "**/test_utils.ts",
+        "**/test.config.ts"
+      ],
+      "threshold": {
+        "lines": 80,
+        "branches": 80,
+        "functions": 80,
+        "statements": 80
+      }
+    },
+    "parallel": true,
+    "sanitizeOps": true,
+    "sanitizeResources": true,
+    "permissions": {
+      "env": true,
+      "net": true,
+      "read": true,
+      "write": true
+    }
+  },
+  "fmt": {
+    "files": {
+      "include": ["**/*.ts"],
+      "exclude": ["**/node_modules/**"]
+    },
+    "options": {
+      "useTabs": false,
+      "lineWidth": 100,
+      "indentWidth": 2,
+      "singleQuote": true,
+      "proseWrap": "always"
+    }
+  },
+  "lint": {
+    "files": {
+      "include": ["**/*.ts"],
+      "exclude": ["**/node_modules/**"]
+    },
+    "rules": {
+      "tags": ["recommended"],
+      "include": ["ban-untagged-todo"],
+      "exclude": ["no-explicit-any"]
+    }
+  }
+}

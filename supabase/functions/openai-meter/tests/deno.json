@@ -1,0 +1,16 @@
+{
+  "imports": {
+    "std/": "https://deno.land/std@0.208.0/",
+    "stripe": "https://esm.sh/stripe@14.16.0",
+    "@types/node": "npm:@types/node"
+  },
+  "tasks": {
+    "dev": "deno run --allow-net --allow-env --watch index.ts",
+    "deploy": "deployctl deploy --project=your-project-id index.ts"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window"],
+    "strict": true
+  },
+  "nodeModulesDir": "auto"
+}

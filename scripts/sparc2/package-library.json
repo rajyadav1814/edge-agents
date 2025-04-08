@@ -1,0 +1,16 @@
+{
+  "name": "@agentics.org/sparc2-library",
+  "version": "2.0.1",
+  "description": "SPARC2 Library Mode - No CLI Output",
+  "type": "module",
+  "main": "build/library.js",
+  "types": "build/library.d.ts",
+  "files": [
+    "build/**/*"
+  ],
+  "scripts": {
+    "build": "deno run -A scripts/build.ts",
+    "test": "deno test -A"
+  },
+  "keywords": [
+    "ai",

@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+# SPARC2 Runner Script
+# This script runs the SPARC2 system with the provided arguments
+
+# Set the base directory to the location of this script
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SPARC2_DIR="${BASE_DIR}/sparc2"
+
+# Check if Deno is installed
+if ! command -v deno &> /dev/null; then
+    echo "Error: Deno is not installed. Please install Deno first."
+    echo "Visit https://deno.land/#installation for installation instructions."
+    exit 1
+fi
+
+# Check if the SPARC2 directory exists
+if [ ! -d "$SPARC2_DIR" ]; then
+    echo "Error: SPARC2 directory not found at $SPARC2_DIR"
+    exit 1
+fi
+
+# Check if .env file exists, if not create it with default values
+ENV_FILE="${SPARC2_DIR}/.env"
+if [ ! -f "$ENV_FILE" ]; then
+    echo "Creating default .env file..."
+    cat > "$ENV_FILE" << EOF
+# SPARC2 Environment Configuration
+# API Keys (replace with your actual keys)
+OPENAI_API_KEY=your_openai_api_key_here
+E2B_API_KEY=your_e2b_api_key_here
+VECTOR_DB_URL=your_vector_db_url_here
+
+# Execution Configuration
+DEFAULT_MODE=automatic
+DEFAULT_DIFF_MODE=file
+EOF
+    echo "Created default .env file at $ENV_FILE"
+    echo "Please edit it to add your API keys before running SPARC2."
+    exit 1
+fi
+
+# Run the SPARC2 CLI with the provided arguments
+echo "Running SPARC2..."
+cd "$SPARC2_DIR" && deno run --allow-read --allow-write --allow-env --allow-net --allow-run src/cli/cli.ts "$@"

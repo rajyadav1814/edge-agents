@@ -1,0 +1,17 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-net --allow-env agent.ts",
+    "file-search": "deno run --allow-net --allow-env --allow-read --allow-write file-search.ts",
+    "test-file-search": "deno run --allow-net --allow-env --allow-read --allow-write test-file-search.ts"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window"],
+    "strict": true
+  },
+  "imports": {
+    "https://deno.land/std@0.168.0/http/server.ts": "https://deno.land/std@0.168.0/http/server.ts",
+    "https://deno.land/std@0.215.0/dotenv/mod.ts": "https://deno.land/std@0.215.0/dotenv/mod.ts",
+    "https://esm.sh/@supabase/supabase-js@2.7.1": "https://esm.sh/@supabase/supabase-js@2.7.1",
+    "https://esm.sh/openai@4.20.1": "https://esm.sh/openai@4.20.1"
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "mcpServers": {
+    "vscodeproject": {
+      "command": "node",
+      "args": [
+        "/workspaces/edge-agents/scripts/vscode-remote-mcp/build/index.js"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "connection",
+        "disconnect",
+        "session_create",
+        "session_join",
+        "token_refresh"
+      ],
+      "communication": {
+        "protocol": "stdio",
+        "messageFormat": "json",
+        "compressionEnabled": false
+      },
+      "alwaysAllow": [],
+      "timeout": 15
+    },
+    "githubProjects-local": {
+      "command": "node",
+      "args": [
+        "/workspaces/edge-agents/supabase/functions/github-projects/dist/mcp-stdio-wrapper.js"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "connection",
+        "disconnect",
+        "tools/list",
+        "tools/call",
+        "discovery"
+      ],
+      "communication": {
+        "protocol": "stdio",
+        "messageFormat": "json",
+        "compressionEnabled": false
+      },
+      "alwaysAllow": [
+        "github-api-proxy",
+        "projects-management",
+        "repository-access"
+      ],
+      "timeout": 15
+    },
+    "githubProjectsHttp": {
+      "url": "http://127.0.0.1:8002",
+      "disabled": false,
+      "headers": {
+        "Authorization": "Bearer your-token"
+      },
+      "autoApprove": [
+        "connection",
+        "disconnect"
+      ],
+      "communication": {
+        "protocol": "http",
+        "messageFormat": "json",
+        "compressionEnabled": false
+      },
+      "alwaysAllow": [
+        "github-api-proxy",
+        "projects-management",
+        "repository-access"
+      ],
+      "timeout": 15
+    }
+  }
+}

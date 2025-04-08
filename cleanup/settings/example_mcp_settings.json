@@ -1,0 +1,63 @@
+{
+  "mcpServers": {
+    "hello-world-server": {
+      "command": "node",
+      "args": [
+        "/path/to/your/hello-world/build/index.js"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "greet"
+      ]
+    },
+    "vscode-mcp": {
+      "command": "node",
+      "args": [
+        "/path/to/your/vscode-remote-mcp/run-mcp-server.js"
+      ],
+      "disabled": false,
+      "timeout": 60,
+      "transportType": "stdio",
+      "autoApprove": [
+        "greet",
+        "list_files",
+        "read_file",
+        "write_file",
+        "execute_command"
+      ]
+    },
+    "sparc2-mcp": {
+      "command": "node",
+      "args": [
+        "/path/to/your/sparc2/src/mcp/mcpServerWrapper.js"
+      ],
+      "workingDirectory": "/path/to/your/sparc2",
+      "disabled": true,
+      "autoApprove": [
+        "analyze_code",
+        "modify_code",
+        "execute_code",
+        "search_code",
+        "create_checkpoint",
+        "rollback",
+        "config"
+      ],
+      "env": {
+        "OPENAI_API_KEY": "your_openai_api_key_here",
+        "OPENROUTER_MODEL": "your_preferred_model",
+        "OPENROUTER_API_KEY": "your_openrouter_api_key_here",
+        "E2B_API_KEY": "your_e2b_api_key_here",
+        "MCP_SECRET_KEY": "your_mcp_secret_key_here",
+        "SPARC2_CONFIG_PATH": "/path/to/your/sparc2/config.toml",
+        "SPARC2_AGENT_CONFIG_PATH": "/path/to/your/sparc2/agent-config.toml",
+        "ENABLE_TRACING": "true",
+        "TRACING_LEVEL": "debug",
+        "OPENAI_MODEL": "your_preferred_openai_model",
+        "NULL_VALUE": "false"
+      },
+      "alwaysAllow": [
+        "analyze_code"
+      ]
+    }
+  }
+}

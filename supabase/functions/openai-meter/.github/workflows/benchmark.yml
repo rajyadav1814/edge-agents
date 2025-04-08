@@ -1,0 +1,162 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+  workflow_dispatch:  # Manual trigger
+
+env:
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+  AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+  STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+  STRIPE_PRICE_ID: ${{ secrets.STRIPE_PRICE_ID }}
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+jobs:
+  benchmark:
+    name: Run Performance Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Cache Deno dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/deno
+            ~/.deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('**/deno.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deno-
+
+      - name: Validate Environment
+        run: |
+          deno run --allow-env --allow-read supabase/functions/openai-meter/validate_env.ts
+        continue-on-error: false
+
+      - name: Run Benchmarks
+        id: benchmark
+        run: |
+          deno run --allow-net --allow-env --allow-read --allow-write \
+            supabase/functions/openai-meter/examples/ci_benchmark.ts \
+            --report-path ./benchmark-results
+        continue-on-error: true
+
+      - name: Upload Benchmark Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: benchmark-results/
+          retention-days: 90
+
+      - name: Generate Performance Badge
+        if: always()
+        run: |
+          RESULT=$(cat benchmark-results/violations-*.md)
+          if [[ $RESULT == *"✅"* ]]; then
+            echo "BADGE_COLOR=green" >> $GITHUB_ENV
+            echo "BADGE_TEXT=passing" >> $GITHUB_ENV
+          else
+            echo "BADGE_COLOR=red" >> $GITHUB_ENV
+            echo "BADGE_TEXT=failing" >> $GITHUB_ENV
+          fi
+
+      - name: Create Performance Badge
+        if: always()
+        uses: schneegans/dynamic-badges-action@v1.6.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: ${{ secrets.BADGE_GIST_ID }}
+          filename: performance.json
+          label: performance
+          message: ${{ env.BADGE_TEXT }}
+          color: ${{ env.BADGE_COLOR }}
+
+      - name: Check Performance Budget
+        if: always()
+        run: |
+          if [[ "${{ steps.benchmark.outcome }}" == "failure" ]]; then
+            echo "::error::Performance tests failed to meet baseline requirements"
+            exit 1
+          fi
+
+      - name: Update PR Comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const results = fs.readFileSync('benchmark-results/violations-*.md', 'utf8');
+            const body = `## Performance Test Results\n\n${results}`;
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Performance Test Results')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+  cleanup:
+    name: Cleanup Old Results
+    needs: benchmark
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Delete old benchmark results
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: artifacts } = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            const oldArtifacts = artifacts.artifacts
+              .filter(artifact => 
+                artifact.name === 'benchmark-results' && 
+                new Date(artifact.created_at) < new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+              );
+            
+            for (const artifact of oldArtifacts) {
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id,
+              });
+            }

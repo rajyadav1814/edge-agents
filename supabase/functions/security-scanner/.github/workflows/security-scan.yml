@@ -1,0 +1,16 @@
+name: Nightly Security Scan
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Run at 2 AM daily
+  workflow_dispatch:     # Manual trigger option
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Security Scan
+        run: |
+          curl -X POST https://${{ secrets.SUPABASE_PROJECT_REF }}.functions.supabase.co/security-scanner/cron-trigger \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+          -H "Content-Type: application/json" \
+          --data '{"repo": "${{ github.repository }}", "branch": "main", "sendReport": true, "recipient": "security@example.com"}'

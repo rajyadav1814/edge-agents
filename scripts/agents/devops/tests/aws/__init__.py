@@ -1,0 +1,3 @@
+"""
+AWS tests package initialization.
+"""

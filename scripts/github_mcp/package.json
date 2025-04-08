@@ -1,0 +1,18 @@
+{
+  "name": "github-mcp-server-tests",
+  "version": "1.0.0",
+  "description": "Test scripts for GitHub MCP Server",
+  "private": true,
+  "scripts": {
+    "test": "node test-github-mcp-server.js",
+    "test:verbose": "VERBOSE=true node test-github-mcp-server.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7",
+    "dotenv": "^16.0.0",
+    "chalk": "^4.1.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
