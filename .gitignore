@@ -132,3 +132,7 @@ dist
 .venv/
 .pytest_cache
 __pycache__
+.roo/mcp.json
+cline_mcp_settings.json
+mcp.json
+.roo/mcp.json
