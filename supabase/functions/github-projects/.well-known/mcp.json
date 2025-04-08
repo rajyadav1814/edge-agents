@@ -141,6 +141,82 @@
           },
           "required": ["query"]
         }
+      },
+      "editProject": {
+        "description": "Edit an existing GitHub Project",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectId": {
+              "type": "string",
+              "description": "ID of the project to edit"
+            },
+            "title": {
+              "type": "string",
+              "description": "New title for the project"
+            },
+            "description": {
+              "type": "string",
+              "description": "New description for the project"
+            },
+            "public": {
+              "type": "boolean",
+              "description": "Whether the project should be public"
+            }
+          },
+          "required": ["projectId"]
+        }
+      },
+      "deleteProject": {
+        "description": "Delete a GitHub Project",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectId": {
+              "type": "string",
+              "description": "ID of the project to delete"
+            }
+          },
+          "required": ["projectId"]
+        }
+      },
+      "editProjectItem": {
+        "description": "Edit an item in a GitHub Project",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string",
+              "description": "ID of the item to edit"
+            },
+            "title": {
+              "type": "string",
+              "description": "New title for the item"
+            },
+            "body": {
+              "type": "string",
+              "description": "New body content for the item"
+            }
+          },
+          "required": ["itemId"]
+        }
+      },
+      "deleteProjectItem": {
+        "description": "Delete an item from a GitHub Project",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string",
+              "description": "ID of the item to delete"
+            },
+            "projectId": {
+              "type": "string",
+              "description": "ID of the project containing the item"
+            }
+          },
+          "required": ["itemId", "projectId"]
+        }
       }
     }
   },
@@ -180,6 +256,23 @@
           "projectId": "PVT_kwDOLXMHXM4AcQ",
           "title": "New task",
           "body": "This is a new task created via MCP"
+        }
+      },
+      {
+        "name": "Edit a project",
+        "tool": "editProject",
+        "arguments": {
+          "projectId": "PVT_kwDOLXMHXM4AcQ",
+          "title": "Updated Project Title",
+          "description": "This project was updated using the MCP API",
+          "public": true
+        }
+      },
+      {
+        "name": "Delete a project",
+        "tool": "deleteProject",
+        "arguments": {
+          "projectId": "PVT_kwDOLXMHXM4AcQ"
         }
       }
     ]

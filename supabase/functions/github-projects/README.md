@@ -17,6 +17,9 @@ Agentic GitHub Project Management is a specialized API designed to enable AI ass
 - **REST API Proxy**: Securely proxy requests to GitHub's REST API
 - **GraphQL Support**: Execute GraphQL queries against GitHub's GraphQL API
 - **Projects API**: Specialized endpoints for GitHub Projects v2
+  - Create, read, update, and delete projects
+  - Create, read, update, and delete project items
+  - Real-time notifications for all operations
 - **Webhook Processing**: Handle and verify GitHub webhooks
 - **MCP Integration**: MCP discovery endpoint for tool integration
 - **SSE Support**: Server-Sent Events for real-time updates
@@ -96,7 +99,24 @@ For detailed documentation, see the [docs](./docs) directory:
 - [Installation & Setup](./docs/installation-setup.md)
 - [MCP & SSE Options](./docs/mcp-sse-options.md)
 - [MCP & SSE Examples](./docs/example-usage-mcp-sse.md)
+- [Edit & Delete API](./docs/edit-delete-api.md)
 - [Troubleshooting Guide](./docs/troubleshooting-guide.md)
+
+## Available MCP Tools
+
+The GitHub Projects MCP server provides the following tools:
+
+1. `getRepository` - Get repository information
+2. `listProjects` - List GitHub Projects for an organization
+3. `getProject` - Get detailed information about a GitHub Project
+4. `createProject` - Create a new GitHub Project
+5. `createProjectItem` - Create a new item in a GitHub Project
+6. `getProjectItems` - Get items from a GitHub Project
+7. `executeGraphQL` - Execute a custom GraphQL query
+8. `editProject` - Edit an existing GitHub Project
+9. `deleteProject` - Delete a GitHub Project
+10. `editProjectItem` - Edit an item in a GitHub Project
+11. `deleteProjectItem` - Delete an item from a GitHub Project
 
 ## Development
 

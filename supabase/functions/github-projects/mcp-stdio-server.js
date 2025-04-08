@@ -26,62 +26,20 @@ const config = {
   cacheTtl: parseInt(process.env.CACHE_TTL || '300')
 };
 
+// Import our services
+const { ProjectEditService } = require('./services/project-edit-service.js');
+const { ProjectDeleteService } = require('./services/project-delete-service.js');
+const { executeGraphQLQuery } = require('./utils/graphql-client.js');
+
 // Create an MCP server
 const server = new McpServer({
   name: 'github-projects-mcp',
   version: '1.0.0'
 });
 
-/**
- * Execute a GraphQL query against the GitHub API
- * @param {string} query - GraphQL query
- * @param {object} variables - Query variables
- * @returns {Promise<object>} - Query result
- */
-async function executeGraphQLQuery(query, variables) {
-  try {
-    console.error(`Executing GraphQL query with variables: ${JSON.stringify(variables)}`);
-    
-    const response = await fetch('https://api.github.com/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Agentics-Supabase-Edge-Function',
-        'Authorization': `token ${config.githubToken}`,
-        'X-Github-Next-Global-ID': '1' // Required for Projects V2 API
-      },
-      body: JSON.stringify({ query, variables })
-    });
-
-    // Handle rate limiting
-    if (response.status === 403 && parseInt(response.headers.get("X-RateLimit-Remaining") || "1") === 0) {
-      const rateLimit = {
-        limit: parseInt(response.headers.get("X-RateLimit-Limit") || "0"),
-        remaining: parseInt(response.headers.get("X-RateLimit-Remaining") || "0"),
-        reset: parseInt(response.headers.get("X-RateLimit-Reset") || "0")
-      };
-      
-      throw new Error(`GitHub API rate limit exceeded. Resets at ${new Date(rateLimit.reset * 1000).toISOString()}`);
-    }
-
-    if (!response.ok) {
-      throw new Error(`Failed to execute GraphQL query: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-
-    // Check for GraphQL errors
-    if (result.errors && result.errors.length > 0) {
-      const errorMessages = result.errors.map(e => e.message).join(', ');
-      throw new Error(`GraphQL Error: ${errorMessages}`);
-    }
-
-    return result.data;
-  } catch (error) {
-    console.error('GraphQL query error:', error);
-    throw error;
-  }
-}
+// Initialize services
+const projectEditService = new ProjectEditService(config);
+const projectDeleteService = new ProjectDeleteService(config);
 
 /**
  * Make a request to the GitHub REST API
@@ -195,13 +153,13 @@ server.tool(
       `;
       
       const variables = { org: organization, first: limit };
-      const data = await executeGraphQLQuery(query, variables);
+      const result = await executeGraphQLQuery(query, variables, config.githubToken);
       
-      if (!data.organization) {
+      if (!result.data || !result.data.organization) {
         throw new Error(`Organization ${organization} not found or not accessible`);
       }
       
-      const projects = data.organization.projectsV2.nodes;
+      const projects = result.data.organization.projectsV2.nodes;
       
       return {
         content: [
@@ -281,13 +239,13 @@ server.tool(
       `;
       
       const variables = { org: organization, number: projectNumber };
-      const data = await executeGraphQLQuery(query, variables);
+      const result = await executeGraphQLQuery(query, variables, config.githubToken);
       
-      if (!data.organization || !data.organization.projectV2) {
+      if (!result.data || !result.data.organization || !result.data.organization.projectV2) {
         throw new Error(`Project #${projectNumber} not found in organization ${organization}`);
       }
       
-      const project = data.organization.projectV2;
+      const project = result.data.organization.projectV2;
       
       return {
         content: [
@@ -330,9 +288,9 @@ server.tool(
         }
       `;
       
-      const orgData = await executeGraphQLQuery(orgQuery, { login: organization });
+      const orgResult = await executeGraphQLQuery(orgQuery, { login: organization }, config.githubToken);
       
-      if (!orgData.organization?.id) {
+      if (!orgResult.data || !orgResult.data.organization || !orgResult.data.organization.id) {
         throw new Error(`Organization ${organization} not found or not accessible`);
       }
       
@@ -358,17 +316,17 @@ server.tool(
       `;
       
       const createVariables = {
-        ownerId: orgData.organization.id,
+        ownerId: orgResult.data.organization.id,
         title
       };
       
-      const createData = await executeGraphQLQuery(createQuery, createVariables);
+      const createResult = await executeGraphQLQuery(createQuery, createVariables, config.githubToken);
       
-      if (!createData.createProjectV2?.projectV2) {
+      if (!createResult.data || !createResult.data.createProjectV2 || !createResult.data.createProjectV2.projectV2) {
         throw new Error('Failed to create project');
       }
       
-      const project = createData.createProjectV2.projectV2;
+      const project = createResult.data.createProjectV2.projectV2;
       
       return {
         content: [
@@ -435,13 +393,13 @@ server.tool(
         body: body || ""
       };
       
-      const data = await executeGraphQLQuery(createQuery, variables);
+      const result = await executeGraphQLQuery(createQuery, variables, config.githubToken);
       
-      if (!data.addProjectV2DraftIssue?.projectItem) {
+      if (!result.data || !result.data.addProjectV2DraftIssue || !result.data.addProjectV2DraftIssue.projectItem) {
         throw new Error('Failed to create project item');
       }
       
-      const item = data.addProjectV2DraftIssue.projectItem;
+      const item = result.data.addProjectV2DraftIssue.projectItem;
       
       return {
         content: [
@@ -510,13 +468,13 @@ server.tool(
       `;
       
       const variables = { projectId, first: limit };
-      const data = await executeGraphQLQuery(query, variables);
+      const result = await executeGraphQLQuery(query, variables, config.githubToken);
       
-      if (!data.node) {
+      if (!result.data || !result.data.node) {
         throw new Error(`Project with ID ${projectId} not found`);
       }
       
-      const items = data.node.items.nodes;
+      const items = result.data.node.items.nodes;
       
       return {
         content: [
@@ -550,16 +508,161 @@ server.tool(
   },
   async ({ query, variables }) => {
     try {
-      const data = await executeGraphQLQuery(query, variables || {});
+      const result = await executeGraphQLQuery(query, variables || {}, config.githubToken);
       
       return {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(data, null, 2)
+            text: JSON.stringify(result.data, null, 2)
           }
         ],
-        response: data
+        response: result.data
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error: ${error.message}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+);
+
+// Add editProject tool
+server.tool(
+  'editProject',
+  {
+    projectId: z.string().describe('ID of the project to edit'),
+    title: z.string().optional().describe('New title for the project'),
+    description: z.string().optional().describe('New description for the project'),
+    public: z.boolean().optional().describe('Whether the project should be public')
+  },
+  async ({ projectId, title, description, public: isPublic }) => {
+    try {
+      const updatedProject = await projectEditService.editProject(projectId, {
+        title,
+        description,
+        public: isPublic
+      });
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(updatedProject, null, 2)
+          }
+        ],
+        project: updatedProject
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error: ${error.message}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+);
+
+// Add deleteProject tool
+server.tool(
+  'deleteProject',
+  {
+    projectId: z.string().describe('ID of the project to delete')
+  },
+  async ({ projectId }) => {
+    try {
+      const result = await projectDeleteService.deleteProject(projectId);
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2)
+          }
+        ],
+        result
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error: ${error.message}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+);
+
+// Add editProjectItem tool
+server.tool(
+  'editProjectItem',
+  {
+    itemId: z.string().describe('ID of the item to edit'),
+    title: z.string().optional().describe('New title for the item'),
+    body: z.string().optional().describe('New body content for the item')
+  },
+  async ({ itemId, title, body }) => {
+    try {
+      const updatedItem = await projectEditService.editProjectItem(itemId, {
+        title,
+        body
+      });
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(updatedItem, null, 2)
+          }
+        ],
+        item: updatedItem
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error: ${error.message}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+);
+
+// Add deleteProjectItem tool
+server.tool(
+  'deleteProjectItem',
+  {
+    itemId: z.string().describe('ID of the item to delete'),
+    projectId: z.string().describe('ID of the project containing the item')
+  },
+  async ({ itemId, projectId }) => {
+    try {
+      const result = await projectDeleteService.deleteProjectItem(itemId, projectId);
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2)
+          }
+        ],
+        result
       };
     } catch (error) {
       return {

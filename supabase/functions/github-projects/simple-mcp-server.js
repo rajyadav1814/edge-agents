@@ -14,11 +14,34 @@ const z = require('zod');
 // Server configuration
 const PORT = 8002;
 
+// Import our services
+const { ProjectEditService } = require('./services/project-edit-service.ts');
+const { ProjectDeleteService } = require('./services/project-delete-service.ts');
+const { SSEEventEmitter } = require('./src/sse/event-emitter.ts');
+
 // Create an MCP server
 const server = new McpServer({
   name: 'github-projects-mcp',
   version: '1.0.0'
 });
+
+// Initialize services
+const sseEmitter = new SSEEventEmitter();
+const config = {
+  githubToken: process.env.GITHUB_TOKEN || process.env.GITHUB_PERSONAL_ACCESS_TOKEN || 'mock-token',
+  githubOrg: process.env.GITHUB_ORG || 'agenticsorg'
+};
+const projectEditService = new ProjectEditService(config);
+const projectDeleteService = new ProjectDeleteService(config);
+
+// Create a context object with services
+const context = {
+  services: {
+    projectEditService,
+    projectDeleteService,
+    sseEmitter
+  }
+};
 
 // Add getRepository tool
 server.tool(
@@ -374,6 +397,160 @@ app.use((req, res, next) => {
 // Add body parsing middleware
 app.use(express.json());
 
+// Add new tools for edit and delete operations
+server.tool(
+  'editProject',
+  {
+    projectId: z.string().describe('ID of the project to edit'),
+    title: z.string().optional().describe('New title for the project'),
+    description: z.string().optional().describe('New description for the project'),
+    public: z.boolean().optional().describe('Whether the project should be public')
+  },
+  async (args) => {
+    try {
+      const updatedProject = await projectEditService.editProject(args.projectId, {
+        title: args.title,
+        description: args.description,
+        public: args.public
+      });
+      
+      // Emit SSE event for project update
+      sseEmitter.emitProjectUpdated(updatedProject);
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(updatedProject, null, 2)
+          }
+        ],
+        project: updatedProject
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error: ${error.message}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+);
+
+server.tool(
+  'deleteProject',
+  {
+    projectId: z.string().describe('ID of the project to delete')
+  },
+  async (args) => {
+    try {
+      const result = await projectDeleteService.deleteProject(args.projectId);
+      
+      // Emit SSE event for project deletion
+      sseEmitter.emitProjectDeleted(args.projectId);
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2)
+          }
+        ],
+        result
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error: ${error.message}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+);
+
+server.tool(
+  'editProjectItem',
+  {
+    itemId: z.string().describe('ID of the item to edit'),
+    title: z.string().optional().describe('New title for the item'),
+    body: z.string().optional().describe('New body content for the item')
+  },
+  async (args) => {
+    try {
+      const updatedItem = await projectEditService.editProjectItem(args.itemId, {
+        title: args.title,
+        body: args.body
+      });
+      
+      // Emit SSE event for item update
+      sseEmitter.emitProjectItemUpdated(updatedItem);
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(updatedItem, null, 2)
+          }
+        ],
+        item: updatedItem
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error: ${error.message}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+);
+
+server.tool(
+  'deleteProjectItem',
+  {
+    itemId: z.string().describe('ID of the item to delete'),
+    projectId: z.string().describe('ID of the project containing the item')
+  },
+  async (args) => {
+    try {
+      const result = await projectDeleteService.deleteProjectItem(args.itemId, args.projectId);
+      
+      // Emit SSE event for project item deletion
+      sseEmitter.emitProjectItemDeleted(args.itemId, args.projectId);
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2)
+          }
+        ],
+        result
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error: ${error.message}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+);
+
 // Set up MCP discovery endpoint
 app.get('/.well-known/mcp.json', (req, res) => {
   const discovery = {
@@ -410,6 +587,19 @@ app.get('/.well-known/mcp.json', (req, res) => {
         },
         executeGraphQL: {
           description: "Execute a custom GraphQL query against the GitHub API"
+        },
+        // Add new capabilities
+        editProject: {
+          description: "Edit an existing GitHub Project"
+        },
+        deleteProject: {
+          description: "Delete a GitHub Project"
+        },
+        editProjectItem: {
+          description: "Edit an item in a GitHub Project"
+        },
+        deleteProjectItem: {
+          description: "Delete an item from a GitHub Project"
         }
       }
     }
@@ -533,6 +723,57 @@ app.get('/tools/list', (req, res) => {
         },
         required: ["query"]
       }
+    },
+    // Add new tools
+    {
+      name: "editProject",
+      description: "Edit an existing GitHub Project",
+      inputSchema: {
+        type: "object",
+        properties: {
+          projectId: { type: "string" },
+          title: { type: "string" },
+          description: { type: "string" },
+          public: { type: "boolean" }
+        },
+        required: ["projectId"]
+      }
+    },
+    {
+      name: "deleteProject",
+      description: "Delete a GitHub Project",
+      inputSchema: {
+        type: "object",
+        properties: {
+          projectId: { type: "string" }
+        },
+        required: ["projectId"]
+      }
+    },
+    {
+      name: "editProjectItem",
+      description: "Edit an item in a GitHub Project",
+      inputSchema: {
+        type: "object",
+        properties: {
+          itemId: { type: "string" },
+          title: { type: "string" },
+          body: { type: "string" }
+        },
+        required: ["itemId"]
+      }
+    },
+    {
+      name: "deleteProjectItem",
+      description: "Delete an item from a GitHub Project",
+      inputSchema: {
+        type: "object",
+        properties: {
+          itemId: { type: "string" },
+          projectId: { type: "string" }
+        },
+        required: ["itemId", "projectId"]
+      }
     }
   ];
   
@@ -565,6 +806,16 @@ app.post('/tools/call', async (req, res) => {
       result = await server.tool('getProjectItems', args);
     } else if (name === 'executeGraphQL') {
       result = await server.tool('executeGraphQL', args);
+    }
+    // Add new tool handlers
+    else if (name === 'editProject') {
+      result = await server.tool('editProject', args);
+    } else if (name === 'deleteProject') {
+      result = await server.tool('deleteProject', args);
+    } else if (name === 'editProjectItem') {
+      result = await server.tool('editProjectItem', args);
+    } else if (name === 'deleteProjectItem') {
+      result = await server.tool('deleteProjectItem', args);
     } else {
       res.status(404).json({ error: `Tool '${name}' not found` });
       return;
