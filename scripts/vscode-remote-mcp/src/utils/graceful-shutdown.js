@@ -10,8 +10,8 @@
  * @returns {Promise<Object>} Promise that resolves with the shutdown message
  */
 async function shutdownGracefully(
-  clients, 
-  reason = 'Server is shutting down', 
+  clients,
+  reason = 'Server is shutting down',
   estimatedDowntime = 300,
   options = {}
 ) {
@@ -22,6 +22,7 @@ async function shutdownGracefully(
     plannedRestart: true,
     cleanup: null,
     exitProcess: true,
+    timeoutMs: parseInt(process.env.MCP_SHUTDOWN_TIMEOUT_MS || '5000', 10),
     ...options
   };
   
@@ -42,8 +43,20 @@ async function shutdownGracefully(
     await notifyClients(clients, shutdownMessage);
     console.log('All clients notified of shutdown');
     
-    // Disconnect all clients
-    await disconnectClients(clients);
+    // Disconnect all clients with timeout
+    const timeoutPromise = new Promise((resolve) => {
+      setTimeout(() => {
+        console.warn(`Shutdown timed out waiting for clients to disconnect after ${shutdownOptions.timeoutMs}ms`);
+        resolve();
+      }, shutdownOptions.timeoutMs);
+    });
+    
+    // Race between disconnection and timeout
+    await Promise.race([
+      disconnectClients(clients),
+      timeoutPromise
+    ]);
+    
     console.log('All clients disconnected');
     
     // Perform any additional cleanup
@@ -89,12 +102,22 @@ async function notifyClients(clients, message) {
   for (const [clientId, client] of clients.entries()) {
     console.log(`Notifying client ${clientId} of shutdown`);
     if (client && typeof client.send === 'function') {
-      notifyPromises.push(client.send(message));
+      try {
+        notifyPromises.push(client.send(message));
+      } catch (error) {
+        console.error(`Failed to notify client ${clientId}:`, error);
+        // Continue with other clients even if one fails
+      }
     }
   }
   
   // Wait for all notifications to complete
-  return Promise.all(notifyPromises);
+  try {
+    await Promise.all(notifyPromises);
+  } catch (error) {
+    console.error('Error during client notification:', error);
+    // Continue with shutdown even if notifications fail
+  }
 }
 
 /**
@@ -108,12 +131,22 @@ async function disconnectClients(clients) {
   // Disconnect each client
   for (const [clientId, client] of clients.entries()) {
     if (client && typeof client.disconnect === 'function') {
-      disconnectPromises.push(client.disconnect());
+      try {
+        disconnectPromises.push(client.disconnect());
+      } catch (error) {
+        console.error(`Failed to disconnect client ${clientId}:`, error);
+        // Continue with other clients even if one fails
+      }
     }
   }
   
   // Wait for all disconnections to complete
-  return Promise.all(disconnectPromises);
+  try {
+    await Promise.all(disconnectPromises);
+  } catch (error) {
+    console.error('Error during client disconnection:', error);
+    // Continue with shutdown even if disconnections fail
+  }
 }
 
 // Export the functions

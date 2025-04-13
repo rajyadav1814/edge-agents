@@ -7,7 +7,8 @@
     "build": "node scripts/build/build.js",
     "start": "cd dist && ./run-mcp-servers.sh",
     "start:http": "cd dist && ./run-simple-mcp.sh",
-    "start:stdio": "cd dist && ./run-stdio-mcp.sh",
+    "start:stdio": "node index.js",
+    "start:legacy": "node mcp-stdio-server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

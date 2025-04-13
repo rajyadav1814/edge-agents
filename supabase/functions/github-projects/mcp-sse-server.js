@@ -1,13 +1,19 @@
 /**
- * MCP stdio server for GitHub Projects API
+ * MCP HTTP server with SSE for GitHub Projects API
  * 
  * This server implements the Model Context Protocol (MCP) using the official SDK.
- * It provides tools for interacting with GitHub repositories and projects.
+ * It provides tools for interacting with GitHub repositories and projects,
+ * and supports Server-Sent Events (SSE) for real-time updates.
  */
 
+const express = require('express');
+const http = require('node:http');
 const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
-const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
+const { SSEServerTransport } = require('@modelcontextprotocol/sdk/server/sse.js');
 const z = require('zod');
+
+// Server configuration
+const PORT = 8002;
 
 // GitHub API integration
 const githubToken = process.env.GITHUB_TOKEN || process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
@@ -35,6 +41,7 @@ const { executeGraphQLQuery } = require('./utils/graphql-client.js');
 const { executeCommand } = require('./utils/command-executor.js');
 const { GitHubIssueService } = require('./services/github-issue-service.js');
 const { GitHubStatusService } = require('./services/github-status-service.js');
+const { SSEEventEmitter } = require('./scripts/build/dist/src/sse/event-emitter.js');
 
 // Create an MCP server
 const server = new McpServer({
@@ -43,6 +50,7 @@ const server = new McpServer({
 });
 
 // Initialize services
+const sseEmitter = new SSEEventEmitter();
 const projectEditService = new ProjectEditService(config);
 const projectDeleteService = new ProjectDeleteService(config);
 const githubProjectService = new GitHubProjectService(config);
@@ -337,6 +345,9 @@ server.tool(
       
       const project = createResult.data.createProjectV2.projectV2;
       
+      // Emit SSE event for project creation
+      sseEmitter.emitProjectCreated(project);
+      
       return {
         content: [
           {
@@ -409,6 +420,9 @@ server.tool(
       }
       
       const item = result.data.addProjectV2DraftIssue.projectItem;
+      
+      // Emit SSE event for item creation
+      sseEmitter.emitProjectItemAdded(item, projectId);
       
       return {
         content: [
@@ -559,6 +573,9 @@ server.tool(
         public: isPublic
       });
       
+      // Emit SSE event for project update
+      sseEmitter.emitProjectUpdated(updatedProject);
+      
       return {
         content: [
           {
@@ -591,6 +608,9 @@ server.tool(
   async ({ projectId }) => {
     try {
       const result = await projectDeleteService.deleteProject(projectId);
+      
+      // Emit SSE event for project deletion
+      sseEmitter.emitProjectDeleted(projectId);
       
       return {
         content: [
@@ -630,6 +650,9 @@ server.tool(
         body
       });
       
+      // Emit SSE event for item update
+      sseEmitter.emitProjectItemUpdated(updatedItem);
+      
       return {
         content: [
           {
@@ -663,6 +686,9 @@ server.tool(
   async ({ itemId, projectId }) => {
     try {
       const result = await projectDeleteService.deleteProjectItem(itemId, projectId);
+      
+      // Emit SSE event for project item deletion
+      sseEmitter.emitProjectItemDeleted(itemId, projectId);
       
       return {
         content: [
@@ -732,21 +758,19 @@ server.tool(
 server.tool(
   'updateProjectFieldValue',
   {
-    projectId: z.string().describe('Project ID'),
     itemId: z.string().describe('Project item ID'),
     fieldId: z.string().describe('Field ID'),
-    optionId: z.string().describe('Single select option ID')
+    value: z.string().describe('New value')
   },
-  async ({ projectId, itemId, fieldId, optionId }) => {
+  async ({ itemId, fieldId, value }) => {
     try {
       // Initialize the project field service if not already done
       const projectFieldService = require('./services/project-field-service');
       
       const result = await projectFieldService.updateProjectFieldValue(
-        projectId,
         itemId,
         fieldId,
-        optionId
+        value
       );
       
       return {
@@ -782,6 +806,9 @@ server.tool(
   async ({ projectId, contentId }) => {
     try {
       const item = await githubProjectService.addItemToProject(projectId, contentId);
+      
+      // Emit SSE event for item addition
+      sseEmitter.emitProjectItemAdded(item, projectId);
       
       return {
         content: [
@@ -1162,30 +1189,450 @@ server.tool(
   }
 );
 
+// Create Express app
+const app = express();
 
+// Add CORS middleware
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
+  
+  next();
+});
 
+// Add body parsing middleware
+app.use(express.json());
 
-// Start the server with stdio transport
-async function startServer() {
+// Set up MCP discovery endpoint
+app.get('/.well-known/mcp.json', (req, res) => {
+  const discovery = {
+    version: "2025-03-26",
+    name: "github-projects-mcp",
+    description: "GitHub Projects API with GraphQL and REST support",
+    vendor: "Edge Agents",
+    contact: {
+      name: "Edge Agents Team",
+      url: "https://github.com/agenticsorg/edge-agents"
+    },
+    authentication: {
+      type: "none"
+    },
+    capabilities: {
+      tools: {
+        getRepository: {
+          description: "Get repository information from GitHub"
+        },
+        listProjects: {
+          description: "List GitHub Projects v2 for an organization"
+        },
+        getProject: {
+          description: "Get detailed information about a GitHub Project"
+        },
+        createProject: {
+          description: "Create a new GitHub Project in an organization"
+        },
+        createProjectItem: {
+          description: "Create a new item in a GitHub Project"
+        },
+        getProjectItems: {
+          description: "Get items from a GitHub Project"
+        },
+        executeGraphQL: {
+          description: "Execute a custom GraphQL query against the GitHub API"
+        },
+        editProject: {
+          description: "Edit an existing GitHub Project"
+        },
+        deleteProject: {
+          description: "Delete a GitHub Project"
+        },
+        editProjectItem: {
+          description: "Edit an item in a GitHub Project"
+        },
+        deleteProjectItem: {
+          description: "Delete an item from a GitHub Project"
+        },
+        createSubIssue: {
+          description: "Create a sub-issue linked to a parent issue"
+        },
+        updateProjectFieldValue: {
+          description: "Update a field value for a project item"
+        },
+        addItemToProject: {
+          description: "Add an existing issue or PR to a project"
+        },
+        createIssue: {
+          description: "Create a new issue in a repository"
+        },
+        getRepositoryId: {
+          description: "Get the ID of a repository"
+        },
+        addSSHKeyToAgent: {
+          description: "Add SSH key to the SSH agent"
+        },
+        generateSSHKey: {
+          description: "Generate a new SSH key"
+        },
+        updatePackageJsonRepos: {
+          description: "Update package.json repositories"
+        },
+        testGitHubConnection: {
+          description: "Test GitHub connection"
+        },
+        setupCodespacesAuth: {
+          description: "Set up authentication for GitHub Codespaces"
+        },
+        createCommitStatus: {
+          description: "Create a commit status"
+        },
+        getCommitStatuses: {
+          description: "Get statuses for a commit"
+        },
+        getCombinedStatus: {
+          description: "Get combined status for a commit"
+        }
+      }
+    }
+  };
+  
+  res.json(discovery);
+});
+
+// Set up SSE endpoint
+const transports = {};
+const sseClients = new Set();
+
+app.get('/sse', async (req, res) => {
+  console.log('SSE connection established');
+  
+  // Set SSE headers
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no' // Disable Nginx buffering
+  });
+  
+  // Send initial connection message
+  res.write(`data: ${JSON.stringify({ type: 'connection_established', message: 'Connected to GitHub Projects SSE' })}\n\n`);
+  
+  // Add client to the set of connected clients
+  sseClients.add(res);
+  
+  // Set up MCP transport if needed
+  const transport = new SSEServerTransport('/messages', res);
+  transports[transport.sessionId] = transport;
+  
+  // Handle client disconnect
+  res.on('close', () => {
+    console.log(`SSE connection closed: ${transport.sessionId}`);
+    sseClients.delete(res);
+    delete transports[transport.sessionId];
+  });
+  
+  // Connect to MCP server
+  await server.connect(transport);
+});
+
+// Set up event listeners for SSE events
+const eventTypes = [
+  'project_created',
+  'project_updated',
+  'project_deleted',
+  'project_item_added',
+  'project_item_updated',
+  'project_item_deleted'
+];
+
+eventTypes.forEach(eventType => {
+  sseEmitter.on(eventType, (data) => {
+    const eventData = JSON.stringify(data);
+    sseClients.forEach(client => {
+      try {
+        client.write(`event: ${eventType}\n`);
+        client.write(`data: ${eventData}\n\n`);
+      } catch (error) {
+        console.error(`Error sending SSE event to client: ${error.message}`);
+      }
+    });
+  });
+});
+
+app.post('/messages', async (req, res) => {
+  const sessionId = req.query.sessionId;
+  const transport = transports[sessionId];
+  
+  if (transport) {
+    await transport.handlePostMessage(req, res);
+  } else {
+    res.status(400).send('No transport found for sessionId');
+  }
+});
+
+// Helper endpoint to manually trigger events (for testing)
+app.post('/test-sse-event', (req, res) => {
+  const { eventType, data } = req.body;
+  
+  if (!eventType || !data) {
+    return res.status(400).json({ error: 'Event type and data are required' });
+  }
+  
+  if (eventType === 'project_created') {
+    sseEmitter.emitProjectCreated(data);
+  } else if (eventType === 'project_updated') {
+    sseEmitter.emitProjectUpdated(data);
+  } else if (eventType === 'project_deleted') {
+    sseEmitter.emitProjectDeleted(data.projectId);
+  } else if (eventType === 'project_item_added') {
+    sseEmitter.emitProjectItemAdded(data.item, data.projectId);
+  } else if (eventType === 'project_item_updated') {
+    sseEmitter.emitProjectItemUpdated(data.item);
+  } else if (eventType === 'project_item_deleted') {
+    sseEmitter.emitProjectItemDeleted(data.itemId, data.projectId);
+  } else {
+    return res.status(400).json({ error: 'Invalid event type' });
+  }
+  
+  res.json({ success: true, message: `Event ${eventType} emitted successfully` });
+});
+
+// Add direct tool endpoints for compatibility with the previous implementation
+app.get('/tools/list', (req, res) => {
+  const tools = [
+    {
+      name: "getRepository",
+      description: "Get repository information",
+      inputSchema: {
+        type: "object",
+        properties: {
+          owner: { type: "string" },
+          repo: { type: "string" }
+        },
+        required: ["owner", "repo"]
+      }
+    },
+    {
+      name: "listProjects",
+      description: "List projects for an organization",
+      inputSchema: {
+        type: "object",
+        properties: {
+          organization: { type: "string" },
+          limit: { type: "number", default: 10 }
+        },
+        required: ["organization"]
+      }
+    },
+    {
+      name: "getProject",
+      description: "Get project details",
+      inputSchema: {
+        type: "object",
+        properties: {
+          organization: { type: "string" },
+          projectNumber: { type: "number" }
+        },
+        required: ["organization", "projectNumber"]
+      }
+    },
+    {
+      name: "createProject",
+      description: "Create a new GitHub Project in an organization",
+      inputSchema: {
+        type: "object",
+        properties: {
+          organization: { type: "string" },
+          title: { type: "string" }
+        },
+        required: ["organization", "title"]
+      }
+    },
+    {
+      name: "createProjectItem",
+      description: "Create a new item in a GitHub Project",
+      inputSchema: {
+        type: "object",
+        properties: {
+          projectId: { type: "string" },
+          title: { type: "string" },
+          body: { type: "string" }
+        },
+        required: ["projectId", "title"]
+      }
+    },
+    {
+      name: "getProjectItems",
+      description: "Get items from a GitHub Project",
+      inputSchema: {
+        type: "object",
+        properties: {
+          projectId: { type: "string" },
+          limit: { type: "number", default: 20 }
+        },
+        required: ["projectId"]
+      }
+    },
+    {
+      name: "executeGraphQL",
+      description: "Execute a GraphQL query against the GitHub API",
+      inputSchema: {
+        type: "object",
+        properties: {
+          query: { type: "string" },
+          variables: { type: "object" }
+        },
+        required: ["query"]
+      }
+    },
+    {
+      name: "editProject",
+      description: "Edit an existing GitHub Project",
+      inputSchema: {
+        type: "object",
+        properties: {
+          projectId: { type: "string" },
+          title: { type: "string" },
+          description: { type: "string" },
+          public: { type: "boolean" }
+        },
+        required: ["projectId"]
+      }
+    },
+    {
+      name: "deleteProject",
+      description: "Delete a GitHub Project",
+      inputSchema: {
+        type: "object",
+        properties: {
+          projectId: { type: "string" }
+        },
+        required: ["projectId"]
+      }
+    },
+    {
+      name: "editProjectItem",
+      description: "Edit an item in a GitHub Project",
+      inputSchema: {
+        type: "object",
+        properties: {
+          itemId: { type: "string" },
+          title: { type: "string" },
+          body: { type: "string" }
+        },
+        required: ["itemId"]
+      }
+    },
+    {
+      name: "deleteProjectItem",
+      description: "Delete an item from a GitHub Project",
+      inputSchema: {
+        type: "object",
+        properties: {
+          itemId: { type: "string" },
+          projectId: { type: "string" }
+        },
+        required: ["itemId", "projectId"]
+      }
+    }
+  ];
+  
+  res.json({ tools });
+});
+
+app.post('/tools/call', async (req, res) => {
   try {
-    console.error('Starting GitHub Projects MCP server...');
-    console.error(`GitHub Organization: ${config.githubOrg}`);
-    console.error(`GitHub Token: ${config.githubToken ? '[Set]' : '[Missing]'}`);
+    const { name, arguments: args } = req.body;
     
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-    console.error('GitHub Projects MCP server running on stdio');
+    if (!name) {
+      res.status(400).json({ error: 'Tool name is required' });
+      return;
+    }
     
-    // Handle graceful shutdown
-    process.on('SIGINT', async () => {
-      console.error('Shutting down MCP server...');
-      process.exit(0);
+    let result;
+    
+    // Call the appropriate tool handler directly
+    if (name === 'getRepository') {
+      result = await server.tool('getRepository', args);
+    } else if (name === 'listProjects') {
+      result = await server.tool('listProjects', args);
+    } else if (name === 'getProject') {
+      result = await server.tool('getProject', args);
+    } else if (name === 'createProject') {
+      result = await server.tool('createProject', args);
+    } else if (name === 'createProjectItem') {
+      result = await server.tool('createProjectItem', args);
+    } else if (name === 'getProjectItems') {
+      result = await server.tool('getProjectItems', args);
+    } else if (name === 'executeGraphQL') {
+      result = await server.tool('executeGraphQL', args);
+    } else if (name === 'editProject') {
+      result = await server.tool('editProject', args);
+    } else if (name === 'deleteProject') {
+      result = await server.tool('deleteProject', args);
+    } else if (name === 'editProjectItem') {
+      result = await server.tool('editProjectItem', args);
+    } else if (name === 'deleteProjectItem') {
+      result = await server.tool('deleteProjectItem', args);
+    } else if (name === 'createSubIssue') {
+      result = await server.tool('createSubIssue', args);
+    } else if (name === 'updateProjectFieldValue') {
+      result = await server.tool('updateProjectFieldValue', args);
+    } else if (name === 'addItemToProject') {
+      result = await server.tool('addItemToProject', args);
+    } else if (name === 'createIssue') {
+      result = await server.tool('createIssue', args);
+    } else if (name === 'getRepositoryId') {
+      result = await server.tool('getRepositoryId', args);
+    } else if (name === 'addSSHKeyToAgent') {
+      result = await server.tool('addSSHKeyToAgent', args);
+    } else if (name === 'generateSSHKey') {
+      result = await server.tool('generateSSHKey', args);
+    } else if (name === 'updatePackageJsonRepos') {
+      result = await server.tool('updatePackageJsonRepos', args);
+    } else if (name === 'testGitHubConnection') {
+      result = await server.tool('testGitHubConnection', args);
+    } else if (name === 'setupCodespacesAuth') {
+      result = await server.tool('setupCodespacesAuth', args);
+    } else if (name === 'createCommitStatus') {
+      result = await server.tool('createCommitStatus', args);
+    } else if (name === 'getCommitStatuses') {
+      result = await server.tool('getCommitStatuses', args);
+    } else if (name === 'getCombinedStatus') {
+      result = await server.tool('getCombinedStatus', args);
+    } else {
+      res.status(404).json({ error: `Tool '${name}' not found` });
+      return;
+    }
+    
+    res.json({
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(result)
+        }
+      ]
     });
   } catch (error) {
-    console.error('Error starting MCP server:', error);
-    process.exit(1);
+    res.status(400).json({ error: `Error executing tool: ${error.message}` });
   }
-}
+});
 
 // Start the server
-startServer().catch(console.error);
+app.listen(PORT, () => {
+  console.log(`GitHub Projects MCP server running at http://localhost:${PORT}`);
+  console.log(`MCP Discovery endpoint: http://localhost:${PORT}/.well-known/mcp.json`);
+  console.log(`SSE endpoint: http://localhost:${PORT}/sse`);
+  console.log(`Direct tools endpoint: http://localhost:${PORT}/tools/call`);
+});
+
+// Handle process exit
+process.on('SIGINT', () => {
+  console.log('Shutting down MCP server...');
+  process.exit(0);
+});

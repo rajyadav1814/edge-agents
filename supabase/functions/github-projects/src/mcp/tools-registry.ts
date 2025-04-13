@@ -10,6 +10,7 @@ import {
   handleEditProjectItemTool,
   handleDeleteProjectItemTool
 } from './tool-handlers.ts';
+import { handleUpdateProjectFieldValueTool } from './field-tool-handlers.ts';
 
 /**
  * Edit Project Tool
@@ -106,11 +107,43 @@ export const deleteProjectItemTool = {
 };
 
 /**
+ * Update Project Field Value Tool
+ */
+export const updateProjectFieldValueTool = {
+  name: 'updateProjectFieldValue',
+  description: 'Update a field value for a project item (e.g., status)',
+  parameters: {
+    projectId: {
+      type: 'string',
+      description: 'ID of the project',
+      required: true
+    },
+    itemId: {
+      type: 'string',
+      description: 'ID of the project item',
+      required: true
+    },
+    fieldId: {
+      type: 'string',
+      description: 'ID of the field to update',
+      required: true
+    },
+    optionId: {
+      type: 'string',
+      description: 'ID of the single select option to set',
+      required: true
+    }
+  },
+  handler: handleUpdateProjectFieldValueTool
+};
+
+/**
  * Export all tools
  */
 export const editDeleteTools = [
   editProjectTool,
   deleteProjectTool,
   editProjectItemTool,
-  deleteProjectItemTool
+  deleteProjectItemTool,
+  updateProjectFieldValueTool
 ];

@@ -1,173 +1,85 @@
-# Agentic GitHub Project Management
+# GitHub Projects MCP Server
 
-An AI-assistant-friendly GitHub Projects API with MCP and SSE integration.
+This is a modular MCP (Model Context Protocol) server for interacting with GitHub Projects API. It provides tools for managing GitHub repositories, projects, issues, and SSH authentication.
 
-## Overview
+## Modular Structure
 
-Agentic GitHub Project Management is a specialized API designed to enable AI assistants and tools to interact with GitHub Projects. It provides:
-
-1. **AI-Assistant Integration**: MCP (Model Context Protocol) support for seamless integration with AI assistants
-2. **Real-time Updates**: SSE (Server-Sent Events) for live project updates
-3. **Comprehensive API**: Full access to GitHub Projects v2 features
-4. **Flexible Deployment**: Run as a Supabase Edge Function or standalone server
-
-## Features
-
-- **AI Assistant Integration**: MCP support for AI assistants like Claude and GPT
-- **REST API Proxy**: Securely proxy requests to GitHub's REST API
-- **GraphQL Support**: Execute GraphQL queries against GitHub's GraphQL API
-- **Projects API**: Specialized endpoints for GitHub Projects v2
-  - Create, read, update, and delete projects
-  - Create, read, update, and delete project items
-  - Real-time notifications for all operations
-- **Webhook Processing**: Handle and verify GitHub webhooks
-- **MCP Integration**: MCP discovery endpoint for tool integration
-- **SSE Support**: Server-Sent Events for real-time updates
-- **Error Handling**: Robust error handling with detailed error messages
-- **Response Formatting**: Standardized response format with metadata
-- **Rate Limit Handling**: Intelligent handling of GitHub API rate limits
-- **Caching**: Configurable response caching
-
-## Quick Start
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/agenticsorg/edge-agents.git
-cd edge-agents/supabase/functions/github-projects
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-```
-
-### Configuration
-
-Create a `.env` file with your GitHub credentials:
+The server is organized into a modular structure for better maintainability and extensibility:
 
 ```
-GITHUB_TOKEN=your_github_personal_access_token
-GITHUB_ORG=your_organization_name
+github-projects/
+├── config/             # Configuration management
+├── server/             # MCP server initialization
+├── services/           # Service implementations
+├── tools/              # MCP tool implementations
+├── utils/              # Utility functions
+├── index.js            # Main entry point
+└── mcp-stdio-server.js # Legacy monolithic server (for backward compatibility)
 ```
 
-### Running the Servers
+### Key Components
 
-```bash
-# Run all servers
-npm start
+- **config/**: Centralizes all configuration settings and environment variables
+- **server/**: Handles MCP server initialization and transport
+- **services/**: Contains service implementations for different GitHub API domains
+- **tools/**: Organizes MCP tools by domain (repository, project, issue, etc.)
+- **utils/**: Provides utility functions for GraphQL, REST API, command execution, etc.
 
-# Or run individual servers
-npm run start:http  # HTTP MCP server
-npm run start:stdio # Stdio MCP server
-```
+## Services
 
-### Using with AI Assistants
+- **ProjectEditService**: Handles editing projects and project items
+- **ProjectDeleteService**: Handles deleting projects and project items
+- **ProjectFieldService**: Handles updating project field values (like status)
+- **GitHubProjectService**: Provides GitHub Projects API functionality
+- **GitHubIssueService**: Provides GitHub Issues API functionality
+- **GitHubStatusService**: Handles GitHub commit status operations
+- **SSHAuthService**: Handles SSH authentication for GitHub
 
-Configure your AI assistant to use the MCP server:
+## Tools
 
-```json
-"githubProjects-local": {
-  "command": "node",
-  "args": [
-    "/path/to/edge-agents/supabase/functions/github-projects/dist/mcp-stdio-server.js"
-  ],
-  "disabled": false,
-  "autoApprove": [
-    "connection",
-    "disconnect",
-    "tools/list",
-    "tools/call",
-    "discovery"
-  ],
-  "communication": {
-    "protocol": "stdio",
-    "messageFormat": "json",
-    "compressionEnabled": false
-  },
-  "timeout": 15
-}
-```
+Tools are organized by domain:
+
+- **repository-tools.js**: Repository-related tools (getRepository, getRepositoryId)
+- **project-tools.js**: Project-related tools (listProjects, getProject, createProject, etc.)
+- **issue-tools.js**: Issue-related tools (createIssue, createSubIssue)
+- **ssh-tools.js**: SSH authentication tools (addSSHKeyToAgent, generateSSHKey, etc.)
+- **graphql-tools.js**: GraphQL-related tools (executeGraphQL)
 
 ## Documentation
 
-For detailed documentation, see the [docs](./docs) directory:
+- [Edit/Delete API](./docs/edit-delete-api.md): Documentation for editing and deleting projects and items
+- [Field Update API](./docs/field-update-api.md): Documentation for updating project field values
+- [Project Management API](./docs/project-management-api.md): Documentation for project management operations
+- [Examples](./docs/examples/): Example code for using the MCP tools
 
-- [API Reference](./docs/api-reference.md)
-- [Installation & Setup](./docs/installation-setup.md)
-- [MCP & SSE Options](./docs/mcp-sse-options.md)
-- [MCP & SSE Examples](./docs/example-usage-mcp-sse.md)
-- [Edit & Delete API](./docs/edit-delete-api.md)
-- [Troubleshooting Guide](./docs/troubleshooting-guide.md)
+## Usage
 
-## Available MCP Tools
-
-The GitHub Projects MCP server provides the following tools:
-
-1. `getRepository` - Get repository information
-2. `listProjects` - List GitHub Projects for an organization
-3. `getProject` - Get detailed information about a GitHub Project
-4. `createProject` - Create a new GitHub Project
-5. `createProjectItem` - Create a new item in a GitHub Project
-6. `getProjectItems` - Get items from a GitHub Project
-7. `executeGraphQL` - Execute a custom GraphQL query
-8. `editProject` - Edit an existing GitHub Project
-9. `deleteProject` - Delete a GitHub Project
-10. `editProjectItem` - Edit an item in a GitHub Project
-11. `deleteProjectItem` - Delete an item from a GitHub Project
-
-## Development
-
-### Building the Project
+### Starting the Server
 
 ```bash
-# Build the project
-npm run build
+# Start the modular server
+npm run start:stdio
+
+# Start the legacy monolithic server
+npm run start:legacy
 ```
 
-### Running Tests
+### Adding New Capabilities
 
-```bash
-# Run tests
-cd tests
-./run-tests.sh
-```
+To add new capabilities to the server:
 
-## Deployment
+1. Create a new service in the `services/` directory
+2. Create a new tool module in the `tools/` directory
+3. Register the new tool module in `tools/index.js`
+4. Update the service initialization in `services/index.js`
 
-### Supabase Edge Function
+## Environment Variables
 
-```bash
-# Deploy to Supabase
-supabase functions deploy github-projects
-
-# Set environment variables
-supabase secrets set GITHUB_TOKEN=your_github_token
-supabase secrets set GITHUB_ORG=your_organization_name
-```
-
-### Standalone Server
-
-```bash
-# Start the HTTP server
-node dist/simple-mcp-server.js
-```
-
-## Contributing
-
-If you'd like to contribute to this project:
-
-1. Fork the repository on GitHub
-2. Create a new branch for your feature or bugfix
-3. Make your changes and ensure tests pass
-4. Submit a pull request with a clear description of your changes
+- `GITHUB_TOKEN` or `GITHUB_PERSONAL_ACCESS_TOKEN`: GitHub API token (required)
+- `GITHUB_ORG`: GitHub organization name (default: 'agenticsorg')
+- `GITHUB_API_VERSION`: GitHub API version (default: 'v3')
+- `CACHE_TTL`: Cache time-to-live in seconds (default: 300)
 
 ## License
 
 MIT
-
-## About Agentics.org
-
-This project is maintained by [Agentics.org](https://agentics.org), an organization dedicated to advancing AI agent technology and integration. Visit our website to learn more about our projects and mission.

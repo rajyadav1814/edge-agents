@@ -221,8 +221,20 @@ function validateSessionJoinPayload(payload) {
  * @returns {boolean} True if valid, throws an error otherwise
  */
 function validateSessionJoinAckPayload(payload) {
-  validateRequiredFields(payload, ['sessionId', 'status', 'participants']);
+  // First check if payload is an object
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Payload must be a non-null object');
+  }
   
+  // Check required fields
+  const requiredFields = ['sessionId', 'status', 'participants'];
+  for (const field of requiredFields) {
+    if (payload[field] === undefined) {
+      throw new Error(`Missing required field: ${field}`);
+    }
+  }
+  
+  // Then validate types
   if (typeof payload.sessionId !== 'string') {
     throw new Error('sessionId must be a string');
   }
@@ -497,8 +509,17 @@ function validateErrorPayload(payload) {
  * @returns {boolean} True if valid, throws an error otherwise
  */
 function validateServerShutdownPayload(payload) {
-  validateRequiredFields(payload, ['reason']);
+  // First check if payload is an object
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Payload must be a non-null object');
+  }
   
+  // Check required fields
+  if (payload.reason === undefined) {
+    throw new Error('Missing required field: reason');
+  }
+  
+  // Then validate types
   if (typeof payload.reason !== 'string') {
     throw new Error('reason must be a string');
   }
@@ -552,8 +573,17 @@ function validateTokenRefreshPayload(payload) {
  * @returns {boolean} True if valid, throws an error otherwise
  */
 function validateTokenRefreshAckPayload(payload) {
-  validateRequiredFields(payload, ['status']);
+  // First check if payload is an object
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Payload must be a non-null object');
+  }
   
+  // Check required fields
+  if (payload.status === undefined) {
+    throw new Error('Missing required field: status');
+  }
+  
+  // Then validate types
   if (typeof payload.status !== 'string') {
     throw new Error('status must be a string');
   }

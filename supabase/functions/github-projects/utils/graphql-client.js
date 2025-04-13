@@ -43,6 +43,17 @@ async function executeGraphQLQuery(query, variables, token) {
 
     const result = await response.json();
 
+    // Check for GraphQL errors (these come with a 200 status code)
+    if (result.errors && result.errors.length > 0) {
+      const errorMessages = result.errors.map(err => {
+        // Log detailed error information
+        console.error('GraphQL error details:', JSON.stringify(err, null, 2));
+        return err.message;
+      }).join('; ');
+      
+      throw new Error(`GraphQL errors: ${errorMessages}`);
+    }
+
     return result;
   } catch (error) {
     console.error('GraphQL query error:', error);

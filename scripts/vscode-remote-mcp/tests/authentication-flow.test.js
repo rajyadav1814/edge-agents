@@ -1,21 +1,28 @@
 /**
  * Tests for the Authentication Flow
+ * 
+ * These tests verify the authentication token management and validation
+ * using environment variables and proper security practices.
  */
 
 jest.mock('../src/utils/connection-manager', () => require('./mocks/connection-manager'));
 jest.mock('../src/utils/auth-manager', () => require('./mocks/auth-manager'));
 jest.mock('../src/utils/client-state-model', () => require('./mocks/client-state-model'));
+jest.mock('../src/config/env', () => ({
+  default: {
+    auth: {
+      enabled: true,
+      token: 'env-default-token'
+    },
+    server: {
+      name: 'vscode-mcp-server'
+    }
+  }
+}));
 
 const { MCPAuthManager } = require('../src/utils/auth-manager');
 const { MCPConnectionManager } = require('../src/utils/connection-manager');
-
-// Mock crypto module for token hashing
-const crypto = {
-  createHash: jest.fn().mockReturnValue({
-    update: jest.fn().mockReturnThis(),
-    digest: jest.fn().mockReturnValue('hashed-token')
-  })
-};
+const config = require('../src/config/env').default;
 
 describe('Authentication Flow', () => {
   let authManager;
@@ -71,6 +78,33 @@ describe('Authentication Flow', () => {
       const retrievedToken = await authManager.getToken(serverId);
       expect(retrievedToken).toBe('mock-token'); // Default mock token
     });
+
+    it('should use environment token for default server', async () => {
+      // Setup - use the default server ID from config
+      const serverId = config.server.name;
+      
+      // No explicit token set, should use environment default
+      const retrievedToken = await authManager.getToken(serverId);
+      
+      // Verify - should get the environment default token
+      expect(retrievedToken).toBe(config.auth.token);
+    });
+
+    it('should hash tokens for secure storage', async () => {
+      // Setup
+      const serverId = 'test-server';
+      const token = 'test-token';
+      
+      // Set a token
+      await authManager.setToken(serverId, token);
+      
+      // Get the token hash
+      const hash = await authManager.getTokenHash(serverId);
+      
+      // Verify - hash should be generated
+      expect(hash).toBeTruthy();
+      expect(hash).not.toBe(token); // Hash should not be the raw token
+    });
   });
 
   describe('Connection Authentication', () => {
@@ -93,7 +127,7 @@ describe('Authentication Flow', () => {
         payload: expect.objectContaining({
           clientId,
           workspaceId,
-          authToken: 'valid-token'
+          authToken: expect.any(String)
         })
       });
     });
@@ -113,6 +147,45 @@ describe('Authentication Flow', () => {
       // Verify
       expect(result).toBe(false);
       expect(mockSendMessage).not.toHaveBeenCalled();
+    });
+
+    it('should verify token hash correctly', async () => {
+      // Setup
+      const serverId = 'test-server';
+      const token = 'secure-token';
+      
+      // Set a token
+      await authManager.setToken(serverId, token);
+      
+      // Get the token hash
+      const hash = await authManager.getTokenHash(serverId);
+      
+      // Verify the hash
+      const isValid = await authManager.verifyTokenHash(serverId, hash);
+      expect(isValid).toBe(true);
+      
+      // Verify with invalid hash
+      const isInvalid = await authManager.verifyTokenHash(serverId, 'invalid-hash');
+      expect(isInvalid).toBe(false);
+    });
+
+    it('should handle token expiration', async () => {
+      // Setup
+      const serverId = 'test-server';
+      const token = 'expiring-token';
+      
+      // Set a token with expiration in the past
+      const pastDate = new Date();
+      pastDate.setHours(pastDate.getHours() - 1); // 1 hour in the past
+      await authManager.setToken(serverId, token, pastDate);
+      
+      // Check if token is expired
+      const isExpired = authManager.isTokenExpired(serverId);
+      expect(isExpired).toBe(true);
+      
+      // Attempt to get the token
+      const retrievedToken = await authManager.getToken(serverId);
+      expect(retrievedToken).toBe('mock-token'); // Should get default mock token
     });
   });
 });

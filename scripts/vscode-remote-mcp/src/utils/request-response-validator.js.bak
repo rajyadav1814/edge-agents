@@ -2,8 +2,6 @@
  * Validator functions for request/response schemas in the VSCode Remote MCP system
  */
 
-const { STATUS_VALUES, PATTERNS } = require('../config/schema-constants');
-
 /**
  * Validates that a request and response pair match correctly
  * @param {Object} request - The request message
@@ -80,18 +78,20 @@ function validateConnectionResponse(message) {
   }
   
   // Validate status value
+  const validStatusValues = ['connected', 'rejected', 'pending'];
   if (typeof payload.status !== 'string') {
     throw new Error('status must be a string');
   }
   
-  if (!STATUS_VALUES.CONNECTION.includes(payload.status)) {
+  if (!validStatusValues.includes(payload.status)) {
     throw new Error('Invalid status value');
   }
   
   // Validate serverTime if present
   if (payload.serverTime) {
     // Check if it's a valid ISO date format
-    if (!PATTERNS.ISO_DATE.test(payload.serverTime)) {
+    const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+    if (!isoDatePattern.test(payload.serverTime)) {
       throw new Error('serverTime must be a valid ISO 8601 timestamp');
     }
     
@@ -176,14 +176,16 @@ function validateSessionCreateResponse(message) {
   }
   
   // Validate status value
-  if (!STATUS_VALUES.SESSION_CREATE.includes(payload.status)) {
+  const validStatusValues = ['created', 'rejected', 'pending'];
+  if (!validStatusValues.includes(payload.status)) {
     throw new Error('Invalid status value');
   }
   
   // Validate createdAt if present
   if (payload.createdAt) {
     // Check if it's a valid ISO date format
-    if (!PATTERNS.ISO_DATE.test(payload.createdAt)) {
+    const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+    if (!isoDatePattern.test(payload.createdAt)) {
       throw new Error('createdAt must be a valid ISO 8601 timestamp');
     }
     
@@ -245,7 +247,8 @@ function validateSessionJoinResponse(message) {
   }
   
   // Validate status value
-  if (!STATUS_VALUES.SESSION_JOIN.includes(payload.status)) {
+  const validStatusValues = ['joined', 'rejected', 'pending'];
+  if (!validStatusValues.includes(payload.status)) {
     throw new Error('Invalid status value');
   }
   
@@ -295,14 +298,16 @@ function validateTokenRefreshResponse(message) {
   }
   
   // Validate status value
-  if (!STATUS_VALUES.TOKEN_REFRESH.includes(payload.status)) {
+  const validStatusValues = ['accepted', 'rejected'];
+  if (!validStatusValues.includes(payload.status)) {
     throw new Error('Invalid status value');
   }
   
   // Validate validUntil if present
   if (payload.validUntil) {
     // Check if it's a valid ISO date format
-    if (!PATTERNS.ISO_DATE.test(payload.validUntil)) {
+    const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+    if (!isoDatePattern.test(payload.validUntil)) {
       throw new Error('validUntil must be a valid ISO 8601 timestamp');
     }
     
