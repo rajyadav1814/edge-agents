@@ -132,7 +132,8 @@ dist
 .venv/
 .pytest_cache
 __pycache__
-.roo/mcp.json
-cline_mcp_settings.json
+
+# Roo and MCP configuration files with sensitive data
+.roo/
 mcp.json
-.roo/mcp.json
+cline_mcp_settings.json
