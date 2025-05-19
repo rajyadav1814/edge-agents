@@ -6,6 +6,7 @@ import { MCPServer } from "./mcp_server.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const SUPABASE_ACCESS_TOKEN = Deno.env.get("SUPABASE_ACCESS_TOKEN") || "";
+console.log("SUPABASE_URL======================", SUPABASE_URL);
 
 // Initialize MCP Server
 const mcpServer = new MCPServer({
@@ -260,8 +261,8 @@ async function deleteFunction(name: string): Promise<Record<string, any>> {
   return await response.json();
 }
 // MCP Server Edge Function
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { McpServer } from "./core/server.ts";
+// import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// import { McpServer } from "./core/server.ts";
 
 // Get the MCP_SECRET_KEY from environment variables
 const MCP_SECRET_KEY = Deno.env.get("MCP_SECRET_KEY");

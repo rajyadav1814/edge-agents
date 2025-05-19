@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the MCP_SECRET_KEY environment variable
-export MCP_SECRET_KEY="test123"
+export MCP_SECRET_KEY="ZTt+jbxIW0bAGL4l2ZM6jBD20O/m8hyj3OCZMjJoWQZ3ZGm2ukXv4Jpn5kdQn8LYlpDfBmYXGkdlw3xN6zAmOw=="
 
 # Start the Deno server in the background
 echo "Starting MCP server..."
